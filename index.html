@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gamepad Tester</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ── COMPACT HEADER ────────────────────────────────────────── -->
+<header>
+  <div class="header-left">
+    <h1><span class="icon">🎮</span> Gamepad Tester</h1>
+    <div class="status-badge">
+      <span class="status-dot" id="status-dot"></span>
+      <span id="status-text">Sin mando — pulsa un botón</span>
+    </div>
+  </div>
+
+  <div class="header-controls">
+    <div class="panel-view-switcher">
+      <button id="btn-view-photo" class="active" title="Vista con foto oficial del mando">📸 Foto</button>
+      <button id="btn-view-diagram" title="Vista con diagrama vectorial">📐 Esquema</button>
+    </div>
+    <select id="model-select" title="Modelo de mando">
+      <option value="auto">🔍 Auto</option>
+      <option value="ps5">PS5 (DualSense)</option>
+      <option value="ps4">PS4 (DualShock 4)</option>
+      <option value="ps3">PS3 (DualShock 3)</option>
+      <option value="ps2">PS2 (DualShock 2)</option>
+      <option value="xbox-series-s">Xbox Series S/X</option>
+      <option value="xbox-one">Xbox One</option>
+      <option value="generic">Genérico</option>
+    </select>
+    <button id="debug-toggle" title="Mostrar guías de botones">🔵 Guías</button>
+  </div>
+</header>
+
+<!-- ── MAIN DASHBOARD (100% SINGLE SCREEN) ───────────────────── -->
+<main class="app-layout">
+
+  <!-- ── LEFT: CONTROLLER STAGE ── -->
+  <section class="stage-section">
+    <div class="controller-stage" id="ctrl-stage">
+      
+      <!-- No Gamepad Overlay Hint -->
+      <div id="no-gamepad-msg" class="hint-banner">
+        <span>🎮 Conecta un mando o pulsa cualquier botón para detectarlo</span>
+      </div>
+
+      <!-- 1. Photorealistic View -->
+      <div id="photo-view-box" class="photo-view-box">
+        <img id="photo-img" class="photo-img" src="assets/controllers/ps4.png" alt="Mando Oficial">
+        <svg id="photo-overlay-svg" class="photo-overlay" viewBox="0 0 1024 1024" preserveAspectRatio="xMidYMid meet"></svg>
+      </div>
+
+      <!-- 2. Technical Vector Diagram View -->
+      <div id="diagram-view-box" style="display:none; width:100%;">
+        <div id="svg-container"></div>
+      </div>
+
+      <!-- Live Button Feedback -->
+      <div id="controller-feedback-label" class="feedback-label">Listo — pulsa cualquier botón para probar</div>
+      <div id="ctrl-id-info" class="ctrl-id-text"></div>
+    </div>
+  </section>
+
+  <!-- ── RIGHT: TELEMETRY & TOOLS SIDEBAR ── -->
+  <aside class="sidebar-section">
+
+    <!-- 1. Sticks Telemetry Card -->
+    <div class="card card-sticks">
+      <div class="card-header">
+        <span>🕹 Sticks Analógicos</span>
+        <div class="drift-quick-btn">
+          <button id="drift-btn" class="mini-btn">▶ Test Drift (3s)</button>
+        </div>
+      </div>
+      <div class="card-body sticks-row">
+        <div class="stick-box">
+          <span class="stick-title">Izquierdo (LX, LY)</span>
+          <canvas id="stick-l-canvas" class="stick-canvas" width="90" height="90"></canvas>
+          <span class="stick-vals" id="stick-l-vals">X: 0.00 Y: 0.00</span>
+        </div>
+        <div class="stick-box">
+          <span class="stick-title">Derecho (RX, RY)</span>
+          <canvas id="stick-r-canvas" class="stick-canvas" width="90" height="90"></canvas>
+          <span class="stick-vals" id="stick-r-vals">X: 0.00 Y: 0.00</span>
+        </div>
+      </div>
+      <!-- Drift status bar -->
+      <div class="drift-status-bar" id="drift-result">Suelta los sticks y pulsa "Test Drift"</div>
+    </div>
+
+    <!-- 2. Buttons Grid Card -->
+    <div class="card card-buttons">
+      <div class="card-header">
+        <span>⌨ Estado de Botones</span>
+      </div>
+      <div class="card-body">
+        <div class="buttons-grid" id="buttons-grid">
+          <div style="color:var(--text-muted);font-size:.78rem;text-align:center;width:100%;padding:10px 0;">
+            Esperando mando…
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Resolution Card (Vibration Removed) -->
+    <div class="card card-resolution">
+      <div class="card-header">
+        <span>📊 Resolución Analógica (Bits)</span>
+        <button id="res-btn" class="mini-btn" title="Resetear contador de valores">↺ Reset</button>
+      </div>
+      <div class="card-body">
+        <div class="res-summary">
+          <div class="res-item">
+            <span class="res-tag">Stick L:</span>
+            <span id="res-l-uniq" class="res-num">0</span> vals (<span id="res-l-bits">—</span>)
+            <span id="res-l-verdict" class="res-badge verdict-warn">—</span>
+          </div>
+          <div class="res-item">
+            <span class="res-tag">Stick R:</span>
+            <span id="res-r-uniq" class="res-num">0</span> vals (<span id="res-r-bits">—</span>)
+            <span id="res-r-verdict" class="res-badge verdict-warn">—</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </aside>
+
+</main>
+
+<script src="controllers-overlay.js"></script>
+<script src="controllers-svg.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
