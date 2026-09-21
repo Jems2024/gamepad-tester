@@ -179,50 +179,21 @@
       </div>
     </div>
 
-    <!-- 2. Mid Row: Buttons Grid + Analog Resolution -->
-    <div class="mid-row-grid">
-
-      <!-- Buttons Grid Card -->
-      <div class="card card-buttons">
-        <div class="card-header">
-          <span>⌨ Estado de Botones Mapeados</span>
+    <!-- 2. Buttons Grid Card (Full Width for All Buttons) -->
+    <div class="card card-buttons">
+      <div class="card-header">
+        <div class="header-title-group">
+          <span class="icon">⌨</span>
+          <span>Estado de Botones Mapeados</span>
         </div>
-        <div class="card-body">
-          <div class="buttons-grid" id="buttons-grid">
-            <div style="color:var(--text-muted);font-size:.78rem;text-align:center;width:100%;padding:10px 0;">
-              Esperando mando…
-            </div>
+      </div>
+      <div class="card-body">
+        <div class="buttons-grid" id="buttons-grid">
+          <div style="color:var(--text-muted);font-size:.78rem;text-align:center;width:100%;padding:10px 0;">
+            Esperando mando…
           </div>
         </div>
       </div>
-
-      <!-- Resolution & Precision Card -->
-      <div class="card card-resolution">
-        <div class="card-header">
-          <span>📊 Resolución Analógica (Bits)</span>
-          <button id="res-btn" class="mini-btn" title="Resetear contador de valores únicos">↺ Reset</button>
-        </div>
-        <div class="card-body">
-          <div class="res-summary">
-            <div class="res-item">
-              <span class="res-tag">Stick L:</span>
-              <span id="res-l-uniq" class="res-num">0</span> valores
-              <span id="res-l-bits" class="res-bits">(—)</span>
-              <span id="res-l-verdict" class="res-badge verdict-warn">—</span>
-            </div>
-            <div class="res-item">
-              <span class="res-tag">Stick R:</span>
-              <span id="res-r-uniq" class="res-num">0</span> valores
-              <span id="res-r-bits" class="res-bits">(—)</span>
-              <span id="res-r-verdict" class="res-badge verdict-warn">—</span>
-            </div>
-          </div>
-          <div class="res-explanation">
-            Mueve los sticks en círculos completos para verificar si son analógicos reales (>200 valores) o réplicas digitales falsas (&lt;8 valores).
-          </div>
-        </div>
-      </div>
-
     </div>
 
     <!-- 3. Advanced Diagnostics (Raw Input Mode) — Collapsible -->

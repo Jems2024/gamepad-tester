@@ -309,15 +309,8 @@ const dom = {
   driftBtn:            document.getElementById('drift-btn'),
   driftResult:         document.getElementById('drift-result'),
 
-  // Buttons & Resolution
+  // Buttons Grid
   buttonsGrid:         document.getElementById('buttons-grid'),
-  resBtn:              document.getElementById('res-btn'),
-  resLUniq:            document.getElementById('res-l-uniq'),
-  resLBits:            document.getElementById('res-l-bits'),
-  resLVerdict:         document.getElementById('res-l-verdict'),
-  resRUniq:            document.getElementById('res-r-uniq'),
-  resRBits:            document.getElementById('res-r-bits'),
-  resRVerdict:         document.getElementById('res-r-verdict'),
 
   // Raw Diagnostics
   rawDiagToggle:       document.getElementById('raw-diag-toggle'),
@@ -368,31 +361,12 @@ let state = {
     timerId:   null,
     samples:   [],
   },
-
-  // Analog Resolution (unique raw floats)
-  axisValues: {
-    lx: new Set(), ly: new Set(), rx: new Set(), ry: new Set()
-  },
 };
 
 // ─────────────────────────────────────────────────────────────
 // RESET CONTROLLER TELEMETRY (WHEN SWAPPING OR ON DEMAND)
 // ─────────────────────────────────────────────────────────────
 function resetControllerTelemetry() {
-  // Clear resolution sets
-  state.axisValues = { lx: new Set(), ly: new Set(), rx: new Set(), ry: new Set() };
-  if (dom.resLUniq) dom.resLUniq.textContent = '0';
-  if (dom.resLBits) dom.resLBits.textContent = '—';
-  if (dom.resLVerdict) {
-    dom.resLVerdict.className = 'res-badge verdict-warn';
-    dom.resLVerdict.textContent = '—';
-  }
-  if (dom.resRUniq) dom.resRUniq.textContent = '0';
-  if (dom.resRBits) dom.resRBits.textContent = '—';
-  if (dom.resRVerdict) {
-    dom.resRVerdict.className = 'res-badge verdict-warn';
-    dom.resRVerdict.textContent = '—';
-  }
 
   // Cancel any active drift capture cleanly
   if (state.drift.capturing) {
@@ -1067,41 +1041,7 @@ function evaluateDriftResults() {
   `;
 }
 
-// ─────────────────────────────────────────────────────────────
-// ANALOG RESOLUTION TRACKER
-// ─────────────────────────────────────────────────────────────
-function updateResolution(axes) {
-  if (axes.lx !== undefined) {
-    state.axisValues.lx.add(+axes.lx.toFixed(5));
-    state.axisValues.ly.add(+axes.ly.toFixed(5));
-  }
-  if (axes.rx !== undefined) {
-    state.axisValues.rx.add(+axes.rx.toFixed(5));
-    state.axisValues.ry.add(+axes.ry.toFixed(5));
-  }
 
-  function renderCell(elUniq, elBits, elVerdict, setA, setB) {
-    if (!elUniq || !elBits || !elVerdict) return;
-    const uniq = Math.max(setA.size, setB.size);
-    const bits = uniq > 1 ? Math.log2(uniq).toFixed(1) : '—';
-    elUniq.textContent = uniq;
-    elBits.textContent = uniq > 1 ? `(${bits} bits)` : '(—)';
-
-    let vc = 'verdict-warn', vt = 'Moviendo…';
-    if (uniq > 180) {
-      vc = 'verdict-ok'; vt = '✅ Analógico real';
-    } else if (uniq > 16) {
-      vc = 'verdict-warn'; vt = '⚠ Limitación / Rango bajo';
-    } else if (uniq <= 8 && uniq > 1) {
-      vc = 'verdict-bad'; vt = '❌ Réplica digital/falsa';
-    }
-    elVerdict.className = `res-badge ${vc}`;
-    elVerdict.textContent = vt;
-  }
-
-  renderCell(dom.resLUniq, dom.resLBits, dom.resLVerdict, state.axisValues.lx, state.axisValues.ly);
-  renderCell(dom.resRUniq, dom.resRBits, dom.resRVerdict, state.axisValues.rx, state.axisValues.ry);
-}
 
 // ─────────────────────────────────────────────────────────────
 // RAW DIAGNOSTICS (COLLAPSIBLE ACCORDION)
@@ -1211,9 +1151,8 @@ function tick() {
     dom.stickLStatusDot.classList.toggle('active', distL > 0.05);
     dom.stickRStatusDot.classList.toggle('active', distR > 0.05);
 
-    // C. Drift & Resolution
+    // C. Drift Benchmark
     recordDriftSample(axes);
-    updateResolution(axes);
 
     // D. Visualizers
     updatePhotoOverlay(gp);
@@ -1404,14 +1343,7 @@ dom.stickZoomBtn.addEventListener('click', () => {
 // Drift Button
 dom.driftBtn.addEventListener('click', startDriftCapture);
 
-// Resolution Reset Button
-dom.resBtn.addEventListener('click', () => {
-  state.axisValues = { lx: new Set(), ly: new Set(), rx: new Set(), ry: new Set() };
-  if (dom.resLUniq) dom.resLUniq.textContent = '0';
-  if (dom.resRUniq) dom.resRUniq.textContent = '0';
-  if (dom.resLBits) dom.resLBits.textContent = '—';
-  if (dom.resRBits) dom.resRBits.textContent = '—';
-});
+
 
 // Raw Diagnostics Accordion
 dom.rawDiagToggle.addEventListener('click', () => {

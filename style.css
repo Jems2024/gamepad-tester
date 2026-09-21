@@ -637,45 +637,37 @@ button.active { background: var(--accent); border-color: var(--accent); color: #
   color: var(--text);
 }
 
-/* ── 2. MID ROW: BUTTONS + ANALOG RESOLUTION ────────────────── */
-.mid-row-grid {
-  display: grid;
-  grid-template-columns: 1.35fr 1fr;
-  gap: 7px;
-  flex-shrink: 0;
-}
-
-/* Buttons Grid Card */
+/* ── 2. BUTTONS STATUS CARD (FULL WIDTH — ALL 18 BUTTONS VISIBLE) ── */
 .card-buttons {
   flex-shrink: 0;
 }
 .card-buttons .card-body {
-  max-height: 155px;
-  overflow-y: auto;
-  padding: 5px 6px;
+  padding: 6px 8px;
 }
 .buttons-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 3px;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 4px;
 }
 
 .btn-chip {
   display: flex;
   flex-direction: column;
-  padding: 3px 5px;
-  border-radius: 4px;
+  padding: 4px 6px;
+  border-radius: 5px;
   background: var(--surface2);
   border: 1px solid var(--border);
-  gap: 1px;
-  transition: border-color 0.08s;
+  gap: 2px;
+  transition: border-color 0.08s, background 0.08s;
 }
 .btn-chip.pressed {
   border-color: var(--accent);
-  background: rgba(99, 102, 241, 0.18);
+  background: rgba(99, 102, 241, 0.22);
+  box-shadow: 0 0 6px rgba(99, 102, 241, 0.3);
 }
 .btn-chip .btn-name {
-  font-size: 0.60rem;
+  font-size: 0.62rem;
+  font-weight: 600;
   color: var(--text-muted);
   white-space: nowrap;
   overflow: hidden;
@@ -683,15 +675,15 @@ button.active { background: var(--accent); border-color: var(--accent); color: #
 }
 .btn-chip.pressed .btn-name { color: #fff; }
 .btn-chip .btn-val {
-  font-family: monospace;
-  font-size: 0.68rem;
+  font-family: 'Consolas', 'Courier New', monospace;
+  font-size: 0.72rem;
   font-weight: 700;
   color: var(--text);
 }
 .btn-chip.pressed .btn-val { color: var(--accent); }
 .bar-wrap {
   width: 100%;
-  height: 2px;
+  height: 3px;
   background: var(--border);
   border-radius: 99px;
   overflow: hidden;
@@ -700,45 +692,6 @@ button.active { background: var(--accent); border-color: var(--accent); color: #
   height: 100%;
   background: var(--accent);
   transition: width 0.04s linear;
-}
-
-/* Resolution Card */
-.card-resolution {
-  flex-shrink: 0;
-}
-.res-summary {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  background: var(--surface2);
-  padding: 5px 8px;
-  border-radius: 4px;
-  border: 1px solid var(--border);
-}
-.res-item {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 0.68rem;
-}
-.res-tag { color: var(--text-muted); font-weight: 600; width: 44px; }
-.res-num { font-weight: 700; font-family: monospace; color: #fff; }
-.res-bits { font-size: 0.66rem; color: var(--text-muted); font-family: monospace; }
-.res-badge {
-  font-size: 0.62rem;
-  padding: 1px 4px;
-  border-radius: 3px;
-  font-weight: 600;
-  margin-left: auto;
-}
-.verdict-ok   { background: rgba(16,185,129,0.2); color: var(--green); }
-.verdict-warn { background: rgba(245,158,11,0.2); color: var(--yellow); }
-.verdict-bad  { background: rgba(239,68,68,0.2); color: var(--red); }
-.res-explanation {
-  font-size: 0.62rem;
-  color: var(--text-muted);
-  line-height: 1.25;
-  margin-top: 5px;
 }
 
 /* ── 3. ADVANCED DIAGNOSTICS (RAW INPUT ACCORDION) ─────────── */
