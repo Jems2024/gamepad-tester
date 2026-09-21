@@ -653,6 +653,7 @@ function buildPhotoOverlay(model) {
   }
 
   dom.photoOverlaySvg.innerHTML = svgHtml;
+  dom.photoOverlaySvg.classList.toggle('debug-guides', !!state.debugMode);
 
   // Cache elements
   state.photoBtns = {};
@@ -690,10 +691,10 @@ function setPhotoBtnActive(idx, val, isActive) {
     if (dom.feedbackLabel) dom.feedbackLabel.textContent = `${getButtonLabel(state.model, idx)} (${val.toFixed(2)})`;
   } else {
     el.classList.remove('active');
-    el.style.fill = 'rgba(0,0,0,0.01)';
-    el.style.fillOpacity = 0;
-    el.style.stroke = state.debugMode ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.08)';
-    el.style.strokeOpacity = state.debugMode ? 0.8 : 0.2;
+    el.style.fill = '';
+    el.style.fillOpacity = '';
+    el.style.stroke = '';
+    el.style.strokeOpacity = '';
     if (dom.feedbackLabel) dom.feedbackLabel.textContent = 'Pulsa cualquier botón para probar';
   }
 }
@@ -1330,6 +1331,7 @@ dom.debugToggle.addEventListener('click', () => {
   state.debugMode = !state.debugMode;
   dom.debugToggle.classList.toggle('active', state.debugMode);
   dom.debugToggle.textContent = state.debugMode ? '🔵 Guías ON' : '🔵 Guías';
+  dom.photoOverlaySvg.classList.toggle('debug-guides', state.debugMode);
   buildPhotoOverlay(state.model);
 });
 
