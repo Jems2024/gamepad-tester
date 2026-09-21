@@ -3,50 +3,68 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gamepad Tester</title>
+  <title>Gamepad Tester — Profesional</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<!-- ── COMPACT HEADER ────────────────────────────────────────── -->
+<!-- ── COMPACT TOP NAVBAR ────────────────────────────────────── -->
 <header>
   <div class="header-left">
     <h1><span class="icon">🎮</span> Gamepad Tester</h1>
     <div class="status-badge">
       <span class="status-dot" id="status-dot"></span>
-      <span id="status-text">Sin mando — pulsa un botón</span>
+      <span id="status-text">Esperando mando…</span>
+    </div>
+    <!-- Active Controller Badge -->
+    <div class="active-controller-badge" id="active-ctrl-badge" title="Mando activo para pruebas">
+      <span class="badge-label">Mando Activo:</span>
+      <span class="badge-name" id="active-ctrl-name">Ninguno</span>
+      <span class="badge-sub" id="active-ctrl-idx">—</span>
     </div>
   </div>
 
   <div class="header-controls">
+    <!-- Multi-controller device selector -->
+    <div class="ctrl-select-wrap">
+      <label for="active-gamepad-select">Dispositivo:</label>
+      <select id="active-gamepad-select" title="Seleccionar mando para testear">
+        <option value="-1">Sin mandos conectados</option>
+      </select>
+    </div>
+
     <div class="panel-view-switcher">
       <button id="btn-view-photo" class="active" title="Vista con foto oficial del mando">📸 Foto</button>
       <button id="btn-view-diagram" title="Vista con diagrama vectorial">📐 Esquema</button>
     </div>
-    <select id="model-select" title="Modelo de mando">
-      <option value="auto">🔍 Auto</option>
+
+    <select id="model-select" title="Perfil de asignación y modelo visual">
+      <option value="auto">🔍 Auto-detectar</option>
       <option value="ps5">PS5 (DualSense)</option>
       <option value="ps4">PS4 (DualShock 4)</option>
       <option value="ps3">PS3 (DualShock 3)</option>
       <option value="ps2">PS2 (DualShock 2)</option>
       <option value="xbox-series-s">Xbox Series S/X</option>
-      <option value="xbox-one">Xbox One</option>
-      <option value="generic">Genérico</option>
+      <option value="xbox-one">Xbox One / 360</option>
+      <option value="nintendo">Nintendo Switch</option>
+      <option value="generic">Genérico / DirectInput</option>
+      <option value="raw">Modo RAW (Sin Mapeo)</option>
     </select>
-    <button id="debug-toggle" title="Mostrar guías de botones">🔵 Guías</button>
+
+    <button id="debug-toggle" title="Mostrar guías de botones interactivos">🔵 Guías</button>
   </div>
 </header>
 
-<!-- ── MAIN DASHBOARD (100% SINGLE SCREEN) ───────────────────── -->
+<!-- ── MAIN DASHBOARD (32% LEFT / 68% RIGHT) ─────────────────── -->
 <main class="app-layout">
 
-  <!-- ── LEFT: CONTROLLER STAGE ── -->
+  <!-- ── LEFT: CONTROLLER VISUAL STAGE & HARDWARE INFO (32%) ── -->
   <section class="stage-section">
     <div class="controller-stage" id="ctrl-stage">
       
-      <!-- No Gamepad Overlay Hint -->
+      <!-- Hint banner when waiting -->
       <div id="no-gamepad-msg" class="hint-banner">
-        <span>🎮 Conecta un mando o pulsa cualquier botón para detectarlo</span>
+        <span>🎮 Conecta un mando o pulsa cualquier botón</span>
       </div>
 
       <!-- 1. Photorealistic View -->
@@ -60,70 +78,180 @@
         <div id="svg-container"></div>
       </div>
 
-      <!-- Live Button Feedback -->
-      <div id="controller-feedback-label" class="feedback-label">Listo — pulsa cualquier botón para probar</div>
+      <!-- Live Button Feedback & Info -->
+      <div id="controller-feedback-label" class="feedback-label">Listo — esperando interacción</div>
       <div id="ctrl-id-info" class="ctrl-id-text"></div>
+      <div id="ctrl-profile-badge" class="ctrl-profile-tag">Perfil: Estándar</div>
+
+      <!-- PS3 / Driver diagnosis note -->
+      <div id="ds3-driver-hint" class="driver-hint-box" style="display:none;">
+        <span class="hint-title">ℹ Nota de compatibilidad PS3 / DirectInput:</span>
+        <span class="hint-body">Si un mando PS3 no responde en Windows, requiere driver XInput (DsHidMini / SCPToolkit). Los mandos sin mapeo nativo se leen en <strong>Modo RAW</strong>.</span>
+      </div>
     </div>
   </section>
 
-  <!-- ── RIGHT: TELEMETRY & TOOLS SIDEBAR ── -->
+  <!-- ── RIGHT: LARGE ANALOG STICKS & TESTING TOOLS (68%) ── -->
   <aside class="sidebar-section">
 
-    <!-- 1. Sticks Telemetry Card -->
-    <div class="card card-sticks">
+    <!-- 1. Large Analog Sticks Testing Center -->
+    <div class="card card-sticks-large">
       <div class="card-header">
-        <span>🕹 Sticks Analógicos</span>
-        <div class="drift-quick-btn">
-          <button id="drift-btn" class="mini-btn">▶ Test Drift (3s)</button>
+        <div class="header-title-group">
+          <span class="icon">🕹</span>
+          <span>Test de Sticks Analógicos — Análisis Cartesiano</span>
+        </div>
+        <div class="header-actions">
+          <button id="stick-zoom-btn" class="mini-btn" title="Amplificar visualmente la zona central de reposo (Micro-Centro)">🔍 Micro-Centro ON</button>
+          <button id="drift-btn" class="action-btn-primary">▶ Test Drift (3s)</button>
         </div>
       </div>
-      <div class="card-body sticks-row">
-        <div class="stick-box">
-          <span class="stick-title">Izquierdo (LX, LY)</span>
-          <canvas id="stick-l-canvas" class="stick-canvas" width="90" height="90"></canvas>
-          <span class="stick-vals" id="stick-l-vals">X: 0.00 Y: 0.00</span>
-        </div>
-        <div class="stick-box">
-          <span class="stick-title">Derecho (RX, RY)</span>
-          <canvas id="stick-r-canvas" class="stick-canvas" width="90" height="90"></canvas>
-          <span class="stick-vals" id="stick-r-vals">X: 0.00 Y: 0.00</span>
-        </div>
-      </div>
-      <!-- Drift status bar -->
-      <div class="drift-status-bar" id="drift-result">Suelta los sticks y pulsa "Test Drift"</div>
-    </div>
 
-    <!-- 2. Buttons Grid Card -->
-    <div class="card card-buttons">
-      <div class="card-header">
-        <span>⌨ Estado de Botones</span>
-      </div>
-      <div class="card-body">
-        <div class="buttons-grid" id="buttons-grid">
-          <div style="color:var(--text-muted);font-size:.78rem;text-align:center;width:100%;padding:10px 0;">
-            Esperando mando…
+      <div class="card-body sticks-large-body">
+        <div class="sticks-grid">
+
+          <!-- Left Stick Tester -->
+          <div class="stick-panel" id="stick-panel-l">
+            <div class="stick-panel-header">
+              <span class="stick-tag">STICK IZQUIERDO (LX, LY)</span>
+              <span class="stick-status-dot" id="stick-l-status-dot"></span>
+            </div>
+            <div class="stick-canvas-wrapper">
+              <canvas id="stick-l-canvas" class="stick-canvas-large" width="400" height="400"></canvas>
+            </div>
+            <div class="stick-metrics-grid">
+              <div class="metric-cell">
+                <span class="metric-label">X:</span>
+                <span class="metric-val" id="stick-l-x">+0.0000</span>
+              </div>
+              <div class="metric-cell">
+                <span class="metric-label">Y:</span>
+                <span class="metric-val" id="stick-l-y">+0.0000</span>
+              </div>
+              <div class="metric-cell highlight">
+                <span class="metric-label">Desvío:</span>
+                <span class="metric-val" id="stick-l-dist">0.0000</span>
+              </div>
+              <div class="metric-cell">
+                <span class="metric-label">Ángulo:</span>
+                <span class="metric-val" id="stick-l-angle">0.0°</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Stick Tester -->
+          <div class="stick-panel" id="stick-panel-r">
+            <div class="stick-panel-header">
+              <span class="stick-tag">STICK DERECHO (RX, RY)</span>
+              <span class="stick-status-dot" id="stick-r-status-dot"></span>
+            </div>
+            <div class="stick-canvas-wrapper">
+              <canvas id="stick-r-canvas" class="stick-canvas-large" width="400" height="400"></canvas>
+            </div>
+            <div class="stick-metrics-grid">
+              <div class="metric-cell">
+                <span class="metric-label">X:</span>
+                <span class="metric-val" id="stick-r-x">+0.0000</span>
+              </div>
+              <div class="metric-cell">
+                <span class="metric-label">Y:</span>
+                <span class="metric-val" id="stick-r-y">+0.0000</span>
+              </div>
+              <div class="metric-cell highlight">
+                <span class="metric-label">Desvío:</span>
+                <span class="metric-val" id="stick-r-dist">0.0000</span>
+              </div>
+              <div class="metric-cell">
+                <span class="metric-label">Ángulo:</span>
+                <span class="metric-val" id="stick-r-angle">0.0°</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Drift status & telemetry bar -->
+        <div class="drift-results-panel" id="drift-result">
+          <div class="drift-initial-hint">
+            <span>ℹ Suelta ambos sticks y pulsa <strong>"▶ Test Drift (3s)"</strong> para calcular desviación y jitter en reposo.</span>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- 3. Resolution Card (Vibration Removed) -->
-    <div class="card card-resolution">
-      <div class="card-header">
-        <span>📊 Resolución Analógica (Bits)</span>
-        <button id="res-btn" class="mini-btn" title="Resetear contador de valores">↺ Reset</button>
-      </div>
-      <div class="card-body">
-        <div class="res-summary">
-          <div class="res-item">
-            <span class="res-tag">Stick L:</span>
-            <span id="res-l-uniq" class="res-num">0</span> vals (<span id="res-l-bits">—</span>)
-            <span id="res-l-verdict" class="res-badge verdict-warn">—</span>
+    <!-- 2. Mid Row: Buttons Grid + Analog Resolution -->
+    <div class="mid-row-grid">
+
+      <!-- Buttons Grid Card -->
+      <div class="card card-buttons">
+        <div class="card-header">
+          <span>⌨ Estado de Botones Mapeados</span>
+        </div>
+        <div class="card-body">
+          <div class="buttons-grid" id="buttons-grid">
+            <div style="color:var(--text-muted);font-size:.78rem;text-align:center;width:100%;padding:10px 0;">
+              Esperando mando…
+            </div>
           </div>
-          <div class="res-item">
-            <span class="res-tag">Stick R:</span>
-            <span id="res-r-uniq" class="res-num">0</span> vals (<span id="res-r-bits">—</span>)
-            <span id="res-r-verdict" class="res-badge verdict-warn">—</span>
+        </div>
+      </div>
+
+      <!-- Resolution & Precision Card -->
+      <div class="card card-resolution">
+        <div class="card-header">
+          <span>📊 Resolución Analógica (Bits)</span>
+          <button id="res-btn" class="mini-btn" title="Resetear contador de valores únicos">↺ Reset</button>
+        </div>
+        <div class="card-body">
+          <div class="res-summary">
+            <div class="res-item">
+              <span class="res-tag">Stick L:</span>
+              <span id="res-l-uniq" class="res-num">0</span> valores
+              <span id="res-l-bits" class="res-bits">(—)</span>
+              <span id="res-l-verdict" class="res-badge verdict-warn">—</span>
+            </div>
+            <div class="res-item">
+              <span class="res-tag">Stick R:</span>
+              <span id="res-r-uniq" class="res-num">0</span> valores
+              <span id="res-r-bits" class="res-bits">(—)</span>
+              <span id="res-r-verdict" class="res-badge verdict-warn">—</span>
+            </div>
+          </div>
+          <div class="res-explanation">
+            Mueve los sticks en círculos completos para verificar si son analógicos reales (>200 valores) o réplicas digitales falsas (&lt;8 valores).
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 3. Advanced Diagnostics (Raw Input Mode) — Collapsible -->
+    <div class="card card-raw-diag">
+      <div class="card-header accordion-header" id="raw-diag-toggle" title="Clic para desplegar / ocultar diagnóstico avanzado">
+        <div class="header-title-group">
+          <span class="icon">⚙</span>
+          <span>Diagnóstico Avanzado (Raw Input / Multi-Ejes)</span>
+        </div>
+        <span class="accordion-arrow" id="raw-diag-arrow">▼</span>
+      </div>
+      <div class="card-body raw-diag-body" id="raw-diag-body" style="display:none;">
+        <div class="raw-meta-grid">
+          <div class="meta-item"><strong>ID:</strong> <span id="raw-id">—</span></div>
+          <div class="meta-item"><strong>Índice:</strong> <span id="raw-index">—</span></div>
+          <div class="meta-item"><strong>Mapping:</strong> <span id="raw-mapping">—</span></div>
+          <div class="meta-item"><strong>Conectado:</strong> <span id="raw-connected">—</span></div>
+          <div class="meta-item"><strong>Total Botones:</strong> <span id="raw-total-btns">0</span></div>
+          <div class="meta-item"><strong>Total Ejes:</strong> <span id="raw-total-axes">0</span></div>
+          <div class="meta-item"><strong>Timestamp:</strong> <span id="raw-timestamp">0</span></div>
+        </div>
+        <div class="raw-streams-grid">
+          <div class="raw-stream-col">
+            <h4 class="raw-subtitle">Ejes Crudos (Axes 0..N):</h4>
+            <div id="raw-axes-list" class="raw-axes-list">Sin datos</div>
+          </div>
+          <div class="raw-stream-col">
+            <h4 class="raw-subtitle">Botones Crudos (Buttons 0..N):</h4>
+            <div id="raw-buttons-list" class="raw-buttons-list">Sin datos</div>
           </div>
         </div>
       </div>
@@ -138,3 +266,4 @@
 <script src="app.js"></script>
 </body>
 </html>
+
