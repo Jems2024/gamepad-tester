@@ -82,7 +82,6 @@ const BTN_NAMES = [
 function getButtonLabel(model, index) {
   const isXbox = model.startsWith('xbox');
   const isPs   = model.startsWith('ps');
-  const isNin  = model === 'nintendo';
 
   if (isPs) {
     const psNames = {
@@ -128,28 +127,6 @@ function getButtonLabel(model, index) {
       17: 'Share Button',
     };
     return xbNames[index] || `Botón ${index}`;
-  } else if (isNin) {
-    const ninNames = {
-      0: 'B Button',
-      1: 'A Button',
-      2: 'Y Button',
-      3: 'X Button',
-      4: 'L (Bumper)',
-      5: 'R (Bumper)',
-      6: 'ZL (Gatillo)',
-      7: 'ZR (Gatillo)',
-      8: 'Minus (-)',
-      9: 'Plus (+)',
-      10: 'Stick L Click',
-      11: 'Stick R Click',
-      12: 'D-Pad Arriba',
-      13: 'D-Pad Abajo',
-      14: 'D-Pad Izquierda',
-      15: 'D-Pad Derecha',
-      16: 'Home',
-      17: 'Capture',
-    };
-    return ninNames[index] || `Botón ${index}`;
   }
   return BTN_NAMES[index] || `Botón ${index}`;
 }
@@ -190,11 +167,6 @@ function detectController(gp) {
     return 'ps3';
   }
 
-  // Nintendo Switch Pro / Joy-Cons
-  if (ids.includes('pro controller') || ids.includes('joy-con') || vid === '057e') {
-    return 'nintendo';
-  }
-
   // Xbox Series S / Series X
   if (ids.includes('series') || ids.includes('0b12') || ids.includes('0b13')) {
     return 'xbox-series-s';
@@ -221,7 +193,6 @@ function getControllerDisplayName(m) {
     'ps2': 'PlayStation 2 (DualShock 2)',
     'xbox-series-s': 'Xbox Series S / X',
     'xbox-one': 'Xbox One / 360',
-    'nintendo': 'Nintendo Switch Pro',
     'generic': 'Mando USB Genérico',
     'raw': 'Modo RAW (DirectInput / Sin Mapeo)'
   };
