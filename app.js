@@ -520,6 +520,7 @@ function getControllerFriendlyName(model) {
     'ps4': 'PlayStation 4 (DualShock 4)',
     'ps3': 'PlayStation 3 (DualShock 3)',
     'ps2': 'PlayStation 2 (DualShock 2)',
+    'xbox': 'Xbox (Series / One / 360)',
     'xbox-series-s': 'Xbox Series X|S',
     'xbox-one': 'Xbox One',
     'generic': 'Mando Genérico'
@@ -533,12 +534,59 @@ function getControllerFriendlyName(model) {
 function detectControllerModel(id = '', mapping = '') {
   const s = id.toLowerCase();
 
+  // PS5
   if (s.includes('dualsense') || s.includes('0ce6') || s.includes('0df2')) return 'ps5';
+
+  // PS4
   if (s.includes('dualshock 4') || s.includes('wireless controller') || s.includes('05c4') || s.includes('09cc')) return 'ps4';
-  if (s.includes('ps3') || s.includes('playstation 3') || s.includes('dualshock 3') || s.includes('0268')) return 'ps3';
-  if (s.includes('ps2') || s.includes('playstation 2') || s.includes('ps creator') || s.includes('twin usb')) return 'ps2';
-  if (s.includes('series') || s.includes('0b12') || s.includes('0b13') || s.includes('xbox wireless')) return 'xbox-series-s';
-  if (s.includes('xbox') || s.includes('xinput') || s.includes('360') || s.includes('045e')) return 'xbox-one';
+
+  // PS3
+  if (s.includes('ps3') || s.includes('playstation 3') || s.includes('dualshock 3') || s.includes('0268') || s.includes('054c:0268')) return 'ps3';
+
+  // PS2 & PS2-to-USB Adapters:
+  // PS2 controllers use USB adapters with hardware IDs or generic names:
+  // - "Twin USB Joystick" / "Twin USB" (VID: 0810, PID: 0001)
+  // - "DragonRise Inc. Generic USB" (VID: 0079)
+  // - "GreenAsia Inc. USB" (VID: 0e8f)
+  // - "Mayflash" (VID: 11ff / 0b43)
+  // - "ShanWan" / "PS Creator" / "TigerGame" / "Vibration Joystick"
+  // - Hardware IDs: 0810, 0079, 0e8f, 11ff, 2563, 0b43, 1345
+  if (
+    s.includes('ps2') ||
+    s.includes('playstation 2') ||
+    s.includes('dualshock 2') ||
+    s.includes('ps creator') ||
+    s.includes('twin usb') ||
+    s.includes('dragonrise') ||
+    s.includes('greenasia') ||
+    s.includes('mayflash') ||
+    s.includes('shanwan') ||
+    s.includes('tigergame') ||
+    s.includes('vibration joystick') ||
+    s.includes('0810') ||
+    s.includes('0079') ||
+    s.includes('0e8f') ||
+    s.includes('11ff') ||
+    s.includes('2563') ||
+    s.includes('0b43') ||
+    s.includes('1345')
+  ) return 'ps2';
+
+  // Unified Xbox (Xbox Series, Xbox One, Xbox 360, XInput)
+  if (
+    s.includes('xbox') ||
+    s.includes('xinput') ||
+    s.includes('360') ||
+    s.includes('series') ||
+    s.includes('045e') ||
+    s.includes('0b12') ||
+    s.includes('0b13')
+  ) return 'xbox';
+
+  // Fallback for generic USB adapters (many cheap PS2-to-USB converters report as "usb gamepad" or "generic usb joystick")
+  if (s.includes('usb gamepad') || s.includes('generic usb') || s.includes('usb joystick')) {
+    return 'ps2';
+  }
 
   return 'generic';
 }

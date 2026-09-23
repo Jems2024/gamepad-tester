@@ -590,3 +590,5 @@ const CONTROLLER_SVGS = {
 </svg>
 `
 };
+
+CONTROLLER_TEMPLATES['xbox'] = CONTROLLER_TEMPLATES['xbox-one'];
