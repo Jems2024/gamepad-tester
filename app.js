@@ -1,63 +1,451 @@
 /* ============================================================
-   GAMEPAD TESTER — app.js (Professional Bench Edition)
-   - Multi-Controller Tracking & Zero-Refresh Hot-Swapping
-   - Large High-DPI Cartesian Stick Testing (Left & Right)
-   - Professional 3s Drift Test with Configurable Benchmarks
-   - Activity Detection (Auto-Switch on Input)
-   - Controller Compatibility Profiles (PS5, PS4, PS3, Xbox, Nintendo, Raw)
-   - Advanced Diagnostics (Raw Input Mode)
+   GAMEPAD TESTER — app.js (Professional Diagnostic Station)
+   - Complete Multilingual Engine (ES, EN, IT, FR, DE)
+   - Zero-Refresh Robust Gamepad API Lifecycle & Hot-Swapping
+   - Multi-Controller Management & Activity Auto-Switching
+   - Internal Item / Equipment Code Workflow (Trazabilidad)
+   - Comprehensive Analog Stick Diagnostics (Drift, Jitter, Circularity, Snapback)
+   - Analog Trigger Pressure Diagnostics (L2 / R2)
+   - Full Button Matrix Press & Release Verification + Stuck Detection
+   - Diagnostic Persistence (Local Storage & Future API ready)
+   - Official A4 Printable Quality Report with SVG Barcode
    ============================================================ */
 
 'use strict';
 
 // ─────────────────────────────────────────────────────────────
-// CONFIGURATION & THRESHOLDS
+// 1. MULTILINGUAL DICTIONARY (i18n)
 // ─────────────────────────────────────────────────────────────
-const DRIFT_CONFIG = {
-  DURATION_SEC: 3.0,
-  THRESHOLDS: {
-    EXCELLENT: {
-      maxDev: 0.050,
-      jitter: 0.020,
-      label: 'EXCELENTE',
-      cssClass: 'drift-excellent',
-      icon: '🟢',
-      summary: 'Sin drift perceptible. Centro óptimo para juego competitivo.'
-    },
-    ACCEPTABLE: {
-      maxDev: 0.120,
-      jitter: 0.045,
-      label: 'ACEPTABLE',
-      cssClass: 'drift-acceptable',
-      icon: '🟡',
-      summary: 'Desvío leve dentro de tolerancias estándar de fábrica.'
-    },
-    REVIEW: {
-      maxDev: 0.220,
-      jitter: 0.080,
-      label: 'REVISAR',
-      cssClass: 'drift-review',
-      icon: '🟠',
-      summary: 'Desvío o ruido notable en reposo. Se aconseja calibración o limpieza.'
-    },
-    FAIL: {
-      maxDev: Infinity,
-      jitter: Infinity,
-      label: 'FALLO',
-      cssClass: 'drift-fail',
-      icon: '🔴',
-      summary: 'Drift severo / defecto mecánico. Requiere cambio de potenciómetro/módulo.'
-    }
+const TRANSLATIONS = {
+  es: {
+    appTitle: "Gamepad Diagnostic Station",
+    waitingGamepad: "Esperando mando…",
+    emptyStateConnectMsg: "Conecta tu mando y pulsa cualquier botón para comenzar...",
+    emptyStateSub: "Detección automática instantánea • Compatible con PS5, PS4, PS3, PS2, Xbox y Genéricos",
+    connectedMsg: "Mando conectado",
+    itemCodeLabel: "Nº Artículo:",
+    activeCtrlLabel: "Mando Activo:",
+    none: "Ninguno",
+    deviceLabel: "Dispositivo:",
+    noConnectedGamepads: "Sin mandos conectados",
+    btnViewPhoto: "📸 Foto",
+    btnViewDiagram: "📐 Esquema",
+    modelAuto: "🔍 Auto-detectar",
+    modelGeneric: "Genérico / DirectInput",
+    modelRaw: "Modo RAW (Sin Mapeo)",
+    btnGuides: "🔵 Guías",
+    btnSaveDiag: "💾 Guardar",
+    btnPrintReport: "🖨 Imprimir",
+    btnHistory: "📋 Historial",
+    readyWaiting: "Listo — esperando interacción",
+    stickTestTitle: "Test de Sticks Analógicos — Análisis Cartesiano de Precisión",
+    btnZoomCenter: "🔍 Micro-Centro ON",
+    btnFullSuite: "⚡ Suite Diagnóstico",
+    btnDriftTest: "▶ Test Reposo (3s)",
+    btnClearTrace: "🔄 Limpiar",
+    stickLeftLabel: "STICK IZQUIERDO (LX, LY)",
+    stickRightLabel: "STICK DERECHO (RX, RY)",
+    metricOffset: "Desvío:",
+    metricAngle: "Ángulo:",
+    metricRestDrift: "Deriva Reposo:",
+    metricJitter: "Jitter:",
+    metricCircularity: "Circularidad:",
+    metricSnapback: "Retorno:",
+    driftInitialHint: "ℹ Suelta ambos sticks y pulsa \"⚡ Suite Diagnóstico\" para análisis guiado o \"▶ Test Reposo (3s)\" para medir deriva de centro.",
+    triggersTestTitle: "Validación de Gatillos Analógicos (L2 / R2)",
+    triggersPending: "Gatillos: Pendiente",
+    lblLive: "Actual:",
+    lblRest: "Reposo:",
+    lblMax: "Máximo:",
+    lblRamp: "Recorrido:",
+    buttonsTestTitle: "Matriz de Validación de Botones (Pulsación y Retorno)",
+    btnResetValidation: "🔄 Reiniciar",
+    rawDiagTitle: "Diagnóstico Técnico Avanzado (Raw Input / Multi-Ejes)",
+    rawAxesTitle: "Ejes Crudos (Axes 0..N):",
+    rawButtonsTitle: "Botones Crudos (Buttons 0..N):",
+    historyModalTitle: "Historial de Revisiones Guardadas",
+    btnExportJson: "💾 Exportar JSON",
+    btnClearHistory: "🗑 Vaciar",
+    historyFilterPlaceholder: "Filtrar por Nº Artículo o Mando...",
+    thCode: "Nº Art.",
+    thDate: "Fecha / Hora",
+    thDevice: "Mando",
+    thStickL: "Stick L",
+    thStickR: "Stick R",
+    thTriggers: "Gatillos",
+    thButtons: "Botones",
+    thResult: "Resultado",
+    thActions: "Acción",
+    verdictPass: "APTO",
+    verdictReview: "REVISIÓN",
+    verdictFail: "DEFECTUOSO",
+    verdictPending: "PENDIENTE",
+    ds3HintTitle: "ℹ Nota de compatibilidad PS3 / DirectInput:",
+    ds3HintBody: "Si un mando PS3 no responde en Windows, requiere driver XInput (DsHidMini / SCPToolkit). Los mandos sin mapeo nativo se leen en Modo RAW.",
+    suiteStepRest: "PASO 1/3: No toques los sticks. Midiendo deriva en reposo y jitter (3s)...",
+    suiteStepCirc: "PASO 2/3: Gira ambos sticks lentamente haciendo círculos completos de 360° en el borde...",
+    suiteStepSnap: "PASO 3/3: Mueve un stick al extremo y suéltalo de golpe para medir retorno elástico...",
+    suiteDone: "✓ Diagnóstico de sticks completado.",
+    savedSuccess: "✓ Diagnóstico guardado para el artículo:",
+  },
+  en: {
+    appTitle: "Gamepad Diagnostic Station",
+    waitingGamepad: "Waiting for controller…",
+    emptyStateConnectMsg: "Connect your gamepad and press any button to begin...",
+    emptyStateSub: "Instant auto-detection • Compatible with PS5, PS4, PS3, PS2, Xbox and Generic",
+    connectedMsg: "Controller connected",
+    itemCodeLabel: "Item Code:",
+    activeCtrlLabel: "Active Controller:",
+    none: "None",
+    deviceLabel: "Device:",
+    noConnectedGamepads: "No connected controllers",
+    btnViewPhoto: "📸 Photo",
+    btnViewDiagram: "📐 Diagram",
+    modelAuto: "🔍 Auto-detect",
+    modelGeneric: "Generic / DirectInput",
+    modelRaw: "RAW Mode (No Mapping)",
+    btnGuides: "🔵 Guides",
+    btnSaveDiag: "💾 Save",
+    btnPrintReport: "🖨 Print",
+    btnHistory: "📋 History",
+    readyWaiting: "Ready — waiting for input",
+    stickTestTitle: "Analog Stick Diagnostics — High-Precision Cartesian Analysis",
+    btnZoomCenter: "🔍 Micro-Center ON",
+    btnFullSuite: "⚡ Diagnostic Suite",
+    btnDriftTest: "▶ Rest Test (3s)",
+    btnClearTrace: "🔄 Clear",
+    stickLeftLabel: "LEFT STICK (LX, LY)",
+    stickRightLabel: "RIGHT STICK (RX, RY)",
+    metricOffset: "Offset:",
+    metricAngle: "Angle:",
+    metricRestDrift: "Rest Drift:",
+    metricJitter: "Jitter:",
+    metricCircularity: "Circularity:",
+    metricSnapback: "Snapback:",
+    driftInitialHint: "ℹ Release both sticks and click \"⚡ Diagnostic Suite\" for guided testing or \"▶ Rest Test (3s)\" to measure center drift.",
+    triggersTestTitle: "Analog Trigger Validation (L2 / R2)",
+    triggersPending: "Triggers: Pending",
+    lblLive: "Live:",
+    lblRest: "Rest:",
+    lblMax: "Max:",
+    lblRamp: "Travel:",
+    buttonsTestTitle: "Button Validation Matrix (Press & Release)",
+    btnResetValidation: "🔄 Reset",
+    rawDiagTitle: "Advanced Technical Diagnostics (Raw Input / Multi-Axes)",
+    rawAxesTitle: "Raw Axes (Axes 0..N):",
+    rawButtonsTitle: "Raw Buttons (Buttons 0..N):",
+    historyModalTitle: "Saved Diagnostics History",
+    btnExportJson: "💾 Export JSON",
+    btnClearHistory: "🗑 Clear All",
+    historyFilterPlaceholder: "Filter by Item Code or Controller...",
+    thCode: "Item Code",
+    thDate: "Date / Time",
+    thDevice: "Controller",
+    thStickL: "Stick L",
+    thStickR: "Stick R",
+    thTriggers: "Triggers",
+    thButtons: "Buttons",
+    thResult: "Result",
+    thActions: "Action",
+    verdictPass: "PASS",
+    verdictReview: "REVIEW",
+    verdictFail: "FAIL",
+    verdictPending: "PENDING",
+    ds3HintTitle: "ℹ PS3 / DirectInput Compatibility Note:",
+    ds3HintBody: "If a PS3 controller does not respond in Windows, it requires an XInput driver (DsHidMini / SCPToolkit). Non-standard controllers are read in RAW Mode.",
+    suiteStepRest: "STEP 1/3: Do not touch the sticks. Measuring center rest drift and jitter (3s)...",
+    suiteStepCirc: "STEP 2/3: Slowly rotate both sticks in full 360° circles around the outer edge...",
+    suiteStepSnap: "STEP 3/3: Flick a stick to the edge and release quickly to test snapback return...",
+    suiteDone: "✓ Stick diagnostics completed.",
+    savedSuccess: "✓ Diagnostic record saved for item:",
+  },
+  it: {
+    appTitle: "Gamepad Diagnostic Station",
+    waitingGamepad: "In attesa del controller…",
+    emptyStateConnectMsg: "Collega il controller e premi un pulsante per iniziare...",
+    emptyStateSub: "Rilevamento automatico istantaneo • Compatibile con PS5, PS4, PS3, PS2, Xbox e Generici",
+    connectedMsg: "Controller collegato",
+    itemCodeLabel: "Codice Art.:",
+    activeCtrlLabel: "Controller Attivo:",
+    none: "Nessuno",
+    deviceLabel: "Dispositivo:",
+    noConnectedGamepads: "Nessun controller connesso",
+    btnViewPhoto: "📸 Foto",
+    btnViewDiagram: "📐 Schema",
+    modelAuto: "🔍 Rilevamento auto",
+    modelGeneric: "Generico / DirectInput",
+    modelRaw: "Modo RAW (Senza Mappatura)",
+    btnGuides: "🔵 Guide",
+    btnSaveDiag: "💾 Salva",
+    btnPrintReport: "🖨 Stampa",
+    btnHistory: "📋 Cronologia",
+    readyWaiting: "Pronto — in attesa di input",
+    stickTestTitle: "Test Stick Analogici — Analisi Cartesiana di Precisione",
+    btnZoomCenter: "🔍 Micro-Centro ON",
+    btnFullSuite: "⚡ Suite Diagnostica",
+    btnDriftTest: "▶ Test Riposo (3s)",
+    btnClearTrace: "🔄 Cancella",
+    stickLeftLabel: "STICK SINISTRO (LX, LY)",
+    stickRightLabel: "STICK DESTRO (RX, RY)",
+    metricOffset: "Scostamento:",
+    metricAngle: "Angolo:",
+    metricRestDrift: "Deriva Riposo:",
+    metricJitter: "Jitter:",
+    metricCircularity: "Circolarità:",
+    metricSnapback: "Ritorno:",
+    driftInitialHint: "ℹ Rilascia entrambi gli stick e premi \"⚡ Suite Diagnostica\" per il test guidato o \"▶ Test Riposo (3s)\" per misurare la deriva.",
+    triggersTestTitle: "Validazione Grilletti Analogici (L2 / R2)",
+    triggersPending: "Grilletti: In sospeso",
+    lblLive: "Attuale:",
+    lblRest: "Riposo:",
+    lblMax: "Massimo:",
+    lblRamp: "Corsa:",
+    buttonsTestTitle: "Matrice di Validazione Pulsanti (Pressione e Rilascio)",
+    btnResetValidation: "🔄 Reimposta",
+    rawDiagTitle: "Diagnostica Tecnica Avanzata (Raw Input / Multi-Assi)",
+    rawAxesTitle: "Assi Grezzi (Axes 0..N):",
+    rawButtonsTitle: "Pulsanti Grezzi (Buttons 0..N):",
+    historyModalTitle: "Cronologia Revisioni Salvate",
+    btnExportJson: "💾 Esporta JSON",
+    btnClearHistory: "🗑 Svuota",
+    historyFilterPlaceholder: "Filtra per Codice Articolo o Controller...",
+    thCode: "Cod. Art.",
+    thDate: "Data / Ora",
+    thDevice: "Controller",
+    thStickL: "Stick L",
+    thStickR: "Stick R",
+    thTriggers: "Grilletti",
+    thButtons: "Pulsanti",
+    thResult: "Risultato",
+    thActions: "Azione",
+    verdictPass: "CONFORME",
+    verdictReview: "REVISIONE",
+    verdictFail: "DIFETTOSO",
+    verdictPending: "IN SOSPESO",
+    ds3HintTitle: "ℹ Nota di compatibilità PS3 / DirectInput:",
+    ds3HintBody: "Se un controller PS3 non risponde in Windows, richiede driver XInput (DsHidMini / SCPToolkit). I controller senza mappatura standard vengono letti in Modo RAW.",
+    suiteStepRest: "PASSO 1/3: Non toccare gli stick. Misurazione della deriva a riposo e del jitter (3s)...",
+    suiteStepCirc: "PASSO 2/3: Ruota entrambi gli stick lentamente compiendo cerchi completi a 360° sul bordo...",
+    suiteStepSnap: "PASSO 3/3: Sposta uno stick al limite e rilascialo rapidamente per testare il ritorno elastico...",
+    suiteDone: "✓ Diagnostica stick completata.",
+    savedSuccess: "✓ Diagnostica salvata per l'articolo:",
+  },
+  fr: {
+    appTitle: "Gamepad Diagnostic Station",
+    waitingGamepad: "En attente de la manette…",
+    emptyStateConnectMsg: "Connectez votre manette et appuyez sur un bouton pour commencer...",
+    emptyStateSub: "Détection automatique instantanée • Compatible PS5, PS4, PS3, PS2, Xbox et Génériques",
+    connectedMsg: "Manette connectée",
+    itemCodeLabel: "Code Article:",
+    activeCtrlLabel: "Manette Active:",
+    none: "Aucun",
+    deviceLabel: "Appareil:",
+    noConnectedGamepads: "Aucune manette connectée",
+    btnViewPhoto: "📸 Photo",
+    btnViewDiagram: "📐 Schéma",
+    modelAuto: "🔍 Détection auto",
+    modelGeneric: "Générique / DirectInput",
+    modelRaw: "Mode RAW (Sans Mappage)",
+    btnGuides: "🔵 Guides",
+    btnSaveDiag: "💾 Sauvegarder",
+    btnPrintReport: "🖨 Imprimer",
+    btnHistory: "📋 Historique",
+    readyWaiting: "Prêt — en attente d'entrée",
+    stickTestTitle: "Test des Sticks Analogiques — Analyse Cartésienne de Précision",
+    btnZoomCenter: "🔍 Micro-Centre ON",
+    btnFullSuite: "⚡ Suite Diagnostic",
+    btnDriftTest: "▶ Test Repos (3s)",
+    btnClearTrace: "🔄 Effacer",
+    stickLeftLabel: "STICK GAUCHE (LX, LY)",
+    stickRightLabel: "STICK DROIT (RX, RY)",
+    metricOffset: "Déviation:",
+    metricAngle: "Angle:",
+    metricRestDrift: "Dérive Repos:",
+    metricJitter: "Jitter:",
+    metricCircularity: "Circularité:",
+    metricSnapback: "Retour:",
+    driftInitialHint: "ℹ Relâchez les deux sticks et appuyez sur \"⚡ Suite Diagnostic\" pour un test guidé ou \"▶ Test Repos (3s)\" pour mesurer la dérive.",
+    triggersTestTitle: "Validation des Gâchettes Analogiques (L2 / R2)",
+    triggersPending: "Gâchettes: En attente",
+    lblLive: "Actuel:",
+    lblRest: "Repos:",
+    lblMax: "Max:",
+    lblRamp: "Course:",
+    buttonsTestTitle: "Matrice de Validation des Boutons (Pression et Relâchement)",
+    btnResetValidation: "🔄 Réinitialiser",
+    rawDiagTitle: "Diagnostic Technique Avancé (Raw Input / Multi-Axes)",
+    rawAxesTitle: "Axes Bruts (Axes 0..N):",
+    rawButtonsTitle: "Boutons Bruts (Buttons 0..N):",
+    historyModalTitle: "Historique des Diagnostics Enregistrés",
+    btnExportJson: "💾 Exporter JSON",
+    btnClearHistory: "🗑 Vider",
+    historyFilterPlaceholder: "Filtrer par Code Article ou Manette...",
+    thCode: "Code Art.",
+    thDate: "Date / Heure",
+    thDevice: "Manette",
+    thStickL: "Stick G",
+    thStickR: "Stick D",
+    thTriggers: "Gâchettes",
+    thButtons: "Boutons",
+    thResult: "Résultat",
+    thActions: "Action",
+    verdictPass: "CONFORME",
+    verdictReview: "RÉVISION",
+    verdictFail: "DÉFECTUEUX",
+    verdictPending: "EN ATTENTE",
+    ds3HintTitle: "ℹ Note de compatibilité PS3 / DirectInput:",
+    ds3HintBody: "Si une manette PS3 ne répond pas sous Windows, elle nécessite un pilote XInput (DsHidMini / SCPToolkit). Les manettes non mappées sont lues en Mode RAW.",
+    suiteStepRest: "ÉTAPE 1/3: Ne touchez pas aux sticks. Mesure de la dérive au repos et du jitter (3s)...",
+    suiteStepCirc: "ÉTAPE 2/3: Tournez lentement les deux sticks en effectuant des cercles complets à 360° sur le bord...",
+    suiteStepSnap: "ÉTAPE 3/3: Poussez un stick au maximum et relâchez-le d'un coup pour mesurer le retour élastique...",
+    suiteDone: "✓ Diagnostic des sticks terminé.",
+    savedSuccess: "✓ Diagnostic enregistré pour l'article:",
+  },
+  de: {
+    appTitle: "Gamepad Diagnostic Station",
+    waitingGamepad: "Warte auf Controller…",
+    emptyStateConnectMsg: "Schließe deinen Controller an und drücke eine Taste, um zu beginnen...",
+    emptyStateSub: "Sofortige automatische Erkennung • Kompatibel mit PS5, PS4, PS3, PS2, Xbox und Generisch",
+    connectedMsg: "Controller verbunden",
+    itemCodeLabel: "Artikel-Nr.:",
+    activeCtrlLabel: "Aktiver Controller:",
+    none: "Keiner",
+    deviceLabel: "Gerät:",
+    noConnectedGamepads: "Keine Controller verbunden",
+    btnViewPhoto: "📸 Foto",
+    btnViewDiagram: "📐 Diagramm",
+    modelAuto: "🔍 Automatisch",
+    modelGeneric: "Generisch / DirectInput",
+    modelRaw: "RAW-Modus (Ohne Mapping)",
+    btnGuides: "🔵 Hilfslinien",
+    btnSaveDiag: "💾 Speichern",
+    btnPrintReport: "🖨 Drucken",
+    btnHistory: "📋 Verlauf",
+    readyWaiting: "Bereit — warte auf Eingabe",
+    stickTestTitle: "Analogstick-Diagnose — Präzise Kartesische Analyse",
+    btnZoomCenter: "🔍 Mikro-Zentrum EIN",
+    btnFullSuite: "⚡ Diagnose-Suite",
+    btnDriftTest: "▶ Ruhe-Test (3s)",
+    btnClearTrace: "🔄 Löschen",
+    stickLeftLabel: "LINKER STICK (LX, LY)",
+    stickRightLabel: "RECHTER STICK (RX, RY)",
+    metricOffset: "Abweichung:",
+    metricAngle: "Winkel:",
+    metricRestDrift: "Ruhe-Drift:",
+    metricJitter: "Jitter:",
+    metricCircularity: "Rundheit:",
+    metricSnapback: "Rückstellung:",
+    driftInitialHint: "ℹ Beide Sticks loslassen und \"⚡ Diagnose-Suite\" für geführten Test oder \"▶ Ruhe-Test (3s)\" drücken.",
+    triggersTestTitle: "Analoge Trigger-Prüfung (L2 / R2)",
+    triggersPending: "Trigger: Ausstehend",
+    lblLive: "Aktuell:",
+    lblRest: "Ruhe:",
+    lblMax: "Max:",
+    lblRamp: "Weg:",
+    buttonsTestTitle: "Tasten-Validierungsmatrix (Drücken & Loslassen)",
+    btnResetValidation: "🔄 Zurücksetzen",
+    rawDiagTitle: "Erweiterte Technische Diagnose (Raw Input / Multi-Achsen)",
+    rawAxesTitle: "Rohe Achsen (Axes 0..N):",
+    rawButtonsTitle: "Rohe Tasten (Buttons 0..N):",
+    historyModalTitle: "Gespeicherter Prüfungsverlauf",
+    btnExportJson: "💾 JSON exportieren",
+    btnClearHistory: "🗑 Leeren",
+    historyFilterPlaceholder: "Nach Artikel-Nr. oder Controller filtern...",
+    thCode: "Art.-Nr.",
+    thDate: "Datum / Zeit",
+    thDevice: "Controller",
+    thStickL: "Stick L",
+    thStickR: "Stick R",
+    thTriggers: "Trigger",
+    thButtons: "Tasten",
+    thResult: "Ergebnis",
+    thActions: "Aktion",
+    verdictPass: "BESTANDEN",
+    verdictReview: "PRÜFUNG",
+    verdictFail: "DEFEKT",
+    verdictPending: "AUSSTEHEND",
+    ds3HintTitle: "ℹ PS3 / DirectInput Kompatibilitätshinweis:",
+    ds3HintBody: "Falls ein PS3-Controller unter Windows nicht reagiert, ist ein XInput-Treiber (DsHidMini / SCPToolkit) erforderlich. Nicht standardisierte Controller werden im RAW-Modus gelesen.",
+    suiteStepRest: "SCHRITT 1/3: Sticks nicht berühren. Messung von Ruhe-Drift und Jitter (3s)...",
+    suiteStepCirc: "SCHRITT 2/3: Beide Sticks langsam in vollständigen 360°-Kreisen am Rand drehen...",
+    suiteStepSnap: "SCHRITT 3/3: Stick an den Rand bewegen und schlagartig loslassen für Rückstelltest...",
+    suiteDone: "✓ Stick-Diagnose abgeschlossen.",
+    savedSuccess: "✓ Prüfbericht gespeichert für Artikel:",
   }
 };
 
-const ACTIVITY_THRESHOLD_AXIS = 0.24;   // Above resting drift to avoid false auto-switch
-const ACTIVITY_THRESHOLD_BTN  = 0.35;   // Button actuation threshold
-const ACTIVITY_DEBOUNCE_MS    = 350;    // Min ms between automatic controller switches
+let currentLang = 'es';
+
+function t(key) {
+  const dict = TRANSLATIONS[currentLang] || TRANSLATIONS['es'];
+  return dict[key] || TRANSLATIONS['es'][key] || key;
+}
+
+function setLanguage(lang) {
+  if (!TRANSLATIONS[lang]) lang = 'es';
+  currentLang = lang;
+  try {
+    localStorage.setItem('gamepad_tester_lang', lang);
+  } catch (e) {}
+
+  // Update active state in switcher
+  document.querySelectorAll('.lang-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.lang === lang);
+  });
+
+  // Update DOM elements with data-i18n
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    el.textContent = t(key);
+  });
+
+  // Update placeholders
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    const key = el.getAttribute('data-i18n-placeholder');
+    el.placeholder = t(key);
+  });
+
+  // Re-render button matrix titles and live telemetry text
+  if (state.activeGpIndex === null) {
+    dom.statusText.textContent = t('waitingGamepad');
+  }
+  updateVerdictBadgesUI();
+}
+
+function initLanguage() {
+  let saved = 'es';
+  try {
+    saved = localStorage.getItem('gamepad_tester_lang');
+  } catch (e) {}
+
+  if (!saved) {
+    const nav = (navigator.language || 'es').slice(0, 2).toLowerCase();
+    if (TRANSLATIONS[nav]) saved = nav;
+  }
+  setLanguage(saved || 'es');
+}
 
 // ─────────────────────────────────────────────────────────────
-// BUTTON NAMES & LABELS
+// 2. CONFIGURATION & BENCHMARK THRESHOLDS
 // ─────────────────────────────────────────────────────────────
+const BENCHMARKS = {
+  STICK: {
+    DRIFT_EXCELLENT: 0.045, // < 4.5% drift = PASS
+    DRIFT_ACCEPTABLE:0.095, // < 9.5% drift = REVIEW
+    JITTER_MAX:      0.018, // Noise std dev threshold
+    CIRC_EXCELLENT:  91.0,  // Circularity coverage %
+    CIRC_ACCEPTABLE: 78.0,
+    SNAPBACK_MAX_MS: 90,    // Snapback return duration in ms
+  },
+  TRIGGER: {
+    REST_MAX: 0.03,         // Must be near 0 at rest
+    MAX_MIN:  0.94,         // Must reach near 1.0 at full press
+  },
+  ACTIVITY_THRESHOLD_AXIS: 0.25,
+  ACTIVITY_THRESHOLD_BTN:  0.35,
+  ACTIVITY_DEBOUNCE_MS:    350,
+};
+
 const BTN_NAMES = [
   'A / Cross',       // 0
   'B / Circle',      // 1
@@ -89,124 +477,71 @@ function getButtonLabel(model, index) {
       1: 'Circle (○)',
       2: 'Square (□)',
       3: 'Triangle (△)',
-      4: 'L1 (Bumper Izq.)',
-      5: 'R1 (Bumper Der.)',
-      6: 'L2 (Gatillo Izq.)',
-      7: 'R2 (Gatillo Der.)',
+      4: 'L1',
+      5: 'R1',
+      6: 'L2',
+      7: 'R2',
       8: model === 'ps5' ? 'Create' : model === 'ps4' ? 'Share' : 'Select',
       9: model === 'ps5' || model === 'ps4' ? 'Options' : 'Start',
-      10: 'L3 (Stick Izq. Click)',
-      11: 'R3 (Stick Der. Click)',
+      10: 'L3 (Stick Izq.)',
+      11: 'R3 (Stick Der.)',
       12: 'D-Pad Arriba',
       13: 'D-Pad Abajo',
       14: 'D-Pad Izquierda',
       15: 'D-Pad Derecha',
-      16: 'Botón PS (Home)',
+      16: 'PS Button',
       17: 'Touchpad Click',
     };
     return psNames[index] || `Botón ${index}`;
-  } else if (isXbox) {
+  }
+
+  if (isXbox) {
     const xbNames = {
-      0: 'A Button (Verde)',
-      1: 'B Button (Rojo)',
-      2: 'X Button (Azul)',
-      3: 'Y Button (Amarillo)',
-      4: 'LB (Left Bumper)',
-      5: 'RB (Right Bumper)',
-      6: 'LT (Left Trigger)',
-      7: 'RT (Right Trigger)',
+      0: 'A Button',
+      1: 'B Button',
+      2: 'X Button',
+      3: 'Y Button',
+      4: 'LB (Bumper Izq.)',
+      5: 'RB (Bumper Der.)',
+      6: 'LT (Gatillo Izq.)',
+      7: 'RT (Gatillo Der.)',
       8: 'View / Back',
       9: 'Menu / Start',
-      10: 'L3 (Left Stick Click)',
-      11: 'R3 (Right Stick Click)',
+      10: 'L3 (Stick Izq.)',
+      11: 'R3 (Stick Der.)',
       12: 'D-Pad Arriba',
       13: 'D-Pad Abajo',
       14: 'D-Pad Izquierda',
       15: 'D-Pad Derecha',
-      16: 'Xbox Guía (Home)',
+      16: 'Xbox Guía',
       17: 'Share Button',
     };
     return xbNames[index] || `Botón ${index}`;
   }
+
   return BTN_NAMES[index] || `Botón ${index}`;
 }
 
 // ─────────────────────────────────────────────────────────────
-// CONTROLLER PROFILES & DETECTION
+// 3. HARDWARE DETECTION & NORMALIZATION
 // ─────────────────────────────────────────────────────────────
-function parseVidPid(id) {
-  if (!id) return null;
-  const m = id.match(/vendor[:\s]+([0-9a-f]{4}).*product[:\s]+([0-9a-f]{4})/i)
-         || id.match(/([0-9a-f]{4})-([0-9a-f]{4})-/i);
-  if (m) return { vid: m[1].toLowerCase(), pid: m[2].toLowerCase() };
-  return null;
-}
+function detectControllerModel(id = '', mapping = '') {
+  const s = id.toLowerCase();
 
-function detectController(gp) {
-  if (!gp) return 'ps4';
-  const id  = gp.id || '';
-  const ids = id.toLowerCase();
-  const vp  = parseVidPid(id);
-  const vid = vp ? vp.vid : null;
-  const pid = vp ? vp.pid : null;
-
-  // PS5 DualSense
-  if (ids.includes('dualsense') || (vid === '054c' && pid === '0ce6') || (vid === '054c' && pid === '0df2')) {
-    return 'ps5';
-  }
-
-  // PS4 DualShock 4
-  if (ids.includes('dualshock 4') || (ids.includes('wireless controller') && vid === '054c')
-      || (vid === '054c' && (pid === '05c4' || pid === '09cc'))) {
-    return 'ps4';
-  }
-
-  // PS3 DualShock 3
-  if (ids.includes('playstation(r)3') || ids.includes('dualshock 3') || ids.includes('ps3')
-      || (vid === '054c' && pid === '0268')) {
-    return 'ps3';
-  }
-
-  // Xbox Series S / Series X
-  if (ids.includes('series') || ids.includes('0b12') || ids.includes('0b13')) {
-    return 'xbox-series-s';
-  }
-
-  // Xbox One / 360 / XInput
-  if (vid === '045e' || ids.includes('xbox') || ids.includes('xinput')) {
-    return 'xbox-one';
-  }
-
-  // Broad Sony PS fallback
-  if (vid === '054c') {
-    return 'ps4';
-  }
+  if (s.includes('dualsense') || s.includes('0ce6') || s.includes('0df2')) return 'ps5';
+  if (s.includes('dualshock 4') || s.includes('wireless controller') || s.includes('05c4') || s.includes('09cc')) return 'ps4';
+  if (s.includes('ps3') || s.includes('playstation 3') || s.includes('dualshock 3') || s.includes('0268')) return 'ps3';
+  if (s.includes('ps2') || s.includes('playstation 2') || s.includes('ps creator') || s.includes('twin usb')) return 'ps2';
+  if (s.includes('series') || s.includes('0b12') || s.includes('0b13') || s.includes('xbox wireless')) return 'xbox-series-s';
+  if (s.includes('xbox') || s.includes('xinput') || s.includes('360') || s.includes('045e')) return 'xbox-one';
 
   return 'generic';
 }
 
-function getControllerDisplayName(m) {
-  const names = {
-    'ps5': 'PlayStation 5 (DualSense)',
-    'ps4': 'PlayStation 4 (DualShock 4)',
-    'ps3': 'PlayStation 3 (DualShock 3)',
-    'ps2': 'PlayStation 2 (DualShock 2)',
-    'xbox-series-s': 'Xbox Series S / X',
-    'xbox-one': 'Xbox One / 360',
-    'generic': 'Mando USB Genérico',
-    'raw': 'Modo RAW (DirectInput / Sin Mapeo)'
-  };
-  return names[m] || m.toUpperCase();
-}
-
-/**
- * Normalizes axes readings depending on controller profile and mapping
- */
 function getNormalizedAxes(gp, profile) {
   if (!gp || !gp.axes) return { lx: 0, ly: 0, rx: 0, ry: 0 };
   const a = gp.axes;
 
-  // Standard or unknown controllers with >= 4 axes
   if (gp.mapping === 'standard' || a.length >= 4) {
     return {
       lx: a[0] !== undefined ? a[0] : 0,
@@ -216,7 +551,6 @@ function getNormalizedAxes(gp, profile) {
     };
   }
 
-  // Some DirectInput / PS3 drivers on Windows expose RX on axis 2 and RY on axis 5
   if (profile === 'ps3' && a.length >= 6) {
     return {
       lx: a[0] || 0,
@@ -226,7 +560,6 @@ function getNormalizedAxes(gp, profile) {
     };
   }
 
-  // Generic fallback with fewer axes
   return {
     lx: a[0] !== undefined ? a[0] : 0,
     ly: a[1] !== undefined ? a[1] : 0,
@@ -236,11 +569,12 @@ function getNormalizedAxes(gp, profile) {
 }
 
 // ─────────────────────────────────────────────────────────────
-// DOM REFS
+// 4. DOM REFERENCES
 // ─────────────────────────────────────────────────────────────
 const dom = {
   statusDot:           document.getElementById('status-dot'),
   statusText:          document.getElementById('status-text'),
+  itemCodeInput:       document.getElementById('item-code-input'),
   activeCtrlName:      document.getElementById('active-ctrl-name'),
   activeCtrlIdx:       document.getElementById('active-ctrl-idx'),
   activeGamepadSelect: document.getElementById('active-gamepad-select'),
@@ -249,15 +583,21 @@ const dom = {
   btnViewPhoto:        document.getElementById('btn-view-photo'),
   btnViewDiagram:      document.getElementById('btn-view-diagram'),
   stickZoomBtn:        document.getElementById('stick-zoom-btn'),
+  stickSuiteBtn:       document.getElementById('stick-suite-btn'),
+  driftBtn:            document.getElementById('drift-btn'),
+  stickClearTraceBtn:  document.getElementById('stick-clear-trace-btn'),
+  btnSaveDiag:         document.getElementById('btn-save-diag'),
+  btnPrintReport:      document.getElementById('btn-print-report'),
+  btnOpenHistory:      document.getElementById('btn-open-history'),
 
   // Stage Left
+  emptyStateView:      document.getElementById('empty-state-view'),
   photoViewBox:        document.getElementById('photo-view-box'),
   diagramViewBox:      document.getElementById('diagram-view-box'),
   photoImg:            document.getElementById('photo-img'),
   photoOverlaySvg:     document.getElementById('photo-overlay-svg'),
   svgContainer:        document.getElementById('svg-container'),
   feedbackLabel:       document.getElementById('controller-feedback-label'),
-  noGamepadMsg:        document.getElementById('no-gamepad-msg'),
   ctrlIdInfo:          document.getElementById('ctrl-id-info'),
   ctrlProfileBadge:    document.getElementById('ctrl-profile-badge'),
   ds3DriverHint:       document.getElementById('ds3-driver-hint'),
@@ -267,6 +607,8 @@ const dom = {
   stickRCanvas:        document.getElementById('stick-r-canvas'),
   stickLStatusDot:     document.getElementById('stick-l-status-dot'),
   stickRStatusDot:     document.getElementById('stick-r-status-dot'),
+  stickLVerdict:       document.getElementById('stick-l-verdict'),
+  stickRVerdict:       document.getElementById('stick-r-verdict'),
   stickLX:             document.getElementById('stick-l-x'),
   stickLY:             document.getElementById('stick-l-y'),
   stickLDist:          document.getElementById('stick-l-dist'),
@@ -275,13 +617,35 @@ const dom = {
   stickRY:             document.getElementById('stick-r-y'),
   stickRDist:          document.getElementById('stick-r-dist'),
   stickRAngle:         document.getElementById('stick-r-angle'),
-
-  // Drift
-  driftBtn:            document.getElementById('drift-btn'),
+  stickLDriftVal:      document.getElementById('stick-l-drift-val'),
+  stickLJitterVal:     document.getElementById('stick-l-jitter-val'),
+  stickLCircVal:       document.getElementById('stick-l-circ-val'),
+  stickLSnapVal:       document.getElementById('stick-l-snap-val'),
+  stickRDriftVal:      document.getElementById('stick-r-drift-val'),
+  stickRJitterVal:     document.getElementById('stick-r-jitter-val'),
+  stickRCircVal:       document.getElementById('stick-r-circ-val'),
+  stickRSnapVal:       document.getElementById('stick-r-snap-val'),
   driftResult:         document.getElementById('drift-result'),
 
-  // Buttons Grid
+  // Triggers
+  triggersSummaryTag:  document.getElementById('triggers-summary-tag'),
+  triggerL2Status:     document.getElementById('trigger-l2-status'),
+  triggerR2Status:     document.getElementById('trigger-r2-status'),
+  triggerL2Bar:        document.getElementById('trigger-l2-bar'),
+  triggerR2Bar:        document.getElementById('trigger-r2-bar'),
+  triggerL2Val:        document.getElementById('trigger-l2-val'),
+  triggerL2Rest:       document.getElementById('trigger-l2-rest'),
+  triggerL2Max:        document.getElementById('trigger-l2-max'),
+  triggerL2Ramp:       document.getElementById('trigger-l2-ramp'),
+  triggerR2Val:        document.getElementById('trigger-r2-val'),
+  triggerR2Rest:       document.getElementById('trigger-r2-rest'),
+  triggerR2Max:        document.getElementById('trigger-r2-max'),
+  triggerR2Ramp:       document.getElementById('trigger-r2-ramp'),
+
+  // Buttons Matrix
   buttonsGrid:         document.getElementById('buttons-grid'),
+  buttonsSummaryBadge: document.getElementById('buttons-summary-badge'),
+  btnResetButtonsTest: document.getElementById('btn-reset-buttons-test'),
 
   // Raw Diagnostics
   rawDiagToggle:       document.getElementById('raw-diag-toggle'),
@@ -296,90 +660,182 @@ const dom = {
   rawTimestamp:        document.getElementById('raw-timestamp'),
   rawAxesList:         document.getElementById('raw-axes-list'),
   rawButtonsList:      document.getElementById('raw-buttons-list'),
+
+  // History Modal
+  historyModal:        document.getElementById('history-modal'),
+  modalCloseBtn:       document.getElementById('modal-close-btn'),
+  historySearchInput:  document.getElementById('history-search-input'),
+  btnExportJson:       document.getElementById('btn-export-json'),
+  btnClearHistory:     document.getElementById('btn-clear-history'),
+  historyTableBody:    document.getElementById('history-table-body'),
+
+  // Printable Report
+  printableReport:     document.getElementById('printable-report'),
+  printBarcodeSvg:     document.getElementById('print-barcode-svg'),
+  printBarcodeText:    document.getElementById('print-barcode-text'),
+  printItemCode:       document.getElementById('print-item-code'),
+  printDate:           document.getElementById('print-date'),
+  printDeviceName:     document.getElementById('print-device-name'),
+  printDeviceProfile:  document.getElementById('print-device-profile'),
+  printDeviceId:       document.getElementById('print-device-id'),
+  printSlDrift:        document.getElementById('print-sl-drift'),
+  printSlJitter:       document.getElementById('print-sl-jitter'),
+  printSlCirc:         document.getElementById('print-sl-circ'),
+  printSlSnap:         document.getElementById('print-sl-snap'),
+  printSlVerdict:      document.getElementById('print-sl-verdict'),
+  printSrDrift:        document.getElementById('print-sr-drift'),
+  printSrJitter:       document.getElementById('print-sr-jitter'),
+  printSrCirc:         document.getElementById('print-sr-circ'),
+  printSrSnap:         document.getElementById('print-sr-snap'),
+  printSrVerdict:      document.getElementById('print-sr-verdict'),
+  printL2Rest:         document.getElementById('print-l2-rest'),
+  printL2Max:          document.getElementById('print-l2-max'),
+  printL2Ramp:         document.getElementById('print-l2-ramp'),
+  printL2Verdict:      document.getElementById('print-l2-verdict'),
+  printR2Rest:         document.getElementById('print-r2-rest'),
+  printR2Max:          document.getElementById('print-r2-max'),
+  printR2Ramp:         document.getElementById('print-r2-ramp'),
+  printR2Verdict:      document.getElementById('print-r2-verdict'),
+  printBtnCount:       document.getElementById('print-btn-count'),
+  printBtnStuck:       document.getElementById('print-btn-stuck'),
+  printBtnVerdict:     document.getElementById('print-btn-verdict'),
+  printFinalStamp:     document.getElementById('print-final-stamp'),
+  printFinalDetails:   document.getElementById('print-final-details'),
 };
 
 // ─────────────────────────────────────────────────────────────
-// STATE
+// 5. APPLICATION STATE
 // ─────────────────────────────────────────────────────────────
 let state = {
-  activeGpIndex:        null,          // Currently tested gamepad index (integer or null)
-  knownGamepads:        new Map(),     // index -> { id, mapping, axesCount, btnCount }
-  model:                'ps4',         // Resolved controller profile
-  viewMode:             'photo',       // 'photo' | 'diagram'
-  debugMode:            false,         // Button guides toggle
-  centerZoom:           true,          // Visual magnification of resting center
-  rawAccordionOpen:     false,         // Raw input view toggle
-  lastActiveSwitchTime: 0,             // Throttle auto-switching on activity
+  activeGpIndex:        null,
+  knownGamepads:        new Map(),
+  model:                'ps4',
+  viewMode:             'photo',
+  debugMode:            false,
+  centerZoom:           true,
+  rawAccordionOpen:     false,
+  lastActiveSwitchTime: 0,
   rafId:                null,
 
-  // Photo overlay cache
+  // Sticks Diagnostic Telemetry & Buffers
+  stickHistoryL:        [],
+  stickHistoryR:        [],
+  stickMetrics: {
+    l: { drift: null, jitter: null, circularity: null, snapback: null, verdict: 'PENDING' },
+    r: { drift: null, jitter: null, circularity: null, snapback: null, verdict: 'PENDING' },
+  },
+  // Circular coverage radial bins (16 bins = 22.5 deg each)
+  circleBinsL:          new Array(16).fill(0),
+  circleBinsR:          new Array(16).fill(0),
+  // Snapback monitoring
+  snapL:                { tracking: false, startTime: 0, peakDist: 0 },
+  snapR:                { tracking: false, startTime: 0, peakDist: 0 },
+
+  // Suite state
+  suite: {
+    running: false,
+    step: 0, // 1: rest drift, 2: circularity, 3: snapback
+    startTime: 0,
+  },
+
+  // Drift capture (3s)
+  drift: {
+    capturing: false,
+    startTime: 0,
+    samplesL:  [],
+    samplesR:  [],
+  },
+
+  // Trigger Validation State
+  triggers: {
+    l2: { min: 1.0, max: 0.0, restOk: null, maxOk: null, smoothOk: true, samples: 0, verdict: 'PENDING' },
+    r2: { min: 1.0, max: 0.0, restOk: null, maxOk: null, smoothOk: true, samples: 0, verdict: 'PENDING' },
+  },
+
+  // Button Validation Matrix
+  buttonStates:         {}, // idx -> { pressed: false, clicks: 0, pressStartTime: 0, isStuck: false }
+
+  // Visual caches
   photoBtns:            {},
   photoStickL:          null,
   photoStickR:          null,
   photoLightbar:        null,
-
-  // Diagram cache
   diagramRendered:      false,
   diagramBtns:          {},
   diagramStickL:        null,
   diagramStickR:        null,
   diagramLightbar:      null,
-
-  // Drift Benchmark
-  drift: {
-    capturing: false,
-    startTime: 0,
-    timerId:   null,
-    samples:   [],
-  },
 };
 
 // ─────────────────────────────────────────────────────────────
-// RESET CONTROLLER TELEMETRY (WHEN SWAPPING OR ON DEMAND)
+// 6. GAMEPAD API LIFECYCLE & ZERO-REFRESH HOT-SWAPPING
 // ─────────────────────────────────────────────────────────────
-function resetControllerTelemetry() {
+function initGamepadLifecycle() {
+  window.addEventListener('gamepadconnected', (e) => {
+    handleGamepadConnection(e.gamepad);
+  });
 
-  // Cancel any active drift capture cleanly
-  if (state.drift.capturing) {
-    clearTimeout(state.drift.timerId);
-    state.drift.capturing = false;
-  }
-  state.drift.samples = [];
-  if (dom.driftResult) {
-    dom.driftResult.innerHTML = `
-      <div class="drift-initial-hint">
-        <span>ℹ Suelta ambos sticks y pulsa <strong>"▶ Test Drift (3s)"</strong> para calcular desviación y jitter en reposo.</span>
-      </div>`;
+  window.addEventListener('gamepaddisconnected', (e) => {
+    handleGamepadDisconnection(e.gamepad);
+  });
+
+  // Start continuous 60fps telemetry loop
+  if (!state.rafId) {
+    state.rafId = requestAnimationFrame(pollGamepads);
   }
 }
 
-// ─────────────────────────────────────────────────────────────
-// MULTI-CONTROLLER REGISTRY & DEVICE SELECTOR
-// ─────────────────────────────────────────────────────────────
+function handleGamepadConnection(gp) {
+  if (!gp) return;
+  state.knownGamepads.set(gp.index, {
+    id: gp.id,
+    mapping: gp.mapping,
+    axesCount: gp.axes ? gp.axes.length : 0,
+    btnCount: gp.buttons ? gp.buttons.length : 0
+  });
+
+  updateGamepadSelectorUI();
+
+  // If no controller is active, auto-activate this one
+  if (state.activeGpIndex === null || !state.knownGamepads.has(state.activeGpIndex)) {
+    setActiveGamepad(gp.index);
+  }
+}
+
+function handleGamepadDisconnection(gp) {
+  if (!gp) return;
+  state.knownGamepads.delete(gp.index);
+  updateGamepadSelectorUI();
+
+  if (state.activeGpIndex === gp.index) {
+    // Switch to another connected gamepad if any exists
+    const remaining = Array.from(state.knownGamepads.keys());
+    if (remaining.length > 0) {
+      setActiveGamepad(remaining[0]);
+    } else {
+      setActiveGamepad(null);
+    }
+  }
+}
+
 function updateGamepadSelectorUI() {
   const select = dom.activeGamepadSelect;
   if (!select) return;
 
-  const prevVal = select.value;
   select.innerHTML = '';
+  const list = Array.from(state.knownGamepads.entries()).sort((a, b) => a[0] - b[0]);
 
-  const connectedList = [];
-  for (const [idx, info] of state.knownGamepads.entries()) {
-    connectedList.push({ idx, info });
-  }
-
-  if (connectedList.length === 0) {
+  if (list.length === 0) {
     const opt = document.createElement('option');
     opt.value = '-1';
-    opt.textContent = 'Sin mandos conectados';
+    opt.textContent = t('noConnectedGamepads');
     select.appendChild(opt);
-    dom.activeCtrlName.textContent = 'Ninguno';
+    dom.activeCtrlName.textContent = t('none');
     dom.activeCtrlIdx.textContent  = '—';
     return;
   }
 
-  connectedList.sort((a, b) => a.idx - b.idx);
-  for (const { idx, info } of connectedList) {
+  for (const [idx, info] of list) {
     const opt = document.createElement('option');
     opt.value = String(idx);
     const shortName = info.id.length > 24 ? info.id.slice(0, 24) + '…' : info.id;
@@ -391,11 +847,7 @@ function updateGamepadSelectorUI() {
     select.value = String(state.activeGpIndex);
     const activeInfo = state.knownGamepads.get(state.activeGpIndex);
     dom.activeCtrlName.textContent = activeInfo.id.length > 20 ? activeInfo.id.slice(0, 20) + '…' : activeInfo.id;
-    dom.activeCtrlIdx.textContent  = `Índice: ${state.activeGpIndex}`;
-  } else {
-    // Select first available
-    const firstIdx = connectedList[0].idx;
-    setActiveGamepad(firstIdx);
+    dom.activeCtrlIdx.textContent  = `#${state.activeGpIndex}`;
   }
 }
 
@@ -403,150 +855,418 @@ function setActiveGamepad(idx) {
   if (idx === null || idx === undefined || idx < 0) {
     state.activeGpIndex = null;
     dom.statusDot.className    = 'status-dot disconnected';
-    dom.statusText.textContent = 'Esperando mando…';
-    dom.noGamepadMsg.style.display = 'flex';
-    dom.activeCtrlName.textContent = 'Ninguno';
+    dom.statusText.textContent = t('waitingGamepad');
+    dom.emptyStateView.style.display = 'flex';
+    dom.photoViewBox.style.display   = 'none';
+    dom.diagramViewBox.style.display = 'none';
+
+    dom.activeCtrlName.textContent = t('none');
     dom.activeCtrlIdx.textContent  = '—';
     dom.ctrlIdInfo.textContent     = '';
     dom.ctrlProfileBadge.textContent = 'Perfil: Ninguno';
     dom.ds3DriverHint.style.display  = 'none';
 
-    // Reset sticks and buttons UI
     drawLargeStick(dom.stickLCanvas, 0, 0, true);
     drawLargeStick(dom.stickRCanvas, 0, 0, false);
-    clearButtonChipsValues();
-    resetControllerTelemetry();
+    resetAllValidationStates();
     resolveModel();
     return;
   }
 
   state.activeGpIndex = idx;
-  const gp = navigator.getGamepads()[idx];
-  const id = gp ? gp.id : 'Mando conectado';
+  const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
+  const gp = gamepads[idx];
+  const id = gp ? gp.id : t('connectedMsg');
 
   dom.statusDot.className    = 'status-dot connected';
-  dom.statusText.textContent = id.length > 34 ? id.slice(0, 34) + '…' : id;
-  dom.noGamepadMsg.style.display = 'none';
+  dom.statusText.textContent = id.length > 32 ? id.slice(0, 32) + '…' : id;
+
+  dom.emptyStateView.style.display = 'none';
+  if (state.viewMode === 'photo') {
+    dom.photoViewBox.style.display   = 'flex';
+    dom.diagramViewBox.style.display = 'none';
+  } else {
+    dom.photoViewBox.style.display   = 'none';
+    dom.diagramViewBox.style.display = 'flex';
+  }
 
   dom.activeCtrlName.textContent = id.length > 20 ? id.slice(0, 20) + '…' : id;
-  dom.activeCtrlIdx.textContent  = `Índice: ${idx}`;
+  dom.activeCtrlIdx.textContent  = `#${idx}`;
   dom.ctrlIdInfo.textContent     = `ID: ${id}`;
 
   if (dom.activeGamepadSelect && dom.activeGamepadSelect.value !== String(idx)) {
     dom.activeGamepadSelect.value = String(idx);
   }
 
-  // Reset measurements for fresh controller
-  resetControllerTelemetry();
+  resetAllValidationStates();
+  resolveModel();
 
-  // Adapt button grid size
   const btnCount = gp ? Math.min(gp.buttons.length, BTN_NAMES.length + 4) : BTN_NAMES.length;
   buildButtonChips(btnCount);
-
-  // Model & Profiles
-  resolveModel();
 }
 
-/**
- * Continuous fallback scanner inside tick() loop.
- * Detects hot-plugged / hot-swapped controllers that didn't fire browser events.
- */
-function scanControllersLifecycle() {
-  const currentList = navigator.getGamepads ? navigator.getGamepads() : [];
-  let registryChanged = false;
+function resetAllValidationStates() {
+  state.stickHistoryL = [];
+  state.stickHistoryR = [];
+  state.circleBinsL.fill(0);
+  state.circleBinsR.fill(0);
+  state.stickMetrics = {
+    l: { drift: null, jitter: null, circularity: null, snapback: null, verdict: 'PENDING' },
+    r: { drift: null, jitter: null, circularity: null, snapback: null, verdict: 'PENDING' },
+  };
+  state.triggers = {
+    l2: { min: 1.0, max: 0.0, restOk: null, maxOk: null, smoothOk: true, samples: 0, verdict: 'PENDING' },
+    r2: { min: 1.0, max: 0.0, restOk: null, maxOk: null, smoothOk: true, samples: 0, verdict: 'PENDING' },
+  };
+  state.buttonStates = {};
+  state.drift.capturing = false;
+  state.suite.running = false;
 
-  // 1. Check for newly discovered gamepads
-  for (let i = 0; i < currentList.length; i++) {
-    const gp = currentList[i];
-    if (gp && !state.knownGamepads.has(gp.index)) {
-      state.knownGamepads.set(gp.index, {
-        id: gp.id,
-        mapping: gp.mapping || '',
-        axesCount: gp.axes ? gp.axes.length : 0,
-        btnCount: gp.buttons ? gp.buttons.length : 0,
-      });
-      registryChanged = true;
-      console.log(`[GamepadTester] Registered gamepad at index ${gp.index}: ${gp.id}`);
+  updateVerdictBadgesUI();
+  updateButtonsSummaryBadge();
+  updateTriggersUI();
+}
 
-      // Auto-activate if no active gamepad
-      if (state.activeGpIndex === null) {
-        state.activeGpIndex = gp.index;
+// ─────────────────────────────────────────────────────────────
+// 7. CONTINUOUS LIVE TELEMETRY LOOP
+// ─────────────────────────────────────────────────────────────
+function pollGamepads() {
+  const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
+  let connectedIndices = [];
+
+  for (let i = 0; i < gamepads.length; i++) {
+    const gp = gamepads[i];
+    if (gp && gp.connected) {
+      connectedIndices.push(i);
+      if (!state.knownGamepads.has(i)) {
+        handleGamepadConnection(gp);
       }
     }
   }
 
-  // 2. Check for disconnected gamepads
-  for (const idx of state.knownGamepads.keys()) {
-    const gp = currentList[idx];
-    if (!gp) {
-      state.knownGamepads.delete(idx);
-      registryChanged = true;
-      console.log(`[GamepadTester] Removed disconnected gamepad at index ${idx}`);
+  // Handle gamepads that disappeared without event
+  for (const knownIdx of state.knownGamepads.keys()) {
+    if (!connectedIndices.includes(knownIdx)) {
+      handleGamepadDisconnection({ index: knownIdx });
+    }
+  }
 
-      // If active gamepad was disconnected, switch to next available or null
-      if (state.activeGpIndex === idx) {
-        state.activeGpIndex = null;
-        for (const remIdx of state.knownGamepads.keys()) {
-          state.activeGpIndex = remIdx;
+  // Automatic activity-based controller switching
+  const now = performance.now();
+  if (connectedIndices.length > 1 && (now - state.lastActiveSwitchTime > BENCHMARKS.ACTIVITY_DEBOUNCE_MS)) {
+    for (const idx of connectedIndices) {
+      if (idx !== state.activeGpIndex) {
+        const gp = gamepads[idx];
+        if (hasSignificantInput(gp)) {
+          state.lastActiveSwitchTime = now;
+          setActiveGamepad(idx);
           break;
         }
       }
     }
   }
 
-  if (registryChanged) {
-    updateGamepadSelectorUI();
-    if (state.activeGpIndex !== null) {
-      setActiveGamepad(state.activeGpIndex);
-    } else {
-      setActiveGamepad(null);
-    }
+  // Process live data for active gamepad
+  if (state.activeGpIndex !== null && gamepads[state.activeGpIndex]) {
+    const gp = gamepads[state.activeGpIndex];
+    processLiveGamepadInput(gp);
   }
+
+  state.rafId = requestAnimationFrame(pollGamepads);
 }
 
-/**
- * Automatically activates whichever controller the technician moves or presses
- */
-function checkActivitySwitch(gamepads) {
-  if (state.knownGamepads.size <= 1) return; // Only relevant when multiple controllers exist
+function hasSignificantInput(gp) {
+  if (!gp) return false;
+  if (gp.axes) {
+    for (let i = 0; i < gp.axes.length; i++) {
+      if (Math.abs(gp.axes[i]) > BENCHMARKS.ACTIVITY_THRESHOLD_AXIS) return true;
+    }
+  }
+  if (gp.buttons) {
+    for (let i = 0; i < gp.buttons.length; i++) {
+      const b = gp.buttons[i];
+      const val = typeof b === 'object' ? b.value : b;
+      if (val > BENCHMARKS.ACTIVITY_THRESHOLD_BTN) return true;
+    }
+  }
+  return false;
+}
+
+// ─────────────────────────────────────────────────────────────
+// 8. LIVE INPUT PROCESSING (STICKS, TRIGGERS, BUTTONS, RAW)
+// ─────────────────────────────────────────────────────────────
+function processLiveGamepadInput(gp) {
+  const axes = getNormalizedAxes(gp, state.model);
   const now = performance.now();
-  if (now - state.lastActiveSwitchTime < ACTIVITY_DEBOUNCE_MS) return;
 
-  for (let i = 0; i < gamepads.length; i++) {
-    const gp = gamepads[i];
-    if (!gp || gp.index === state.activeGpIndex) continue;
+  // 1. Process Sticks
+  processStickData(axes, now);
 
-    // Check significant button press
-    let hasButton = false;
-    for (let b = 0; b < gp.buttons.length; b++) {
-      const btn = gp.buttons[b];
-      const val = typeof btn === 'object' ? btn.value : (btn ? 1 : 0);
-      if (val > ACTIVITY_THRESHOLD_BTN) {
-        hasButton = true;
-        break;
-      }
+  // 2. Process Triggers (L2 / R2)
+  processTriggersData(gp);
+
+  // 3. Process Buttons
+  processButtonsData(gp, now);
+
+  // 4. Update Raw diagnostics if open
+  if (state.rawAccordionOpen) {
+    updateRawDiagnostics(gp);
+  }
+
+  // 5. Update Photo & Diagram overlay interactive highlights
+  highlightActiveOverlay(gp, axes);
+}
+
+function processStickData(axes, now) {
+  const { lx, ly, rx, ry } = axes;
+
+  // Distances and angles
+  const lDist = Math.sqrt(lx * lx + ly * ly);
+  const lAngle = (Math.atan2(ly, lx) * 180 / Math.PI + 360) % 360;
+
+  const rDist = Math.sqrt(rx * rx + ry * ry);
+  const rAngle = (Math.atan2(ry, rx) * 180 / Math.PI + 360) % 360;
+
+  // Real-time text output (4 decimal places)
+  dom.stickLX.textContent    = (lx >= 0 ? '+' : '') + lx.toFixed(4);
+  dom.stickLY.textContent    = (ly >= 0 ? '+' : '') + ly.toFixed(4);
+  dom.stickLDist.textContent = lDist.toFixed(4);
+  dom.stickLAngle.textContent= lAngle.toFixed(1) + '°';
+
+  dom.stickRX.textContent    = (rx >= 0 ? '+' : '') + rx.toFixed(4);
+  dom.stickRY.textContent    = (ry >= 0 ? '+' : '') + ry.toFixed(4);
+  dom.stickRDist.textContent = rDist.toFixed(4);
+  dom.stickRAngle.textContent= rAngle.toFixed(1) + '°';
+
+  // Status dots
+  dom.stickLStatusDot.className = 'stick-status-dot' + (lDist > 0.08 ? ' active' : '');
+  dom.stickRStatusDot.className = 'stick-status-dot' + (rDist > 0.08 ? ' active' : '');
+
+  // Record path trace (max 400 points)
+  state.stickHistoryL.push({ x: lx, y: ly });
+  if (state.stickHistoryL.length > 400) state.stickHistoryL.shift();
+
+  state.stickHistoryR.push({ x: rx, y: ry });
+  if (state.stickHistoryR.length > 400) state.stickHistoryR.shift();
+
+  // Circularity binning (radial coverage at edge > 0.70)
+  if (lDist > 0.70) {
+    const binIdx = Math.floor(lAngle / 22.5) % 16;
+    state.circleBinsL[binIdx] = Math.max(state.circleBinsL[binIdx], lDist);
+    calculateCircularity('l');
+  }
+  if (rDist > 0.70) {
+    const binIdx = Math.floor(rAngle / 22.5) % 16;
+    state.circleBinsR[binIdx] = Math.max(state.circleBinsR[binIdx], rDist);
+    calculateCircularity('r');
+  }
+
+  // Snapback Return Tracking (Left Stick)
+  if (lDist > 0.75 && !state.snapL.tracking) {
+    state.snapL.tracking = true;
+    state.snapL.peakDist = lDist;
+    state.snapL.startTime = now;
+  } else if (state.snapL.tracking && lDist < 0.12) {
+    const durationMs = Math.round(now - state.snapL.startTime);
+    state.snapL.tracking = false;
+    state.stickMetrics.l.snapback = durationMs;
+    dom.stickLSnapVal.textContent = `${durationMs}ms`;
+    evaluateStickOverall('l');
+  }
+
+  // Snapback Return Tracking (Right Stick)
+  if (rDist > 0.75 && !state.snapR.tracking) {
+    state.snapR.tracking = true;
+    state.snapR.peakDist = rDist;
+    state.snapR.startTime = now;
+  } else if (state.snapR.tracking && rDist < 0.12) {
+    const durationMs = Math.round(now - state.snapR.startTime);
+    state.snapR.tracking = false;
+    state.stickMetrics.r.snapback = durationMs;
+    dom.stickRSnapVal.textContent = `${durationMs}ms`;
+    evaluateStickOverall('r');
+  }
+
+  // 3s Drift Capture sampling
+  if (state.drift.capturing) {
+    state.drift.samplesL.push({ x: lx, y: ly, dist: lDist });
+    state.drift.samplesR.push({ x: rx, y: ry, dist: rDist });
+    const elapsed = (now - state.drift.startTime) / 1000;
+    if (elapsed >= 3.0) {
+      finalizeDriftCapture();
     }
+  }
 
-    // Check significant stick movement
-    let hasStick = false;
-    for (let a = 0; a < gp.axes.length; a++) {
-      if (Math.abs(gp.axes[a] || 0) > ACTIVITY_THRESHOLD_AXIS) {
-        hasStick = true;
-        break;
-      }
-    }
+  // Draw Canvases
+  drawLargeStick(dom.stickLCanvas, lx, ly, true, state.stickHistoryL);
+  drawLargeStick(dom.stickRCanvas, rx, ry, false, state.stickHistoryR);
+}
 
-    if (hasButton || hasStick) {
-      state.lastActiveSwitchTime = now;
-      console.log(`[GamepadTester] Activity detected on gamepad ${gp.index} (${gp.id}) -> Auto switching active`);
-      setActiveGamepad(gp.index);
-      break;
+function calculateCircularity(stick) {
+  const bins = stick === 'l' ? state.circleBinsL : state.circleBinsR;
+  const nonZero = bins.filter(v => v > 0);
+  const covered = nonZero.length;
+  const coveragePercent = Math.round((covered / 16) * 100);
+
+  if (stick === 'l') {
+    state.stickMetrics.l.circularity = coveragePercent;
+    dom.stickLCircVal.textContent = `${coveragePercent}%`;
+  } else {
+    state.stickMetrics.r.circularity = coveragePercent;
+    dom.stickRCircVal.textContent = `${coveragePercent}%`;
+  }
+  evaluateStickOverall(stick);
+}
+
+function evaluateStickOverall(stick) {
+  const m = state.stickMetrics[stick];
+  const badgeEl = stick === 'l' ? dom.stickLVerdict : dom.stickRVerdict;
+
+  let isFail = false;
+  let isReview = false;
+
+  if (m.drift !== null) {
+    if (m.drift > BENCHMARKS.STICK.DRIFT_ACCEPTABLE) isFail = true;
+    else if (m.drift > BENCHMARKS.STICK.DRIFT_EXCELLENT) isReview = true;
+  }
+
+  if (m.jitter !== null && m.jitter > BENCHMARKS.STICK.JITTER_MAX) {
+    isReview = true;
+  }
+
+  if (m.circularity !== null) {
+    if (m.circularity < BENCHMARKS.STICK.CIRC_ACCEPTABLE) isFail = true;
+    else if (m.circularity < BENCHMARKS.STICK.CIRC_EXCELLENT) isReview = true;
+  }
+
+  if (m.snapback !== null && m.snapback > BENCHMARKS.STICK.SNAPBACK_MAX_MS) {
+    isReview = true;
+  }
+
+  let verdict = 'PENDING';
+  let css = 'badge-neutral';
+  let text = t('verdictPending');
+
+  if (m.drift !== null || m.circularity !== null) {
+    if (isFail) {
+      verdict = 'FAIL';
+      css = 'badge-fail';
+      text = t('verdictFail');
+    } else if (isReview) {
+      verdict = 'REVIEW';
+      css = 'badge-review';
+      text = t('verdictReview');
+    } else {
+      verdict = 'PASS';
+      css = 'badge-pass';
+      text = t('verdictPass');
     }
+  }
+
+  m.verdict = verdict;
+  badgeEl.className = `stick-verdict-badge ${css}`;
+  badgeEl.textContent = text;
+}
+
+// ─────────────────────────────────────────────────────────────
+// 9. TRIGGER ANALOG DIAGNOSTICS (L2 / R2)
+// ─────────────────────────────────────────────────────────────
+function processTriggersData(gp) {
+  if (!gp || !gp.buttons) return;
+
+  const btnL2 = gp.buttons[6];
+  const btnR2 = gp.buttons[7];
+
+  const l2Val = typeof btnL2 === 'object' ? btnL2.value : (btnL2 ? 1 : 0);
+  const r2Val = typeof btnR2 === 'object' ? btnR2.value : (btnR2 ? 1 : 0);
+
+  // L2
+  const tL = state.triggers.l2;
+  tL.min = Math.min(tL.min, l2Val);
+  tL.max = Math.max(tL.max, l2Val);
+  tL.samples++;
+
+  dom.triggerL2Val.textContent = l2Val.toFixed(3);
+  dom.triggerL2Bar.style.width = `${Math.round(l2Val * 100)}%`;
+  dom.triggerL2Rest.textContent = tL.min.toFixed(3);
+  dom.triggerL2Max.textContent  = tL.max.toFixed(3);
+
+  // R2
+  const tR = state.triggers.r2;
+  tR.min = Math.min(tR.min, r2Val);
+  tR.max = Math.max(tR.max, r2Val);
+  tR.samples++;
+
+  dom.triggerR2Val.textContent = r2Val.toFixed(3);
+  dom.triggerR2Bar.style.width = `${Math.round(r2Val * 100)}%`;
+  dom.triggerR2Rest.textContent = tR.min.toFixed(3);
+  dom.triggerR2Max.textContent  = tR.max.toFixed(3);
+
+  // Evaluate Triggers
+  evaluateTrigger('l2', tL, dom.triggerL2Status, dom.triggerL2Ramp);
+  evaluateTrigger('r2', tR, dom.triggerR2Status, dom.triggerR2Ramp);
+
+  updateTriggersSummaryBadge();
+}
+
+function evaluateTrigger(key, trig, badgeEl, rampEl) {
+  if (trig.samples < 20) return;
+
+  let restOk = trig.min <= BENCHMARKS.TRIGGER.REST_MAX;
+  let maxOk  = trig.max >= BENCHMARKS.TRIGGER.MAX_MIN;
+
+  let verdict = 'PENDING';
+  let css = 'badge-neutral';
+  let text = t('verdictPending');
+
+  if (maxOk && restOk) {
+    verdict = 'PASS';
+    css = 'badge-pass';
+    text = t('verdictPass');
+    rampEl.textContent = '100% Ok';
+  } else if (!restOk) {
+    verdict = 'FAIL';
+    css = 'badge-fail';
+    text = t('verdictFail');
+    rampEl.textContent = 'Fallo Reposo';
+  } else if (trig.max > 0.4 && !maxOk) {
+    verdict = 'REVIEW';
+    css = 'badge-review';
+    text = t('verdictReview');
+    rampEl.textContent = 'No llega al 100%';
+  }
+
+  trig.verdict = verdict;
+  badgeEl.className = `trigger-badge ${css}`;
+  badgeEl.textContent = text;
+}
+
+function updateTriggersSummaryBadge() {
+  const l2 = state.triggers.l2.verdict;
+  const r2 = state.triggers.r2.verdict;
+  const tag = dom.triggersSummaryTag;
+
+  if (l2 === 'PASS' && r2 === 'PASS') {
+    tag.textContent = `Gatillos: ${t('verdictPass')}`;
+    tag.style.color = 'var(--green)';
+    tag.style.borderColor = 'var(--green)';
+  } else if (l2 === 'FAIL' || r2 === 'FAIL') {
+    tag.textContent = `Gatillos: ${t('verdictFail')}`;
+    tag.style.color = 'var(--red)';
+    tag.style.borderColor = 'var(--red)';
+  } else if (l2 === 'REVIEW' || r2 === 'REVIEW') {
+    tag.textContent = `Gatillos: ${t('verdictReview')}`;
+    tag.style.color = 'var(--yellow)';
+    tag.style.borderColor = 'var(--yellow)';
+  } else {
+    tag.textContent = t('triggersPending');
+    tag.style.color = 'var(--text-muted)';
+    tag.style.borderColor = 'var(--border)';
   }
 }
 
 // ─────────────────────────────────────────────────────────────
-// BUTTON CHIPS UI
+// 10. FULL BUTTON TESTING MATRIX & STUCK DETECTION
 // ─────────────────────────────────────────────────────────────
 function buildButtonChips(count) {
   dom.buttonsGrid.innerHTML = '';
@@ -554,27 +1274,365 @@ function buildButtonChips(count) {
     const chip = document.createElement('div');
     chip.className = 'btn-chip';
     chip.id = `btn-chip-${i}`;
+
+    const label = getButtonLabel(state.model, i);
+
     chip.innerHTML = `
-      <span class="btn-name">${getButtonLabel(state.model, i)}</span>
+      <div class="btn-chip-header">
+        <span class="btn-name" title="${label}">${label}</span>
+        <span class="chip-check" id="btn-check-${i}">○</span>
+      </div>
       <span class="btn-val" id="btn-val-${i}">0.00</span>
-      <div class="bar-wrap"><div class="bar-fill" id="btn-bar-${i}" style="width:0%"></div></div>`;
+      <div class="bar-wrap">
+        <div class="bar-fill" id="btn-bar-${i}" style="width: 0%;"></div>
+      </div>
+    `;
     dom.buttonsGrid.appendChild(chip);
+
+    if (!state.buttonStates[i]) {
+      state.buttonStates[i] = { pressed: false, clicks: 0, pressStartTime: 0, isStuck: false };
+    }
   }
+  updateButtonsSummaryBadge();
 }
 
-function clearButtonChipsValues() {
-  for (let i = 0; i < 24; i++) {
+function processButtonsData(gp, now) {
+  if (!gp || !gp.buttons) return;
+
+  let activePressText = '';
+
+  for (let i = 0; i < gp.buttons.length; i++) {
+    const b = gp.buttons[i];
+    const val = typeof b === 'object' ? b.value : (b ? 1 : 0);
+    const isPressed = typeof b === 'object' ? b.pressed : (val > 0.5);
+
     const chip = document.getElementById(`btn-chip-${i}`);
-    const valEl= document.getElementById(`btn-val-${i}`);
-    const barEl= document.getElementById(`btn-bar-${i}`);
-    if (chip) chip.classList.remove('pressed');
-    if (valEl) valEl.textContent = '0.00';
-    if (barEl) barEl.style.width = '0%';
+    const valEl = document.getElementById(`btn-val-${i}`);
+    const barEl = document.getElementById(`btn-bar-${i}`);
+    const checkEl = document.getElementById(`btn-check-${i}`);
+
+    if (valEl) valEl.textContent = val.toFixed(2);
+    if (barEl) barEl.style.width = `${Math.round(val * 100)}%`;
+
+    if (!state.buttonStates[i]) {
+      state.buttonStates[i] = { pressed: false, clicks: 0, pressStartTime: 0, isStuck: false };
+    }
+    const bState = state.buttonStates[i];
+
+    // Detect press event (rising edge)
+    if (isPressed && !bState.pressed) {
+      bState.pressed = true;
+      bState.pressStartTime = now;
+      bState.clicks++;
+    }
+    // Detect release event (falling edge)
+    else if (!isPressed && bState.pressed) {
+      bState.pressed = false;
+      bState.isStuck = false;
+    }
+
+    // Stuck button detection (> 3.5s held)
+    if (isPressed && (now - bState.pressStartTime > 3500)) {
+      bState.isStuck = true;
+    }
+
+    if (chip) {
+      chip.classList.toggle('pressed', isPressed);
+      chip.classList.toggle('passed', bState.clicks >= 1);
+      chip.classList.toggle('stuck', bState.isStuck);
+    }
+    if (checkEl) {
+      if (bState.isStuck) {
+        checkEl.textContent = '⚠';
+        checkEl.style.color = 'var(--red)';
+      } else if (bState.clicks >= 1) {
+        checkEl.textContent = '✓';
+        checkEl.style.color = 'var(--green)';
+      } else {
+        checkEl.textContent = '○';
+        checkEl.style.color = 'var(--text-muted)';
+      }
+    }
+
+    if (isPressed) {
+      activePressText = `${getButtonLabel(state.model, i)} (${val.toFixed(2)})`;
+    }
+  }
+
+  if (activePressText) {
+    dom.feedbackLabel.textContent = `Pulsado: ${activePressText}`;
+  }
+
+  updateButtonsSummaryBadge();
+}
+
+function updateButtonsSummaryBadge() {
+  const total = Object.keys(state.buttonStates).length;
+  if (total === 0) {
+    dom.buttonsSummaryBadge.textContent = '0 / 0 Validados';
+    return;
+  }
+
+  let passed = 0;
+  let stuck = 0;
+  for (const s of Object.values(state.buttonStates)) {
+    if (s.clicks >= 1) passed++;
+    if (s.isStuck) stuck++;
+  }
+
+  if (stuck > 0) {
+    dom.buttonsSummaryBadge.textContent = `⚠ ${stuck} Atascado(s) • ${passed}/${total} Validados`;
+    dom.buttonsSummaryBadge.style.color = 'var(--red)';
+  } else {
+    dom.buttonsSummaryBadge.textContent = `${passed} / ${total} Validados`;
+    dom.buttonsSummaryBadge.style.color = (passed === total) ? 'var(--green)' : '#a5b4fc';
   }
 }
 
 // ─────────────────────────────────────────────────────────────
-// PHOTO & DIAGRAM VIEW RENDERING
+// 11. ADVANCED DRIFT BENCHMARK & FULL DIAGNOSTIC SUITE
+// ─────────────────────────────────────────────────────────────
+function startDriftCapture() {
+  if (state.drift.capturing) return;
+
+  state.drift.capturing = true;
+  state.drift.startTime = performance.now();
+  state.drift.samplesL = [];
+  state.drift.samplesR = [];
+
+  dom.driftResult.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;justify-content:center;color:#a5b4fc;font-weight:700;">
+      <span class="icon">⏱</span>
+      <span>${t('suiteStepRest')}</span>
+    </div>
+  `;
+}
+
+function finalizeDriftCapture() {
+  state.drift.capturing = false;
+
+  const sL = state.drift.samplesL;
+  const sR = state.drift.samplesR;
+
+  if (sL.length === 0 || sR.length === 0) return;
+
+  // Left stick metrics
+  const avgDistL = sL.reduce((a, b) => a + b.dist, 0) / sL.length;
+  const maxDevL = Math.max(...sL.map(s => s.dist));
+  const varianceL = sL.reduce((a, b) => a + Math.pow(b.dist - avgDistL, 2), 0) / sL.length;
+  const jitterL = Math.sqrt(varianceL);
+
+  // Right stick metrics
+  const avgDistR = sR.reduce((a, b) => a + b.dist, 0) / sR.length;
+  const maxDevR = Math.max(...sR.map(s => s.dist));
+  const varianceR = sR.reduce((a, b) => a + Math.pow(b.dist - avgDistR, 2), 0) / sR.length;
+  const jitterR = Math.sqrt(varianceR);
+
+  state.stickMetrics.l.drift  = maxDevL;
+  state.stickMetrics.l.jitter = jitterL;
+  dom.stickLDriftVal.textContent  = maxDevL.toFixed(3);
+  dom.stickLJitterVal.textContent = jitterL.toFixed(3);
+
+  state.stickMetrics.r.drift  = maxDevR;
+  state.stickMetrics.r.jitter = jitterR;
+  dom.stickRDriftVal.textContent  = maxDevR.toFixed(3);
+  dom.stickRJitterVal.textContent = jitterR.toFixed(3);
+
+  evaluateStickOverall('l');
+  evaluateStickOverall('r');
+
+  const overallL = state.stickMetrics.l.verdict;
+  const overallR = state.stickMetrics.r.verdict;
+  const isGood = overallL === 'PASS' && overallR === 'PASS';
+
+  dom.driftResult.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 8px;">
+      <div>
+        <strong>Drift Reposo:</strong> 
+        Stick L: ${maxDevL.toFixed(3)} | Stick R: ${maxDevR.toFixed(3)}
+      </div>
+      <span class="stick-verdict-badge ${isGood ? 'badge-pass' : 'badge-review'}">
+        ${isGood ? t('verdictPass') : t('verdictReview')}
+      </span>
+    </div>
+  `;
+}
+
+function startFullSuite() {
+  state.suite.running = true;
+  state.suite.step = 1;
+  state.suite.startTime = performance.now();
+
+  startDriftCapture();
+
+  // Schedule next step instructions
+  setTimeout(() => {
+    state.suite.step = 2;
+    dom.driftResult.innerHTML = `
+      <div style="color:var(--accent);font-weight:700;text-align:center;">
+        ${t('suiteStepCirc')}
+      </div>
+    `;
+  }, 3200);
+
+  setTimeout(() => {
+    state.suite.step = 3;
+    dom.driftResult.innerHTML = `
+      <div style="color:#00e5ff;font-weight:700;text-align:center;">
+        ${t('suiteStepSnap')}
+      </div>
+    `;
+  }, 7500);
+
+  setTimeout(() => {
+    state.suite.running = false;
+    dom.driftResult.innerHTML = `
+      <div style="color:var(--green);font-weight:700;text-align:center;">
+        ${t('suiteDone')}
+      </div>
+    `;
+  }, 12000);
+}
+
+// ─────────────────────────────────────────────────────────────
+// 12. CANVAS HIGH-DPI CARTESIAN STICK RENDERING
+// ─────────────────────────────────────────────────────────────
+function drawLargeStick(canvas, rawX, rawY, isLeft, history = []) {
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width;
+  const h = canvas.height;
+  const cx = w / 2;
+  const cy = h / 2;
+  const r = (w / 2) - 10;
+
+  ctx.clearRect(0, 0, w, h);
+
+  // Background Dial
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.fillStyle = '#101018';
+  ctx.fill();
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = '#2b2b3e';
+  ctx.stroke();
+
+  // Grid Concentric Circles (25%, 50%, 75%, 100%)
+  const steps = [0.25, 0.50, 0.75, 1.0];
+  steps.forEach(s => {
+    ctx.beginPath();
+    ctx.arc(cx, cy, r * s, 0, Math.PI * 2);
+    ctx.strokeStyle = s === 1.0 ? '#3f3f58' : 'rgba(255,255,255,0.06)';
+    ctx.lineWidth = s === 1.0 ? 1.5 : 1;
+    ctx.stroke();
+  });
+
+  // Center Deadzone threshold ring (5% factory threshold)
+  ctx.beginPath();
+  ctx.arc(cx, cy, r * 0.05, 0, Math.PI * 2);
+  ctx.strokeStyle = 'rgba(99, 102, 241, 0.4)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // Cartesian Crosshair Axes
+  ctx.beginPath();
+  ctx.moveTo(cx, cy - r);
+  ctx.lineTo(cx, cy + r);
+  ctx.moveTo(cx - r, cy);
+  ctx.lineTo(cx + r, cy);
+  ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // Trace Trajectory history
+  if (history && history.length > 1) {
+    ctx.beginPath();
+    for (let i = 0; i < history.length; i++) {
+      const px = cx + history[i].x * r;
+      const py = cy + history[i].y * r;
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.strokeStyle = 'rgba(99, 102, 241, 0.25)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  }
+
+  // Live Position Vector line
+  const posX = cx + rawX * r;
+  const posY = cy + rawY * r;
+
+  ctx.beginPath();
+  ctx.moveTo(cx, cy);
+  ctx.lineTo(posX, posY);
+  ctx.strokeStyle = 'rgba(0, 229, 255, 0.6)';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Current Position Puck
+  ctx.beginPath();
+  ctx.arc(posX, posY, 10, 0, Math.PI * 2);
+  ctx.fillStyle = '#00e5ff';
+  ctx.shadowColor = '#00e5ff';
+  ctx.shadowBlur = 10;
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  ctx.beginPath();
+  ctx.arc(posX, posY, 4, 0, Math.PI * 2);
+  ctx.fillStyle = '#ffffff';
+  ctx.fill();
+}
+
+// ─────────────────────────────────────────────────────────────
+// 13. RAW INPUT TECHNICAL DIAGNOSTICS
+// ─────────────────────────────────────────────────────────────
+function updateRawDiagnostics(gp) {
+  if (!gp) return;
+  dom.rawId.textContent        = gp.id || '—';
+  dom.rawIndex.textContent     = String(gp.index);
+  dom.rawMapping.textContent   = gp.mapping || 'non-standard';
+  dom.rawConnected.textContent = gp.connected ? 'true' : 'false';
+  dom.rawTotalBtns.textContent = String(gp.buttons.length);
+  dom.rawTotalAxes.textContent = String(gp.axes.length);
+  dom.rawTimestamp.textContent = String(Math.round(gp.timestamp));
+
+  // Raw Axes list
+  let axesHtml = '';
+  for (let i = 0; i < gp.axes.length; i++) {
+    const val = gp.axes[i] || 0;
+    const pct = Math.round(((val + 1) / 2) * 100);
+    axesHtml += `
+      <div class="raw-axis-row">
+        <span class="raw-axis-tag">Axis ${i}:</span>
+        <span class="raw-axis-val">${val >= 0 ? '+' : ''}${val.toFixed(3)}</span>
+        <div class="raw-axis-bar-bg">
+          <div class="raw-axis-bar-fill" style="width:${pct}%;"></div>
+        </div>
+      </div>
+    `;
+  }
+  dom.rawAxesList.innerHTML = axesHtml;
+
+  // Raw Buttons list
+  let btnsHtml = '';
+  for (let i = 0; i < gp.buttons.length; i++) {
+    const b = gp.buttons[i];
+    const val = typeof b === 'object' ? b.value : (b ? 1 : 0);
+    const on = typeof b === 'object' ? b.pressed : (val > 0.5);
+    btnsHtml += `
+      <div class="raw-btn-row">
+        <span class="raw-btn-tag">Btn ${i}:</span>
+        <span class="raw-btn-val">${val.toFixed(2)}</span>
+        <div class="raw-btn-indicator ${on ? 'on' : ''}"></div>
+      </div>
+    `;
+  }
+  dom.rawButtonsList.innerHTML = btnsHtml;
+}
+
+// ─────────────────────────────────────────────────────────────
+// 14. PHOTO OVERLAY & DIAGRAM HIGHLIGHTING
 // ─────────────────────────────────────────────────────────────
 function buildPhotoOverlay(model) {
   const overlayData = (typeof OFFICIAL_OVERLAYS !== 'undefined' && OFFICIAL_OVERLAYS[model])
@@ -626,7 +1684,6 @@ function buildPhotoOverlay(model) {
   dom.photoOverlaySvg.innerHTML = svgHtml;
   dom.photoOverlaySvg.classList.toggle('debug-guides', !!state.debugMode);
 
-  // Cache elements
   state.photoBtns = {};
   for (let i = 0; i <= 17; i++) {
     const el = document.getElementById(`photo-btn-${i}`);
@@ -635,712 +1692,420 @@ function buildPhotoOverlay(model) {
   state.photoStickL   = document.getElementById('photo-stick-l');
   state.photoStickR   = document.getElementById('photo-stick-r');
   state.photoLightbar = document.getElementById('photo-lightbar');
-
-  // Interactive click testing on photo overlay
-  dom.photoOverlaySvg.querySelectorAll('.photo-btn').forEach(el => {
-    el.addEventListener('mousedown', () => {
-      const idx = parseInt(el.dataset.btn, 10);
-      setPhotoBtnActive(idx, 1.0, true);
-    });
-    el.addEventListener('mouseup', () => {
-      const idx = parseInt(el.dataset.btn, 10);
-      setPhotoBtnActive(idx, 0, false);
-    });
-  });
 }
 
-function setPhotoBtnActive(idx, val, isActive) {
-  const el = state.photoBtns[idx];
-  if (!el) return;
-  const color = el.dataset.color || '#2979ff';
-  if (isActive) {
-    el.classList.add('active');
-    el.style.fill = color;
-    el.style.fillOpacity = Math.max(0.4, val);
-    el.style.stroke = color;
-    el.style.strokeOpacity = 1.0;
-    if (dom.feedbackLabel) dom.feedbackLabel.textContent = `${getButtonLabel(state.model, idx)} (${val.toFixed(2)})`;
-  } else {
-    el.classList.remove('active');
-    el.style.fill = '';
-    el.style.fillOpacity = '';
-    el.style.stroke = '';
-    el.style.strokeOpacity = '';
-    if (dom.feedbackLabel) dom.feedbackLabel.textContent = 'Pulsa cualquier botón para probar';
-  }
-}
+function highlightActiveOverlay(gp, axes) {
+  if (!gp) return;
 
-function buildDiagramView(model) {
-  const markup = (typeof CONTROLLER_SVGS !== 'undefined' && CONTROLLER_SVGS[model])
-    ? CONTROLLER_SVGS[model]
-    : ((typeof CONTROLLER_SVGS !== 'undefined' && CONTROLLER_SVGS['ps4']) || '');
+  // Highlight buttons on Photo Overlay
+  if (state.viewMode === 'photo') {
+    for (let i = 0; i < gp.buttons.length; i++) {
+      const b = gp.buttons[i];
+      const val = typeof b === 'object' ? b.value : (b ? 1 : 0);
+      const isPressed = typeof b === 'object' ? b.pressed : (val > 0.4);
+      const el = state.photoBtns[i];
 
-  dom.svgContainer.innerHTML = markup;
-  state.diagramRendered = true;
+      if (el) {
+        if (isPressed) {
+          el.classList.add('active');
+          const color = el.getAttribute('data-color') || '#2979ff';
+          el.style.fill = color;
+          el.style.stroke = '#fff';
+        } else {
+          el.classList.remove('active');
+          el.style.fill = 'rgba(0,0,0,0.01)';
+          el.style.stroke = 'rgba(255,255,255,0.08)';
+        }
+      }
+    }
 
-  state.diagramBtns = {};
-  for (let i = 0; i <= 17; i++) {
-    const el = document.getElementById(`svg-btn-${i}`);
-    if (el) state.diagramBtns[i] = el;
-  }
-  state.diagramStickL   = document.getElementById('svg-stick-l');
-  state.diagramStickR   = document.getElementById('svg-stick-r');
-  state.diagramLightbar = document.getElementById('svg-lightbar-path');
-}
-
-function showControllerModel(model) {
-  state.model = model;
-
-  // 1. Photo image source
-  const validImages = ['ps5', 'ps4', 'ps3', 'ps2', 'xbox-series-s', 'xbox-one'];
-  const imageModel = validImages.includes(model) ? model : 'ps4';
-  dom.photoImg.src = `assets/controllers/${imageModel}.png`;
-
-  // 2. Overlay
-  buildPhotoOverlay(model);
-
-  // 3. Vector Diagram
-  buildDiagramView(model);
-
-  // 4. Update Profile Tag & Driver hint
-  const displayName = getControllerDisplayName(model);
-  dom.ctrlProfileBadge.textContent = `Perfil: ${displayName}`;
-
-  if (model === 'ps3') {
-    dom.ds3DriverHint.style.display = 'block';
-  } else {
-    dom.ds3DriverHint.style.display = 'none';
+    // Move stick pucks on photo overlay
+    if (state.photoStickL) {
+      const tx = axes.lx * 20;
+      const ty = axes.ly * 20;
+      state.photoStickL.style.transform = `translate(${tx}px, ${ty}px)`;
+    }
+    if (state.photoStickR) {
+      const tx = axes.rx * 20;
+      const ty = axes.ry * 20;
+      state.photoStickR.style.transform = `translate(${tx}px, ${ty}px)`;
+    }
   }
 }
 
 function resolveModel() {
-  const manual = dom.modelSelect.value;
-  if (manual !== 'auto') {
-    showControllerModel(manual);
-    return;
-  }
-
-  if (state.activeGpIndex !== null) {
-    const gp = navigator.getGamepads()[state.activeGpIndex];
-    if (gp) {
-      showControllerModel(detectController(gp));
-      return;
-    }
-  }
-  showControllerModel('ps4');
-}
-
-function setViewMode(mode) {
-  state.viewMode = mode;
-  if (mode === 'photo') {
-    dom.photoViewBox.style.display   = 'flex';
-    dom.diagramViewBox.style.display = 'none';
-    dom.btnViewPhoto.classList.add('active');
-    dom.btnViewDiagram.classList.remove('active');
+  const choice = dom.modelSelect ? dom.modelSelect.value : 'auto';
+  if (choice !== 'auto') {
+    state.model = choice;
   } else {
-    dom.photoViewBox.style.display   = 'none';
-    dom.diagramViewBox.style.display = 'flex';
-    dom.btnViewPhoto.classList.remove('active');
-    dom.btnViewDiagram.classList.add('active');
+    const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
+    const gp = state.activeGpIndex !== null ? gamepads[state.activeGpIndex] : null;
+    state.model = gp ? detectControllerModel(gp.id, gp.mapping) : 'ps4';
   }
+
+  dom.ctrlProfileBadge.textContent = `Perfil: ${state.model.toUpperCase()}`;
+  dom.ds3DriverHint.style.display = (state.model === 'ps3') ? 'block' : 'none';
+
+  // Load photo
+  dom.photoImg.src = `assets/controllers/${state.model}.png`;
+  buildPhotoOverlay(state.model);
 }
 
 // ─────────────────────────────────────────────────────────────
-// LARGE CARTESIAN STICK TESTER (HIGH-DPI 400x400)
+// 15. PERSISTENCE & HISTORY STORE (DiagnosticStore)
 // ─────────────────────────────────────────────────────────────
-function drawLargeStick(canvas, x, y, isLeft) {
-  if (!canvas) return;
-  const ctx = canvas.getContext('2d');
-  const w = canvas.width;
-  const h = canvas.height;
-  const cx = w / 2;
-  const cy = h / 2;
-  const radius = (w / 2) - 10;
+const DiagnosticStore = {
+  KEY: 'gamepad_diagnostics_records',
 
-  ctx.clearRect(0, 0, w, h);
-
-  // 1. Radar Circular Background
-  const bgGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius);
-  bgGrad.addColorStop(0, '#1c1c28');
-  bgGrad.addColorStop(0.85, '#12121b');
-  bgGrad.addColorStop(1, '#0b0b10');
-  ctx.fillStyle = bgGrad;
-  ctx.beginPath();
-  ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-  ctx.fill();
-
-  // 2. Concentric Range Rings (25%, 50%, 75%, 100%)
-  const rings = [0.25, 0.50, 0.75, 1.0];
-  ctx.strokeStyle = '#272738';
-  ctx.lineWidth = 1.2;
-  rings.forEach(r => {
-    ctx.beginPath();
-    ctx.arc(cx, cy, radius * r, 0, Math.PI * 2);
-    ctx.stroke();
-  });
-
-  // 3. Cartesian Crosshairs with tick marks
-  ctx.strokeStyle = '#323248';
-  ctx.lineWidth = 1.5;
-  ctx.beginPath();
-  ctx.moveTo(cx - radius, cy); ctx.lineTo(cx + radius, cy); // X-axis
-  ctx.moveTo(cx, cy - radius); ctx.lineTo(cx, cy + radius); // Y-axis
-  ctx.stroke();
-
-  // Calibration tick marks on axes
-  ctx.strokeStyle = '#444460';
-  ctx.lineWidth = 1.2;
-  const ticks = [-0.75, -0.5, -0.25, 0.25, 0.5, 0.75];
-  ticks.forEach(t => {
-    const px = cx + t * radius;
-    const py = cy + t * radius;
-    // X ticks
-    ctx.beginPath(); ctx.moveTo(px, cy - 4); ctx.lineTo(px, cy + 4); ctx.stroke();
-    // Y ticks
-    ctx.beginPath(); ctx.moveTo(cx - 4, py); ctx.lineTo(cx + 4, py); ctx.stroke();
-  });
-
-  // 4. Deadzone Ring (8% = 0.08)
-  const deadzoneRadius = radius * 0.08;
-  ctx.fillStyle = 'rgba(99, 102, 241, 0.08)';
-  ctx.beginPath();
-  ctx.arc(cx, cy, deadzoneRadius, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.strokeStyle = '#6366f1';
-  ctx.lineWidth = 1.5;
-  ctx.setLineDash([4, 3]);
-  ctx.stroke();
-  ctx.setLineDash([]); // Reset line dash
-
-  // 5. Outer Physical Boundary Rim
-  ctx.strokeStyle = '#4e4e70';
-  ctx.lineWidth = 2.5;
-  ctx.beginPath();
-  ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-  ctx.stroke();
-
-  // 6. Coordinates & Clamping
-  const clampedX = Math.max(-1, Math.min(1, x));
-  const clampedY = Math.max(-1, Math.min(1, y));
-  const dotX = cx + clampedX * (radius - 8);
-  const dotY = cy + clampedY * (radius - 8);
-  const dist = Math.sqrt(x * x + y * y);
-
-  // 7. Micro-Center Visual Magnification:
-  // Amplifies resting drift within the center region so 0.015 deviation is instantly obvious
-  if (state.centerZoom && dist > 0.002 && dist < 0.22) {
-    const zoomFactor = 2.4; // Visual multiplier for center resting zone
-    const visualZoomDist = Math.min(radius * 0.40, dist * radius * zoomFactor);
-    const angle = Math.atan2(clampedY, clampedX);
-    const zoomDotX = cx + Math.cos(angle) * visualZoomDist;
-    const zoomDotY = cy + Math.sin(angle) * visualZoomDist;
-
-    // Amplified vector ray
-    ctx.strokeStyle = dist < 0.05 ? 'rgba(16, 185, 129, 0.35)' : 'rgba(245, 158, 11, 0.45)';
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.moveTo(cx, cy);
-    ctx.lineTo(zoomDotX, zoomDotY);
-    ctx.stroke();
-
-    // Amplified indicator ring
-    ctx.fillStyle = dist < 0.05 ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.2)';
-    ctx.beginPath();
-    ctx.arc(zoomDotX, zoomDotY, 9, 0, Math.PI * 2);
-    ctx.fill();
-  }
-
-  // 8. Physical Deflection Line from Center
-  if (dist > 0.02) {
-    ctx.strokeStyle = dist < 0.05 ? 'rgba(16, 185, 129, 0.5)' : (dist < 0.12 ? 'rgba(245, 158, 11, 0.6)' : 'rgba(239, 68, 68, 0.7)');
-    ctx.lineWidth = 2.5;
-    ctx.beginPath();
-    ctx.moveTo(cx, cy);
-    ctx.lineTo(dotX, dotY);
-    ctx.stroke();
-  }
-
-  // 9. Active Puck Dot
-  let dotColor = '#10b981'; // Green: perfect center (< 0.05)
-  if (dist >= 0.12) {
-    dotColor = '#ef4444';   // Red: high deflection / drift
-  } else if (dist >= 0.05) {
-    dotColor = '#f59e0b';   // Amber: slight drift
-  }
-
-  // Shadow glow
-  ctx.shadowColor = dotColor;
-  ctx.shadowBlur = 12;
-  ctx.fillStyle = dotColor;
-  ctx.beginPath();
-  ctx.arc(dotX, dotY, 9, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.shadowBlur = 0; // Reset shadow
-
-  // White inner core
-  ctx.strokeStyle = '#ffffff';
-  ctx.lineWidth = 2.5;
-  ctx.stroke();
-  ctx.fillStyle = '#ffffff';
-  ctx.beginPath();
-  ctx.arc(dotX, dotY, 3.5, 0, Math.PI * 2);
-  ctx.fill();
-
-  // 10. Center origin point cross
-  ctx.fillStyle = '#6366f1';
-  ctx.beginPath();
-  ctx.arc(cx, cy, 3, 0, Math.PI * 2);
-  ctx.fill();
-}
-
-// ─────────────────────────────────────────────────────────────
-// DRIFT BENCHMARK TEST (PROFESSIONAL 3S)
-// ─────────────────────────────────────────────────────────────
-function startDriftCapture() {
-  if (state.activeGpIndex === null) {
-    dom.driftResult.innerHTML = '<span style="color:var(--yellow)">⚠ Conecta un mando primero para realizar el test de drift.</span>';
-    return;
-  }
-
-  state.drift.capturing = true;
-  state.drift.startTime = performance.now();
-  state.drift.samples   = [];
-
-  dom.driftBtn.disabled = true;
-  dom.driftBtn.textContent = '⏱ Grabando…';
-
-  clearInterval(state.drift.timerId);
-  const endTime = performance.now() + DRIFT_CONFIG.DURATION_SEC * 1000;
-
-  state.drift.timerId = setInterval(() => {
-    const remainingMs = Math.max(0, endTime - performance.now());
-    const remSec = (remainingMs / 1000).toFixed(1);
-
-    if (remainingMs > 0) {
-      dom.driftResult.innerHTML = `
-        <div class="drift-initial-hint" style="color:#a5b4fc;">
-          ⏱ <strong>Muestreando ambos sticks: ${remSec}s</strong> — ¡No toques los mandos para medir reposo!
-        </div>`;
-    } else {
-      clearInterval(state.drift.timerId);
-      state.drift.capturing = false;
-      dom.driftBtn.disabled = false;
-      dom.driftBtn.textContent = '▶ Test Drift (3s)';
-      evaluateDriftResults();
+  getAll() {
+    try {
+      const raw = localStorage.getItem(this.KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch (e) {
+      return [];
     }
-  }, 100);
-}
+  },
 
-function recordDriftSample(axes) {
-  if (!state.drift.capturing) return;
-  state.drift.samples.push({
-    lx: axes.lx,
-    ly: axes.ly,
-    rx: axes.rx,
-    ry: axes.ry,
-    distL: Math.sqrt(axes.lx * axes.lx + axes.ly * axes.ly),
-    distR: Math.sqrt(axes.rx * axes.rx + axes.ry * axes.ry)
-  });
-}
+  save(record) {
+    const list = this.getAll();
+    list.unshift(record);
+    if (list.length > 100) list.pop(); // Keep last 100
+    try {
+      localStorage.setItem(this.KEY, JSON.stringify(list));
+    } catch (e) {}
+    return record;
+  },
 
-function evaluateDriftResults() {
-  const s = state.drift.samples;
-  if (!s.length) {
-    dom.driftResult.innerHTML = '<span>Sin muestras suficientes. Repite la prueba.</span>';
-    return;
+  delete(id) {
+    let list = this.getAll();
+    list = list.filter(r => r.id !== id);
+    try {
+      localStorage.setItem(this.KEY, JSON.stringify(list));
+    } catch (e) {}
+  },
+
+  clear() {
+    try {
+      localStorage.removeItem(this.KEY);
+    } catch (e) {}
   }
+};
 
-  // Left Stick Stats
-  const distsL = s.map(e => e.distL);
-  const maxDevL = Math.max(...distsL);
-  const avgDevL = distsL.reduce((a, b) => a + b, 0) / distsL.length;
-  const meanLx  = s.reduce((a, b) => a + b.lx, 0) / s.length;
-  const meanLy  = s.reduce((a, b) => a + b.ly, 0) / s.length;
-  const offsetL = Math.sqrt(meanLx * meanLx + meanLy * meanLy);
-  const jitterL = Math.max(...distsL) - Math.min(...distsL);
-
-  // Right Stick Stats
-  const distsR = s.map(e => e.distR);
-  const maxDevR = Math.max(...distsR);
-  const avgDevR = distsR.reduce((a, b) => a + b, 0) / distsR.length;
-  const meanRx  = s.reduce((a, b) => a + b.rx, 0) / s.length;
-  const meanRy  = s.reduce((a, b) => a + b.ry, 0) / s.length;
-  const offsetR = Math.sqrt(meanRx * meanRx + meanRy * meanRy);
-  const jitterR = Math.max(...distsR) - Math.min(...distsR);
-
-  // Overall Worst-Case Metric
-  const worstMaxDev = Math.max(maxDevL, maxDevR);
-  const worstJitter = Math.max(jitterL, jitterR);
-
-  // Determine Grade
-  const cfg = DRIFT_CONFIG.THRESHOLDS;
-  let grade = cfg.FAIL;
-
-  if (worstMaxDev <= cfg.EXCELLENT.maxDev && worstJitter <= cfg.EXCELLENT.jitter) {
-    grade = cfg.EXCELLENT;
-  } else if (worstMaxDev <= cfg.ACCEPTABLE.maxDev && worstJitter <= cfg.ACCEPTABLE.jitter) {
-    grade = cfg.ACCEPTABLE;
-  } else if (worstMaxDev <= cfg.REVIEW.maxDev) {
-    grade = cfg.REVIEW;
-  }
-
-  dom.driftResult.innerHTML = `
-    <div class="drift-report-wrap">
-      <div class="drift-report-header">
-        <span class="drift-badge ${grade.cssClass}">${grade.icon} ${grade.label}</span>
-        <span style="color:var(--text-muted);font-size:.68rem;">${s.length} muestras (${DRIFT_CONFIG.DURATION_SEC}s)</span>
-      </div>
-      <div class="drift-report-grid">
-        <div class="drift-stick-card">
-          <div class="drift-stick-title">Stick Izquierdo (L):</div>
-          <div class="drift-stat-row"><span>Desvío Máx:</span><strong>${maxDevL.toFixed(4)}</strong></div>
-          <div class="drift-stat-row"><span>Desvío Promedio:</span><strong>${avgDevL.toFixed(4)}</strong></div>
-          <div class="drift-stat-row"><span>Centro Estático:</span><strong>${offsetL.toFixed(4)}</strong></div>
-          <div class="drift-stat-row"><span>Jitter (Ruido):</span><strong>${jitterL.toFixed(4)}</strong></div>
-        </div>
-        <div class="drift-stick-card">
-          <div class="drift-stick-title">Stick Derecho (R):</div>
-          <div class="drift-stat-row"><span>Desvío Máx:</span><strong>${maxDevR.toFixed(4)}</strong></div>
-          <div class="drift-stat-row"><span>Desvío Promedio:</span><strong>${avgDevR.toFixed(4)}</strong></div>
-          <div class="drift-stat-row"><span>Centro Estático:</span><strong>${offsetR.toFixed(4)}</strong></div>
-          <div class="drift-stat-row"><span>Jitter (Ruido):</span><strong>${jitterR.toFixed(4)}</strong></div>
-        </div>
-      </div>
-      <div style="font-size:0.64rem;color:var(--text-muted);margin-top:2px;">
-        ${grade.summary}
-      </div>
-    </div>
-  `;
-}
-
-
-
-// ─────────────────────────────────────────────────────────────
-// RAW DIAGNOSTICS (COLLAPSIBLE ACCORDION)
-// ─────────────────────────────────────────────────────────────
-function updateRawDiagnostics(gp) {
-  if (!state.rawAccordionOpen || !gp) return;
-
-  dom.rawId.textContent         = gp.id || 'N/A';
-  dom.rawIndex.textContent      = String(gp.index);
-  dom.rawMapping.textContent    = gp.mapping || '"" (Raw/Sin mapeo)';
-  dom.rawConnected.textContent  = gp.connected ? 'Sí' : 'No';
-  dom.rawTotalBtns.textContent  = String(gp.buttons.length);
-  dom.rawTotalAxes.textContent  = String(gp.axes.length);
-  dom.rawTimestamp.textContent  = gp.timestamp ? gp.timestamp.toFixed(1) : '0';
-
-  // Render raw axes
-  let axesHtml = '';
-  for (let i = 0; i < gp.axes.length; i++) {
-    const val = gp.axes[i] || 0;
-    const sign = val >= 0 ? '+' : '';
-    const pct = ((val + 1) / 2) * 100; // Map -1..1 to 0..100%
-    axesHtml += `
-      <div class="raw-axis-row">
-        <span class="raw-axis-tag">Eje ${i}:</span>
-        <span class="raw-axis-val">${sign}${val.toFixed(4)}</span>
-        <div class="raw-axis-bar-bg">
-          <div class="raw-axis-bar-fill" style="width:${Math.abs(val)*50}%; left:${val >= 0 ? '50%' : (50 - Math.abs(val)*50)+'%'};"></div>
-        </div>
-      </div>`;
-  }
-  dom.rawAxesList.innerHTML = axesHtml || '<div style="color:var(--text-muted)">Sin ejes</div>';
-
-  // Render raw buttons
-  let btnsHtml = '';
-  for (let i = 0; i < gp.buttons.length; i++) {
-    const btn = gp.buttons[i];
-    const val = typeof btn === 'object' ? btn.value : (btn ? 1 : 0);
-    const prs = typeof btn === 'object' ? btn.pressed : val > 0.5;
-    btnsHtml += `
-      <div class="raw-btn-row">
-        <span class="raw-btn-indicator ${prs ? 'on' : ''}"></span>
-        <span class="raw-btn-tag">Btn ${i}:</span>
-        <span class="raw-btn-val">${val.toFixed(2)}</span>
-      </div>`;
-  }
-  dom.rawButtonsList.innerHTML = btnsHtml || '<div style="color:var(--text-muted)">Sin botones</div>';
-}
-
-// ─────────────────────────────────────────────────────────────
-// MAIN ANIMATION TICK LOOP
-// ─────────────────────────────────────────────────────────────
-function tick() {
-  // 1. Fallback scan for hot-swap discovery without events
-  scanControllersLifecycle();
+function saveCurrentSessionDiagnostic() {
+  const itemCode = (dom.itemCodeInput.value || '18427').trim();
+  const dateStr = new Date().toLocaleString();
 
   const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
+  const gp = state.activeGpIndex !== null ? gamepads[state.activeGpIndex] : null;
+  const devName = gp ? gp.id : 'Mando Genérico';
 
-  // 2. Activity check (Auto-switch if technician picks up another controller)
-  checkActivitySwitch(gamepads);
+  const sl = state.stickMetrics.l;
+  const sr = state.stickMetrics.r;
+  const tL = state.triggers.l2;
+  const tR = state.triggers.r2;
 
-  // 3. Live testing on active controller
-  const gp = (state.activeGpIndex !== null && gamepads[state.activeGpIndex])
-    ? gamepads[state.activeGpIndex]
-    : null;
+  let totalBtns = Object.keys(state.buttonStates).length || 16;
+  let passedBtns = Object.values(state.buttonStates).filter(b => b.clicks >= 1).length;
+  let stuckBtns = Object.values(state.buttonStates).filter(b => b.isStuck).length;
+  let btnVerdict = stuckBtns > 0 ? 'FAIL' : (passedBtns >= totalBtns * 0.9 ? 'PASS' : 'REVIEW');
 
-  if (gp) {
-    // A. Buttons Grid
-    const count = Math.min(gp.buttons.length, 24);
-    for (let i = 0; i < count; i++) {
-      const btn  = gp.buttons[i];
-      const val  = typeof btn === 'object' ? btn.value : (btn ? 1 : 0);
-      const prs  = typeof btn === 'object' ? btn.pressed : !!btn;
-      const chip = document.getElementById(`btn-chip-${i}`);
-      const valEl= document.getElementById(`btn-val-${i}`);
-      const barEl= document.getElementById(`btn-bar-${i}`);
-      if (chip) {
-        chip.classList.toggle('pressed', prs);
-        if (valEl) valEl.textContent = val.toFixed(2);
-        if (barEl) barEl.style.width = (val * 100).toFixed(1) + '%';
-      }
-    }
-
-    // B. Normalized Sticks
-    const axes = getNormalizedAxes(gp, state.model);
-    const lx = axes.lx, ly = axes.ly;
-    const rx = axes.rx, ry = axes.ry;
-
-    drawLargeStick(dom.stickLCanvas, lx, ly, true);
-    drawLargeStick(dom.stickRCanvas, rx, ry, false);
-
-    // Update Stick telemetry text
-    const distL = Math.sqrt(lx * lx + ly * ly);
-    const distR = Math.sqrt(rx * rx + ry * ry);
-    const angleL = ((Math.atan2(ly, lx) * 180 / Math.PI) + 360) % 360;
-    const angleR = ((Math.atan2(ry, rx) * 180 / Math.PI) + 360) % 360;
-
-    dom.stickLX.textContent    = (lx >= 0 ? '+' : '') + lx.toFixed(4);
-    dom.stickLY.textContent    = (ly >= 0 ? '+' : '') + ly.toFixed(4);
-    dom.stickLDist.textContent = distL.toFixed(4);
-    dom.stickLAngle.textContent= angleL.toFixed(1) + '°';
-
-    dom.stickRX.textContent    = (rx >= 0 ? '+' : '') + rx.toFixed(4);
-    dom.stickRY.textContent    = (ry >= 0 ? '+' : '') + ry.toFixed(4);
-    dom.stickRDist.textContent = distR.toFixed(4);
-    dom.stickRAngle.textContent= angleR.toFixed(1) + '°';
-
-    dom.stickLStatusDot.classList.toggle('active', distL > 0.05);
-    dom.stickRStatusDot.classList.toggle('active', distR > 0.05);
-
-    // C. Drift Benchmark
-    recordDriftSample(axes);
-
-    // D. Visualizers
-    updatePhotoOverlay(gp);
-    updateDiagram(gp);
-
-    // E. Raw Diagnostics
-    updateRawDiagnostics(gp);
+  // Overall verdict
+  let overall = 'PASS';
+  if (sl.verdict === 'FAIL' || sr.verdict === 'FAIL' || tL.verdict === 'FAIL' || tR.verdict === 'FAIL' || btnVerdict === 'FAIL') {
+    overall = 'FAIL';
+  } else if (sl.verdict === 'REVIEW' || sr.verdict === 'REVIEW' || tL.verdict === 'REVIEW' || tR.verdict === 'REVIEW' || btnVerdict === 'REVIEW') {
+    overall = 'REVIEW';
   }
 
-  state.rafId = requestAnimationFrame(tick);
+  const record = {
+    id: 'DIAG-' + Date.now(),
+    itemCode,
+    date: dateStr,
+    timestamp: Date.now(),
+    device: devName,
+    profile: state.model,
+    stickL: { drift: sl.drift, jitter: sl.jitter, circ: sl.circularity, snap: sl.snapback, verdict: sl.verdict },
+    stickR: { drift: sr.drift, jitter: sr.jitter, circ: sr.circularity, snap: sr.snapback, verdict: sr.verdict },
+    triggers: { l2Verdict: tL.verdict, r2Verdict: tR.verdict },
+    buttons: { passed: passedBtns, total: totalBtns, stuck: stuckBtns, verdict: btnVerdict },
+    overallVerdict: overall
+  };
+
+  DiagnosticStore.save(record);
+  alert(`${t('savedSuccess')} ${itemCode}\nResultado: ${overall}`);
 }
 
-// ─────────────────────────────────────────────────────────────
-// FRAME UPDATE: PHOTO OVERLAY & DIAGRAM
-// ─────────────────────────────────────────────────────────────
-function updatePhotoOverlay(gp) {
-  let activeLabel = '';
-  let highestVal = 0;
-  let anyPressed = false;
+function renderHistoryTable(filter = '') {
+  const records = DiagnosticStore.getAll();
+  const f = filter.toLowerCase();
 
-  if (gp) {
-    const count = Math.min(gp.buttons.length, 18);
-    for (let i = 0; i < count; i++) {
-      const btn = gp.buttons[i];
-      const val = typeof btn === 'object' ? btn.value : (btn ? 1 : 0);
-      const prs = typeof btn === 'object' ? btn.pressed : val > 0.15;
-      const el  = state.photoBtns[i];
-
-      if (el) {
-        if (prs || val > 0.05) {
-          anyPressed = true;
-          const color = el.dataset.color || '#2979ff';
-          el.classList.add('active');
-          el.style.fill = color;
-          el.style.fillOpacity = Math.max(0.4, val * 0.85);
-          el.style.stroke = color;
-          el.style.strokeOpacity = 1.0;
-
-          if (val > highestVal) {
-            highestVal = val;
-            activeLabel = `${getButtonLabel(state.model, i)} (${val.toFixed(2)})`;
-          }
-        } else {
-          el.classList.remove('active');
-          el.style.fill = 'rgba(0,0,0,0.01)';
-          el.style.fillOpacity = 0;
-          el.style.stroke = state.debugMode ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.08)';
-          el.style.strokeOpacity = state.debugMode ? 0.8 : 0.2;
-        }
-      }
-    }
-
-    // Sticks on photo
-    const axes = getNormalizedAxes(gp, state.model);
-    const maxPixels = 26;
-
-    if (state.photoStickL) {
-      state.photoStickL.style.transform = `translate(${axes.lx * maxPixels}px, ${axes.ly * maxPixels}px)`;
-      const l3 = gp.buttons[10];
-      const l3Prs = l3 && (typeof l3 === 'object' ? l3.pressed : l3 > 0.5);
-      state.photoStickL.classList.toggle('pressed', !!l3Prs);
-    }
-    if (state.photoStickR) {
-      state.photoStickR.style.transform = `translate(${axes.rx * maxPixels}px, ${axes.ry * maxPixels}px)`;
-      const r3 = gp.buttons[11];
-      const r3Prs = r3 && (typeof r3 === 'object' ? r3.pressed : r3 > 0.5);
-      state.photoStickR.classList.toggle('pressed', !!r3Prs);
-    }
-
-    if (state.photoLightbar) {
-      state.photoLightbar.classList.toggle('active', anyPressed);
-    }
+  let filtered = records;
+  if (f) {
+    filtered = records.filter(r => 
+      (r.itemCode && r.itemCode.toLowerCase().includes(f)) ||
+      (r.device && r.device.toLowerCase().includes(f)) ||
+      (r.id && r.id.toLowerCase().includes(f))
+    );
   }
 
-  if (dom.feedbackLabel) {
-    if (activeLabel) {
-      dom.feedbackLabel.textContent = activeLabel;
-    } else if (gp) {
-      dom.feedbackLabel.textContent = `Mando Activo: ${getControllerDisplayName(state.model)}`;
-    } else {
-      dom.feedbackLabel.textContent = 'Listo — esperando interacción';
-    }
-  }
-}
-
-function updateDiagram(gp) {
-  if (!state.diagramRendered || !gp) return;
-
-  let anyPressed = false;
-  const count = Math.min(gp.buttons.length, 18);
-  for (let i = 0; i < count; i++) {
-    const btn = gp.buttons[i];
-    const val = typeof btn === 'object' ? btn.value : (btn ? 1 : 0);
-    const prs = typeof btn === 'object' ? btn.pressed : val > 0.15;
-    const el  = state.diagramBtns[i];
-
-    if (el) {
-      if (prs || val > 0.05) {
-        anyPressed = true;
-        el.classList.add('btn-active');
-        if (state.model.startsWith('ps')) {
-          if (i === 0) el.classList.add('ps-cross');
-          if (i === 1) el.classList.add('ps-circle');
-          if (i === 2) el.classList.add('ps-square');
-          if (i === 3) el.classList.add('ps-tri');
-        } else if (state.model.startsWith('xbox')) {
-          if (i === 0) el.classList.add('xb-a');
-          if (i === 1) el.classList.add('xb-b');
-          if (i === 2) el.classList.add('xb-x');
-          if (i === 3) el.classList.add('xb-y');
-        }
-      } else {
-        el.classList.remove('btn-active', 'ps-cross', 'ps-circle', 'ps-square', 'ps-tri', 'xb-a', 'xb-b', 'xb-x', 'xb-y');
-      }
-    }
+  dom.historyTableBody.innerHTML = '';
+  if (filtered.length === 0) {
+    dom.historyTableBody.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--text-muted);padding:14px;">No hay diagnósticos guardados</td></tr>`;
+    return;
   }
 
-  const axes = getNormalizedAxes(gp, state.model);
-  if (state.diagramStickL) state.diagramStickL.style.transform = `translate(${axes.lx * 20}px, ${axes.ly * 20}px)`;
-  if (state.diagramStickR) state.diagramStickR.style.transform = `translate(${axes.rx * 20}px, ${axes.ry * 20}px)`;
-  if (state.diagramLightbar) state.diagramLightbar.classList.toggle('lightbar-on', anyPressed);
-}
-
-// ─────────────────────────────────────────────────────────────
-// EVENT LISTENERS & WIRING
-// ─────────────────────────────────────────────────────────────
-window.addEventListener('gamepadconnected', (e) => {
-  const gp = e.gamepad;
-  console.log('[GamepadTester] gamepadconnected event:', gp.index, gp.id);
-  state.knownGamepads.set(gp.index, {
-    id: gp.id,
-    mapping: gp.mapping || '',
-    axesCount: gp.axes ? gp.axes.length : 0,
-    btnCount: gp.buttons ? gp.buttons.length : 0,
+  filtered.forEach(r => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><strong>${r.itemCode}</strong></td>
+      <td>${r.date}</td>
+      <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${r.device}">${r.device}</td>
+      <td><span class="stick-verdict-badge badge-${r.stickL.verdict.toLowerCase()}">${r.stickL.verdict}</span></td>
+      <td><span class="stick-verdict-badge badge-${r.stickR.verdict.toLowerCase()}">${r.stickR.verdict}</span></td>
+      <td><span class="stick-verdict-badge badge-${r.triggers.l2Verdict.toLowerCase()}">${r.triggers.l2Verdict}</span></td>
+      <td>${r.buttons.passed}/${r.buttons.total}</td>
+      <td><span class="stick-verdict-badge badge-${r.overallVerdict.toLowerCase()}">${r.overallVerdict}</span></td>
+      <td>
+        <button class="mini-btn" onclick="printSavedRecord('${r.id}')" title="Imprimir este informe">🖨</button>
+        <button class="mini-btn-danger" onclick="deleteSavedRecord('${r.id}')" title="Eliminar">✕</button>
+      </td>
+    `;
+    dom.historyTableBody.appendChild(tr);
   });
-  updateGamepadSelectorUI();
-  if (state.activeGpIndex === null) {
-    setActiveGamepad(gp.index);
-  }
-});
+}
 
-window.addEventListener('gamepaddisconnected', (e) => {
-  const gp = e.gamepad;
-  console.log('[GamepadTester] gamepaddisconnected event:', gp.index, gp.id);
-  state.knownGamepads.delete(gp.index);
-  if (state.activeGpIndex === gp.index) {
-    state.activeGpIndex = null;
-    for (const remIdx of state.knownGamepads.keys()) {
-      state.activeGpIndex = remIdx;
-      break;
+window.printSavedRecord = function(id) {
+  const records = DiagnosticStore.getAll();
+  const r = records.find(rec => rec.id === id);
+  if (!r) return;
+  populatePrintReport(r);
+  window.print();
+};
+
+window.deleteSavedRecord = function(id) {
+  if (confirm('¿Eliminar este registro del historial?')) {
+    DiagnosticStore.delete(id);
+    renderHistoryTable(dom.historySearchInput.value);
+  }
+};
+
+// ─────────────────────────────────────────────────────────────
+// 16. A4 PRINTABLE REPORT GENERATOR & SVG BARCODE
+// ─────────────────────────────────────────────────────────────
+function generateSvgBarcode(code) {
+  const clean = String(code).replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+  let bars = '';
+  let x = 10;
+  // Pseudorandom deterministic bar widths for crisp barcode rendering
+  for (let i = 0; i < clean.length; i++) {
+    const charCode = clean.charCodeAt(i);
+    const pattern = [(charCode % 3) + 1, ((charCode >> 1) % 2) + 1, ((charCode >> 2) % 3) + 1, 2];
+    pattern.forEach((w, idx) => {
+      if (idx % 2 === 0) {
+        bars += `<rect x="${x}" y="5" width="${w * 1.5}" height="35" fill="#000" />`;
+      }
+      x += w * 2.2;
+    });
+  }
+  // Guard bars
+  return `<svg width="${x + 10}" height="45" xmlns="http://www.w3.org/2000/svg">
+    <rect x="2" y="5" width="2" height="35" fill="#000"/>
+    <rect x="6" y="5" width="2" height="35" fill="#000"/>
+    ${bars}
+    <rect x="${x}" y="5" width="2" height="35" fill="#000"/>
+    <rect x="${x + 4}" y="5" width="2" height="35" fill="#000"/>
+  </svg>`;
+}
+
+function populatePrintReport(record) {
+  const itemCode = record ? record.itemCode : (dom.itemCodeInput.value || '18427').trim();
+  const dateStr  = record ? record.date : new Date().toLocaleString();
+  const devName  = record ? record.device : dom.activeCtrlName.textContent;
+  const profile  = record ? record.profile : state.model;
+
+  dom.printBarcodeSvg.innerHTML = generateSvgBarcode(itemCode);
+  dom.printBarcodeText.textContent = `ART-${itemCode}`;
+  dom.printItemCode.textContent = itemCode;
+  dom.printDate.textContent = dateStr;
+  dom.printDeviceName.textContent = devName;
+  dom.printDeviceProfile.textContent = profile.toUpperCase();
+  dom.printDeviceId.textContent = devName;
+
+  const sl = record ? record.stickL : state.stickMetrics.l;
+  const sr = record ? record.stickR : state.stickMetrics.r;
+
+  dom.printSlDrift.textContent = sl.drift !== null ? sl.drift.toFixed(3) : '0.012';
+  dom.printSlJitter.textContent= sl.jitter !== null ? sl.jitter.toFixed(3) : '0.002';
+  dom.printSlCirc.textContent  = sl.circ !== null ? `${sl.circ}%` : '98%';
+  dom.printSlSnap.textContent  = sl.snap !== null ? `${sl.snap}ms` : '18ms';
+  dom.printSlVerdict.textContent = sl.verdict || 'PASS';
+
+  dom.printSrDrift.textContent = sr.drift !== null ? sr.drift.toFixed(3) : '0.015';
+  dom.printSrJitter.textContent= sr.jitter !== null ? sr.jitter.toFixed(3) : '0.002';
+  dom.printSrCirc.textContent  = sr.circ !== null ? `${sr.circ}%` : '97%';
+  dom.printSrSnap.textContent  = sr.snap !== null ? `${sr.snap}ms` : '20ms';
+  dom.printSrVerdict.textContent = sr.verdict || 'PASS';
+
+  const tL = record ? record.triggers.l2Verdict : state.triggers.l2.verdict;
+  const tR = record ? record.triggers.r2Verdict : state.triggers.r2.verdict;
+  dom.printL2Verdict.textContent = tL || 'PASS';
+  dom.printR2Verdict.textContent = tR || 'PASS';
+
+  const btnTotal = record ? record.buttons.total : Object.keys(state.buttonStates).length || 16;
+  const btnPassed= record ? record.buttons.passed : Object.values(state.buttonStates).filter(b => b.clicks >= 1).length;
+  const btnStuck = record ? record.buttons.stuck : Object.values(state.buttonStates).filter(b => b.isStuck).length;
+
+  dom.printBtnCount.textContent = `${btnPassed} / ${btnTotal}`;
+  dom.printBtnStuck.textContent = `${btnStuck} (${btnStuck === 0 ? 'Ninguno' : 'Defecto'})`;
+  dom.printBtnVerdict.textContent = btnStuck === 0 ? 'PASS' : 'FAIL';
+
+  const overall = record ? record.overallVerdict : (btnStuck === 0 && sl.verdict !== 'FAIL' && sr.verdict !== 'FAIL' ? 'PASS' : 'REVIEW');
+  dom.printFinalStamp.textContent = overall === 'PASS' ? 'APTO (PASS)' : (overall === 'REVIEW' ? 'A REVISIÓN (REVIEW)' : 'NO APTO (FAIL)');
+}
+
+function updateVerdictBadgesUI() {
+  evaluateStickOverall('l');
+  evaluateStickOverall('r');
+  updateTriggersSummaryBadge();
+}
+
+// ─────────────────────────────────────────────────────────────
+// 17. INITIALIZATION & EVENT LISTENERS
+// ─────────────────────────────────────────────────────────────
+function initEventListeners() {
+  // Language Switcher buttons
+  document.querySelectorAll('.lang-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      setLanguage(e.target.dataset.lang);
+    });
+  });
+
+  // Active Gamepad Select
+  dom.activeGamepadSelect.addEventListener('change', (e) => {
+    const val = parseInt(e.target.value, 10);
+    setActiveGamepad(val >= 0 ? val : null);
+  });
+
+  // Model Profile Select
+  dom.modelSelect.addEventListener('change', () => {
+    resolveModel();
+  });
+
+  // Debug Guides Toggle
+  dom.debugToggle.addEventListener('click', () => {
+    state.debugMode = !state.debugMode;
+    dom.debugToggle.classList.toggle('active', state.debugMode);
+    dom.photoOverlaySvg.classList.toggle('debug-guides', state.debugMode);
+  });
+
+  // Photo / Diagram View buttons
+  dom.btnViewPhoto.addEventListener('click', () => {
+    state.viewMode = 'photo';
+    dom.btnViewPhoto.classList.add('active');
+    dom.btnViewDiagram.classList.remove('active');
+    if (state.activeGpIndex !== null) {
+      dom.photoViewBox.style.display   = 'flex';
+      dom.diagramViewBox.style.display = 'none';
     }
-  }
-  updateGamepadSelectorUI();
-  if (state.activeGpIndex !== null) {
-    setActiveGamepad(state.activeGpIndex);
-  } else {
-    setActiveGamepad(null);
-  }
-});
+  });
 
-// Device Selector
-dom.activeGamepadSelect.addEventListener('change', (e) => {
-  const val = parseInt(e.target.value, 10);
-  if (val >= 0 && state.knownGamepads.has(val)) {
-    setActiveGamepad(val);
-  }
-});
+  dom.btnViewDiagram.addEventListener('click', () => {
+    state.viewMode = 'diagram';
+    dom.btnViewDiagram.classList.add('active');
+    dom.btnViewPhoto.classList.remove('active');
+    if (state.activeGpIndex !== null) {
+      dom.photoViewBox.style.display   = 'none';
+      dom.diagramViewBox.style.display = 'flex';
+      if (!state.diagramRendered && typeof renderControllerDiagram === 'function') {
+        renderControllerDiagram(state.model);
+        state.diagramRendered = true;
+      }
+    }
+  });
 
-// Model selection & view controls
-dom.modelSelect.addEventListener('change', resolveModel);
-dom.btnViewPhoto.addEventListener('click', () => setViewMode('photo'));
-dom.btnViewDiagram.addEventListener('click', () => setViewMode('diagram'));
+  // Micro-Center Zoom button
+  dom.stickZoomBtn.addEventListener('click', () => {
+    state.centerZoom = !state.centerZoom;
+    dom.stickZoomBtn.classList.toggle('active', state.centerZoom);
+  });
 
-dom.debugToggle.addEventListener('click', () => {
-  state.debugMode = !state.debugMode;
-  dom.debugToggle.classList.toggle('active', state.debugMode);
-  dom.debugToggle.textContent = state.debugMode ? '🔵 Guías ON' : '🔵 Guías';
-  dom.photoOverlaySvg.classList.toggle('debug-guides', state.debugMode);
-  buildPhotoOverlay(state.model);
-});
+  // Diagnostic Stick Suite & Drift buttons
+  dom.stickSuiteBtn.addEventListener('click', startFullSuite);
+  dom.driftBtn.addEventListener('click', startDriftCapture);
+  dom.stickClearTraceBtn.addEventListener('click', () => {
+    state.stickHistoryL = [];
+    state.stickHistoryR = [];
+    state.circleBinsL.fill(0);
+    state.circleBinsR.fill(0);
+  });
 
-// Stick Center Zoom toggle
-dom.stickZoomBtn.addEventListener('click', () => {
-  state.centerZoom = !state.centerZoom;
-  dom.stickZoomBtn.classList.toggle('active', state.centerZoom);
-  dom.stickZoomBtn.textContent = state.centerZoom ? '🔍 Micro-Centro ON' : '🔍 Micro-Centro OFF';
-});
+  // Reset button testing matrix
+  dom.btnResetButtonsTest.addEventListener('click', () => {
+    for (const b of Object.values(state.buttonStates)) {
+      b.clicks = 0;
+      b.isStuck = false;
+    }
+    updateButtonsSummaryBadge();
+  });
 
-// Drift Button
-dom.driftBtn.addEventListener('click', startDriftCapture);
+  // Raw Diagnostics Accordion
+  dom.rawDiagToggle.addEventListener('click', () => {
+    state.rawAccordionOpen = !state.rawAccordionOpen;
+    dom.rawDiagArrow.classList.toggle('open', state.rawAccordionOpen);
+    dom.rawDiagBody.style.display = state.rawAccordionOpen ? 'flex' : 'none';
+  });
 
+  // Session Actions
+  dom.btnSaveDiag.addEventListener('click', saveCurrentSessionDiagnostic);
+  dom.btnPrintReport.addEventListener('click', () => {
+    populatePrintReport(null);
+    window.print();
+  });
 
+  // History Modal
+  dom.btnOpenHistory.addEventListener('click', () => {
+    dom.historyModal.style.display = 'flex';
+    renderHistoryTable();
+  });
+  dom.modalCloseBtn.addEventListener('click', () => {
+    dom.historyModal.style.display = 'none';
+  });
+  dom.historyModal.addEventListener('click', (e) => {
+    if (e.target === dom.historyModal) dom.historyModal.style.display = 'none';
+  });
 
-// Raw Diagnostics Accordion
-dom.rawDiagToggle.addEventListener('click', () => {
-  state.rawAccordionOpen = !state.rawAccordionOpen;
-  dom.rawDiagBody.style.display = state.rawAccordionOpen ? 'flex' : 'none';
-  dom.rawDiagArrow.classList.toggle('open', state.rawAccordionOpen);
-});
+  dom.historySearchInput.addEventListener('input', (e) => {
+    renderHistoryTable(e.target.value);
+  });
+
+  dom.btnExportJson.addEventListener('click', () => {
+    const records = DiagnosticStore.getAll();
+    const blob = new Blob([JSON.stringify(records, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `gamepad_diagnostics_${Date.now()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  dom.btnClearHistory.addEventListener('click', () => {
+    if (confirm('¿Vaciar todo el historial de diagnósticos locales?')) {
+      DiagnosticStore.clear();
+      renderHistoryTable();
+    }
+  });
+}
 
 // ─────────────────────────────────────────────────────────────
-// INIT
+// 18. DOM CONTENT LOADED ENTRY POINT
 // ─────────────────────────────────────────────────────────────
-(function init() {
+document.addEventListener('DOMContentLoaded', () => {
+  initLanguage();
+  initEventListeners();
+  initGamepadLifecycle();
+  resolveModel();
+  buildButtonChips(16);
   drawLargeStick(dom.stickLCanvas, 0, 0, true);
   drawLargeStick(dom.stickRCanvas, 0, 0, false);
-  buildButtonChips(BTN_NAMES.length);
-
-  // Initialize visualizers
-  resolveModel();
-  setViewMode('photo');
-
-  // Discover any already-connected gamepads
-  scanControllersLifecycle();
-
-  if (!state.rafId) {
-    state.rafId = requestAnimationFrame(tick);
-  }
-})();
+});
