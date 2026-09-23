@@ -374,14 +374,14 @@ header h1 {
 /* Overlay Visual Controls Feedback */
 .photo-btn {
   cursor: pointer;
-  fill: rgba(0, 229, 255, 0.02);
-  stroke: rgba(0, 229, 255, 0.25);
-  stroke-width: 2;
+  fill: rgba(0, 229, 255, 0.04);
+  stroke: rgba(0, 229, 255, 0.45);
+  stroke-width: 2.5;
   transition: fill 0.06s, stroke 0.06s, filter 0.06s;
 }
 .photo-btn:hover {
-  stroke: rgba(0, 229, 255, 0.6);
-  fill: rgba(0, 229, 255, 0.08);
+  stroke: rgba(0, 229, 255, 0.75);
+  fill: rgba(0, 229, 255, 0.12);
 }
 /* Live Pressed */
 .photo-btn.pressed {

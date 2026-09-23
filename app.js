@@ -868,9 +868,17 @@ function setActiveGamepad(idx) {
     state.activeGpIndex = null;
     if (dom.statusDot) dom.statusDot.className = 'status-dot disconnected';
     if (dom.statusText) dom.statusText.textContent = t('waitingGamepad');
-    if (dom.emptyStateView) dom.emptyStateView.style.display = 'flex';
-    if (dom.photoViewBox) dom.photoViewBox.style.display   = 'none';
-    if (dom.ctrlBottomChip) dom.ctrlBottomChip.style.display = 'none';
+    
+    const choice = dom.modelSelect ? dom.modelSelect.value : 'auto';
+    if (choice === 'auto') {
+      if (dom.emptyStateView) dom.emptyStateView.style.display = 'flex';
+      if (dom.photoViewBox) dom.photoViewBox.style.display   = 'none';
+      if (dom.ctrlBottomChip) dom.ctrlBottomChip.style.display = 'none';
+    } else {
+      if (dom.emptyStateView) dom.emptyStateView.style.display = 'none';
+      if (dom.photoViewBox) dom.photoViewBox.style.display   = 'flex';
+      if (dom.ctrlBottomChip) dom.ctrlBottomChip.style.display = 'flex';
+    }
 
     drawLargeStick(dom.stickLCanvas, 0, 0, true);
     drawLargeStick(dom.stickRCanvas, 0, 0, false);
@@ -1699,9 +1707,10 @@ function updateRawDiagnostics(gp) {
 // 14. PHOTO OVERLAY & REAL-TIME CONTROLS FEEDBACK
 // ─────────────────────────────────────────────────────────────
 function buildPhotoOverlay(model) {
-  const profile = (typeof CONTROLLER_PROFILES !== 'undefined' && CONTROLLER_PROFILES[model])
-    ? CONTROLLER_PROFILES[model]
-    : ((typeof CONTROLLER_PROFILES !== 'undefined' && CONTROLLER_PROFILES['generic']) || { controls: {} });
+  const allProfiles = (typeof CONTROLLER_PROFILES !== 'undefined' && CONTROLLER_PROFILES)
+    || (typeof window !== 'undefined' && window.CONTROLLER_PROFILES)
+    || {};
+  const profile = allProfiles[model] || allProfiles['generic'] || { controls: {} };
 
   if (dom.photoOverlaySvg) {
     dom.photoOverlaySvg.setAttribute('viewBox', profile.viewBox || '0 0 1024 1024');
@@ -1828,10 +1837,18 @@ function resolveModel() {
   const choice = dom.modelSelect ? dom.modelSelect.value : 'auto';
   if (choice !== 'auto') {
     state.model = choice;
+    if (dom.emptyStateView) dom.emptyStateView.style.display = 'none';
+    if (dom.photoViewBox) dom.photoViewBox.style.display   = 'flex';
+    if (dom.ctrlBottomChip) dom.ctrlBottomChip.style.display = 'flex';
   } else {
     const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
     const gp = state.activeGpIndex !== null ? gamepads[state.activeGpIndex] : null;
     state.model = gp ? detectControllerModel(gp.id, gp.mapping) : 'ps4';
+    if (!gp) {
+      if (dom.emptyStateView) dom.emptyStateView.style.display = 'flex';
+      if (dom.photoViewBox) dom.photoViewBox.style.display   = 'none';
+      if (dom.ctrlBottomChip) dom.ctrlBottomChip.style.display = 'none';
+    }
   }
 
   if (dom.chipModelName) {
@@ -1843,6 +1860,7 @@ function resolveModel() {
     dom.photoImg.src = `assets/controllers/${state.model}.png`;
   }
   buildPhotoOverlay(state.model);
+  fitPhotoStage();
 }
 
 // ─────────────────────────────────────────────────────────────

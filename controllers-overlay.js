@@ -178,3 +178,10 @@ const CONTROLLER_PROFILES = {
     }
   }
 };
+
+if (typeof window !== 'undefined') {
+  window.CONTROLLER_PROFILES = CONTROLLER_PROFILES;
+}
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = CONTROLLER_PROFILES;
+}
