@@ -1704,8 +1704,10 @@ function buildPhotoOverlay(model) {
     : ((typeof CONTROLLER_PROFILES !== 'undefined' && CONTROLLER_PROFILES['generic']) || { controls: {} });
 
   if (dom.photoOverlaySvg) {
-    dom.photoOverlaySvg.setAttribute('viewBox', profile.viewBox || '0 0 1000 1000');
+    dom.photoOverlaySvg.setAttribute('viewBox', profile.viewBox || '0 0 1024 1024');
+    dom.photoOverlaySvg.setAttribute('preserveAspectRatio', 'none');
   }
+  fitPhotoStage();
 
   let svgHtml = `
     <defs>
@@ -2345,6 +2347,18 @@ function initEventListeners() {
   }
 }
 
+function fitPhotoStage() {
+  const container = dom.photoViewBox;
+  const wrapper = document.querySelector('.photo-stage-wrapper');
+  if (!container || !wrapper) return;
+  const rect = container.getBoundingClientRect();
+  const size = Math.floor(Math.min(rect.width, rect.height));
+  if (size > 50) {
+    wrapper.style.width = `${size}px`;
+    wrapper.style.height = `${size}px`;
+  }
+}
+
 // ─────────────────────────────────────────────────────────────
 // 19. DOM CONTENT LOADED ENTRY POINT
 // ─────────────────────────────────────────────────────────────
@@ -2358,4 +2372,10 @@ document.addEventListener('DOMContentLoaded', () => {
   drawLargeStick(dom.stickRCanvas, 0, 0, false);
   updateWorkflowProgress();
   updateOverallVerdict();
+  fitPhotoStage();
+
+  window.addEventListener('resize', fitPhotoStage);
+  if (window.ResizeObserver && dom.photoViewBox) {
+    new ResizeObserver(fitPhotoStage).observe(dom.photoViewBox);
+  }
 });
