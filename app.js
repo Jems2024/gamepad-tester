@@ -1,14 +1,15 @@
 /* ============================================================
    GAMEPAD TESTER — app.js (Professional Diagnostic Station)
-   - Complete Multilingual Engine (ES, EN, IT, FR, DE)
+   - Streamlined Diagnostic UX for High-Volume Controller Testing
+   - Pixel-accurate Scalable Interactive Overlay Map (CONTROLLER_PROFILES)
+   - Live Multi-State Control Feedback (Inactive, Pressed, Validated Green, Stuck Red)
+   - 5-Step Guided Progression Bar + Dynamic Single-Line Instruction Banner
+   - Minimal Floating Language Selector with Flag Emojis (ES, EN, IT, FR, DE)
+   - Instant Quality Certification Verdict (APTO / REVISIÓN / DEFECTUOSO)
    - Zero-Refresh Robust Gamepad API Lifecycle & Hot-Swapping
-   - Multi-Controller Management & Activity Auto-Switching
-   - Internal Item / Equipment Code Workflow (Trazabilidad)
-   - Comprehensive Analog Stick Diagnostics (Drift, Jitter, Circularity, Snapback)
+   - High-Precision Cartesian Stick Benchmarking (Drift, Jitter, Circularity, Snapback)
    - Analog Trigger Pressure Diagnostics (L2 / R2)
-   - Full Button Matrix Press & Release Verification + Stuck Detection
-   - Diagnostic Persistence (Local Storage & Future API ready)
-   - Official A4 Printable Quality Report with SVG Barcode
+   - Diagnostic History Persistence & Official A4 Printable Quality Report
    ============================================================ */
 
 'use strict';
@@ -18,49 +19,42 @@
 // ─────────────────────────────────────────────────────────────
 const TRANSLATIONS = {
   es: {
-    appTitle: "Gamepad Diagnostic Station",
+    appTitle: "Gamepad Tester Pro",
     waitingGamepad: "Esperando mando…",
-    emptyStateConnectMsg: "Conecta tu mando y pulsa cualquier botón para comenzar...",
-    emptyStateSub: "Detección automática instantánea • Compatible con PS5, PS4, PS3, PS2, Xbox y Genéricos",
+    emptyStateConnectMsg: "Conecta tu mando y pulsa cualquier botón",
     connectedMsg: "Mando conectado",
-    itemCodeLabel: "Nº Artículo:",
+    itemCodeLabel: "Nº Art:",
     activeCtrlLabel: "Mando Activo:",
     none: "Ninguno",
-    deviceLabel: "Dispositivo:",
     noConnectedGamepads: "Sin mandos conectados",
-    btnViewPhoto: "📸 Foto",
-    btnViewDiagram: "📐 Esquema",
-    modelAuto: "🔍 Auto-detectar",
-    modelGeneric: "Genérico / DirectInput",
-    modelRaw: "Modo RAW (Sin Mapeo)",
-    btnGuides: "🔵 Guías",
-    btnSaveDiag: "💾 Guardar",
-    btnPrintReport: "🖨 Imprimir",
-    btnHistory: "📋 Historial",
-    readyWaiting: "Listo — esperando interacción",
-    stickTestTitle: "Test de Sticks Analógicos — Análisis Cartesiano de Precisión",
-    btnZoomCenter: "🔍 Micro-Centro ON",
-    btnFullSuite: "⚡ Suite Diagnóstico",
-    btnDriftTest: "▶ Test Reposo (3s)",
+    modelAuto: "🔍 Auto",
+    btnSaveDiag: "Guardar",
+    btnPrintReport: "Imprimir",
+    btnHistory: "Historial",
+    btnDetails: "Detalles",
+    stepButtons: "Botones",
+    stepTriggers: "Gatillos",
+    stepStickL: "Stick Izq.",
+    stepStickR: "Stick Der.",
+    stepCert: "Certificación",
+    lblOverallVerdict: "CERTIFICACIÓN TÉCNICA:",
+    chipConnected: "Conectado",
+    stickTestTitle: "Sticks Analógicos — Análisis Cartesiano",
+    btnZoomCenter: "🔍 Micro-Centro",
+    btnFullSuite: "⚡ Suite Sticks",
+    btnDriftTest: "▶ Reposo (3s)",
     btnClearTrace: "🔄 Limpiar",
-    stickLeftLabel: "STICK IZQUIERDO (LX, LY)",
-    stickRightLabel: "STICK DERECHO (RX, RY)",
+    stickLeftLabel: "STICK IZQUIERDO",
+    stickRightLabel: "STICK DERECHO",
     metricOffset: "Desvío:",
-    metricAngle: "Ángulo:",
-    metricRestDrift: "Deriva Reposo:",
-    metricJitter: "Jitter:",
-    metricCircularity: "Circularidad:",
-    metricSnapback: "Retorno:",
-    driftInitialHint: "ℹ Suelta ambos sticks y pulsa \"⚡ Suite Diagnóstico\" para análisis guiado o \"▶ Test Reposo (3s)\" para medir deriva de centro.",
-    triggersTestTitle: "Validación de Gatillos Analógicos (L2 / R2)",
-    triggersPending: "Gatillos: Pendiente",
+    metricCircularity: "Circ:",
+    triggersTestTitle: "Gatillos Analógicos (L2 / R2)",
+    triggersPending: "Pendiente",
     lblLive: "Actual:",
-    lblRest: "Reposo:",
-    lblMax: "Máximo:",
-    lblRamp: "Recorrido:",
-    buttonsTestTitle: "Matriz de Validación de Botones (Pulsación y Retorno)",
-    btnResetValidation: "🔄 Reiniciar",
-    rawDiagTitle: "Diagnóstico Técnico Avanzado (Raw Input / Multi-Ejes)",
+    lblMax: "Máx:",
+    buttonsTestTitle: "Matriz de Botones",
+    btnResetValidation: "🔄",
+    rawDiagTitle: "Detalles Técnicos (Hardware / Raw)",
     rawAxesTitle: "Ejes Crudos (Axes 0..N):",
     rawButtonsTitle: "Botones Crudos (Buttons 0..N):",
     historyModalTitle: "Historial de Revisiones Guardadas",
@@ -76,69 +70,65 @@ const TRANSLATIONS = {
     thButtons: "Botones",
     thResult: "Resultado",
     thActions: "Acción",
-    verdictPass: "APTO",
+    verdictPass: "APTO (PASS)",
     verdictReview: "REVISIÓN",
     verdictFail: "DEFECTUOSO",
     verdictPending: "PENDIENTE",
-    ds3HintTitle: "ℹ Nota de compatibilidad PS3 / DirectInput:",
-    ds3HintBody: "Si un mando PS3 no responde en Windows, requiere driver XInput (DsHidMini / SCPToolkit). Los mandos sin mapeo nativo se leen en Modo RAW.",
-    suiteStepRest: "PASO 1/3: No toques los sticks. Midiendo deriva en reposo y jitter (3s)...",
-    suiteStepCirc: "PASO 2/3: Gira ambos sticks lentamente haciendo círculos completos de 360° en el borde...",
-    suiteStepSnap: "PASO 3/3: Mueve un stick al extremo y suéltalo de golpe para medir retorno elástico...",
+    suiteStepRest: "PASO 1/3: No toques los sticks. Midiendo reposo y jitter (3s)...",
+    suiteStepCirc: "PASO 2/3: Gira ambos sticks lentamente en círculos completos de 360°...",
+    suiteStepSnap: "PASO 3/3: Mueve el stick al extremo y suéltalo de golpe...",
     suiteDone: "✓ Diagnóstico de sticks completado.",
     savedSuccess: "✓ Diagnóstico guardado para el artículo:",
+    instructionStep1: "Paso 1: Pulsa todos los botones en el mando hasta verlos en verde.",
+    instructionStep2: "Paso 2: Presiona a fondo ambos gatillos analógicos (L2 y R2).",
+    instructionStep3: "Paso 3: Gira el Stick Izquierdo en círculos completos de 360°.",
+    instructionStep4: "Paso 4: Gira el Stick Derecho en círculos completos de 360°.",
+    instructionStep5: "Paso 5: Revisión completada. Pulsa Guardar o Imprimir informe.",
   },
   en: {
-    appTitle: "Gamepad Diagnostic Station",
+    appTitle: "Gamepad Tester Pro",
     waitingGamepad: "Waiting for controller…",
-    emptyStateConnectMsg: "Connect your gamepad and press any button to begin...",
-    emptyStateSub: "Instant auto-detection • Compatible with PS5, PS4, PS3, PS2, Xbox and Generic",
+    emptyStateConnectMsg: "Connect your controller and press any button",
     connectedMsg: "Controller connected",
-    itemCodeLabel: "Item Code:",
+    itemCodeLabel: "Item #:",
     activeCtrlLabel: "Active Controller:",
     none: "None",
-    deviceLabel: "Device:",
     noConnectedGamepads: "No connected controllers",
-    btnViewPhoto: "📸 Photo",
-    btnViewDiagram: "📐 Diagram",
-    modelAuto: "🔍 Auto-detect",
-    modelGeneric: "Generic / DirectInput",
-    modelRaw: "RAW Mode (No Mapping)",
-    btnGuides: "🔵 Guides",
-    btnSaveDiag: "💾 Save",
-    btnPrintReport: "🖨 Print",
-    btnHistory: "📋 History",
-    readyWaiting: "Ready — waiting for input",
-    stickTestTitle: "Analog Stick Diagnostics — High-Precision Cartesian Analysis",
-    btnZoomCenter: "🔍 Micro-Center ON",
-    btnFullSuite: "⚡ Diagnostic Suite",
+    modelAuto: "🔍 Auto",
+    btnSaveDiag: "Save",
+    btnPrintReport: "Print",
+    btnHistory: "History",
+    btnDetails: "Details",
+    stepButtons: "Buttons",
+    stepTriggers: "Triggers",
+    stepStickL: "Stick L",
+    stepStickR: "Stick R",
+    stepCert: "Certification",
+    lblOverallVerdict: "TECHNICAL CERTIFICATION:",
+    chipConnected: "Connected",
+    stickTestTitle: "Analog Sticks — Cartesian Analysis",
+    btnZoomCenter: "🔍 Micro-Center",
+    btnFullSuite: "⚡ Sticks Suite",
     btnDriftTest: "▶ Rest Test (3s)",
     btnClearTrace: "🔄 Clear",
-    stickLeftLabel: "LEFT STICK (LX, LY)",
-    stickRightLabel: "RIGHT STICK (RX, RY)",
+    stickLeftLabel: "LEFT STICK",
+    stickRightLabel: "RIGHT STICK",
     metricOffset: "Offset:",
-    metricAngle: "Angle:",
-    metricRestDrift: "Rest Drift:",
-    metricJitter: "Jitter:",
-    metricCircularity: "Circularity:",
-    metricSnapback: "Snapback:",
-    driftInitialHint: "ℹ Release both sticks and click \"⚡ Diagnostic Suite\" for guided testing or \"▶ Rest Test (3s)\" to measure center drift.",
-    triggersTestTitle: "Analog Trigger Validation (L2 / R2)",
-    triggersPending: "Triggers: Pending",
+    metricCircularity: "Circ:",
+    triggersTestTitle: "Analog Triggers (L2 / R2)",
+    triggersPending: "Pending",
     lblLive: "Live:",
-    lblRest: "Rest:",
     lblMax: "Max:",
-    lblRamp: "Travel:",
-    buttonsTestTitle: "Button Validation Matrix (Press & Release)",
-    btnResetValidation: "🔄 Reset",
-    rawDiagTitle: "Advanced Technical Diagnostics (Raw Input / Multi-Axes)",
+    buttonsTestTitle: "Buttons Matrix",
+    btnResetValidation: "🔄",
+    rawDiagTitle: "Technical Details (Hardware / Raw)",
     rawAxesTitle: "Raw Axes (Axes 0..N):",
     rawButtonsTitle: "Raw Buttons (Buttons 0..N):",
-    historyModalTitle: "Saved Diagnostics History",
+    historyModalTitle: "Saved Diagnostic Records",
     btnExportJson: "💾 Export JSON",
     btnClearHistory: "🗑 Clear All",
     historyFilterPlaceholder: "Filter by Item Code or Controller...",
-    thCode: "Item Code",
+    thCode: "Item #",
     thDate: "Date / Time",
     thDevice: "Controller",
     thStickL: "Stick L",
@@ -149,60 +139,56 @@ const TRANSLATIONS = {
     thActions: "Action",
     verdictPass: "PASS",
     verdictReview: "REVIEW",
-    verdictFail: "FAIL",
+    verdictFail: "DEFECTIVE",
     verdictPending: "PENDING",
-    ds3HintTitle: "ℹ PS3 / DirectInput Compatibility Note:",
-    ds3HintBody: "If a PS3 controller does not respond in Windows, it requires an XInput driver (DsHidMini / SCPToolkit). Non-standard controllers are read in RAW Mode.",
-    suiteStepRest: "STEP 1/3: Do not touch the sticks. Measuring center rest drift and jitter (3s)...",
-    suiteStepCirc: "STEP 2/3: Slowly rotate both sticks in full 360° circles around the outer edge...",
-    suiteStepSnap: "STEP 3/3: Flick a stick to the edge and release quickly to test snapback return...",
-    suiteDone: "✓ Stick diagnostics completed.",
+    suiteStepRest: "STEP 1/3: Do not touch sticks. Measuring rest drift and jitter (3s)...",
+    suiteStepCirc: "STEP 2/3: Slowly rotate both sticks in full 360° edge circles...",
+    suiteStepSnap: "STEP 3/3: Push stick to extreme edge and release abruptly...",
+    suiteDone: "✓ Sticks diagnostics completed.",
     savedSuccess: "✓ Diagnostic record saved for item:",
+    instructionStep1: "Step 1: Press all physical buttons until they turn green.",
+    instructionStep2: "Step 2: Fully pull both analog triggers (L2 and R2).",
+    instructionStep3: "Step 3: Rotate Left Stick in full 360° edge circles.",
+    instructionStep4: "Step 4: Rotate Right Stick in full 360° edge circles.",
+    instructionStep5: "Step 5: Inspection complete. Click Save or Print report.",
   },
   it: {
-    appTitle: "Gamepad Diagnostic Station",
+    appTitle: "Gamepad Tester Pro",
     waitingGamepad: "In attesa del controller…",
-    emptyStateConnectMsg: "Collega il controller e premi un pulsante per iniziare...",
-    emptyStateSub: "Rilevamento automatico istantaneo • Compatibile con PS5, PS4, PS3, PS2, Xbox e Generici",
-    connectedMsg: "Controller collegato",
-    itemCodeLabel: "Codice Art.:",
+    emptyStateConnectMsg: "Collega il controller e premi qualsiasi tasto",
+    connectedMsg: "Controller connesso",
+    itemCodeLabel: "Cod. Art:",
     activeCtrlLabel: "Controller Attivo:",
     none: "Nessuno",
-    deviceLabel: "Dispositivo:",
     noConnectedGamepads: "Nessun controller connesso",
-    btnViewPhoto: "📸 Foto",
-    btnViewDiagram: "📐 Schema",
-    modelAuto: "🔍 Rilevamento auto",
-    modelGeneric: "Generico / DirectInput",
-    modelRaw: "Modo RAW (Senza Mappatura)",
-    btnGuides: "🔵 Guide",
-    btnSaveDiag: "💾 Salva",
-    btnPrintReport: "🖨 Stampa",
-    btnHistory: "📋 Cronologia",
-    readyWaiting: "Pronto — in attesa di input",
-    stickTestTitle: "Test Stick Analogici — Analisi Cartesiana di Precisione",
-    btnZoomCenter: "🔍 Micro-Centro ON",
-    btnFullSuite: "⚡ Suite Diagnostica",
-    btnDriftTest: "▶ Test Riposo (3s)",
-    btnClearTrace: "🔄 Cancella",
-    stickLeftLabel: "STICK SINISTRO (LX, LY)",
-    stickRightLabel: "STICK DESTRO (RX, RY)",
-    metricOffset: "Scostamento:",
-    metricAngle: "Angolo:",
-    metricRestDrift: "Deriva Riposo:",
-    metricJitter: "Jitter:",
-    metricCircularity: "Circolarità:",
-    metricSnapback: "Ritorno:",
-    driftInitialHint: "ℹ Rilascia entrambi gli stick e premi \"⚡ Suite Diagnostica\" per il test guidato o \"▶ Test Riposo (3s)\" per misurare la deriva.",
-    triggersTestTitle: "Validazione Grilletti Analogici (L2 / R2)",
-    triggersPending: "Grilletti: In sospeso",
+    modelAuto: "🔍 Auto",
+    btnSaveDiag: "Salva",
+    btnPrintReport: "Stampa",
+    btnHistory: "Cronologia",
+    btnDetails: "Dettagli",
+    stepButtons: "Pulsanti",
+    stepTriggers: "Grilletti",
+    stepStickL: "Stick Sin.",
+    stepStickR: "Stick Des.",
+    stepCert: "Certificazione",
+    lblOverallVerdict: "CERTIFICAZIONE TECNICA:",
+    chipConnected: "Collegato",
+    stickTestTitle: "Stick Analogici — Analisi Cartesiana",
+    btnZoomCenter: "🔍 Micro-Centro",
+    btnFullSuite: "⚡ Suite Stick",
+    btnDriftTest: "▶ Riposo (3s)",
+    btnClearTrace: "🔄 Reimposta",
+    stickLeftLabel: "STICK SINISTRO",
+    stickRightLabel: "STICK DESTRO",
+    metricOffset: "Deriva:",
+    metricCircularity: "Circ:",
+    triggersTestTitle: "Grilletti Analogici (L2 / R2)",
+    triggersPending: "In sospeso",
     lblLive: "Attuale:",
-    lblRest: "Riposo:",
-    lblMax: "Massimo:",
-    lblRamp: "Corsa:",
-    buttonsTestTitle: "Matrice di Validazione Pulsanti (Pressione e Rilascio)",
-    btnResetValidation: "🔄 Reimposta",
-    rawDiagTitle: "Diagnostica Tecnica Avanzata (Raw Input / Multi-Assi)",
+    lblMax: "Max:",
+    buttonsTestTitle: "Matrice di Pulsanti",
+    btnResetValidation: "🔄",
+    rawDiagTitle: "Dettagli Tecnici (Hardware / Raw)",
     rawAxesTitle: "Assi Grezzi (Axes 0..N):",
     rawButtonsTitle: "Pulsanti Grezzi (Buttons 0..N):",
     historyModalTitle: "Cronologia Revisioni Salvate",
@@ -222,58 +208,54 @@ const TRANSLATIONS = {
     verdictReview: "REVISIONE",
     verdictFail: "DIFETTOSO",
     verdictPending: "IN SOSPESO",
-    ds3HintTitle: "ℹ Nota di compatibilità PS3 / DirectInput:",
-    ds3HintBody: "Se un controller PS3 non risponde in Windows, richiede driver XInput (DsHidMini / SCPToolkit). I controller senza mappatura standard vengono letti in Modo RAW.",
-    suiteStepRest: "PASSO 1/3: Non toccare gli stick. Misurazione della deriva a riposo e del jitter (3s)...",
-    suiteStepCirc: "PASSO 2/3: Ruota entrambi gli stick lentamente compiendo cerchi completi a 360° sul bordo...",
-    suiteStepSnap: "PASSO 3/3: Sposta uno stick al limite e rilascialo rapidamente per testare il ritorno elastico...",
+    suiteStepRest: "PASSO 1/3: Non toccare gli stick. Misurazione riposo e jitter (3s)...",
+    suiteStepCirc: "PASSO 2/3: Ruota entrambi gli stick lentamente a 360°...",
+    suiteStepSnap: "PASSO 3/3: Sposta lo stick al limite e rilascialo di colpo...",
     suiteDone: "✓ Diagnostica stick completata.",
     savedSuccess: "✓ Diagnostica salvata per l'articolo:",
+    instructionStep1: "Passo 1: Premi tutti i pulsanti finché non diventano verdi.",
+    instructionStep2: "Passo 2: Premi a fondo entrambi i grilletti (L2 e R2).",
+    instructionStep3: "Passo 3: Ruota lo Stick Sinistro in cerchi completi a 360°.",
+    instructionStep4: "Passo 4: Ruota lo Stick Destro in cerchi completi a 360°.",
+    instructionStep5: "Passo 5: Revisione completata. Clicca Salva o Stampa rapporto.",
   },
   fr: {
-    appTitle: "Gamepad Diagnostic Station",
+    appTitle: "Gamepad Tester Pro",
     waitingGamepad: "En attente de la manette…",
-    emptyStateConnectMsg: "Connectez votre manette et appuyez sur un bouton pour commencer...",
-    emptyStateSub: "Détection automatique instantanée • Compatible PS5, PS4, PS3, PS2, Xbox et Génériques",
+    emptyStateConnectMsg: "Connectez votre manette et appuyez sur un bouton",
     connectedMsg: "Manette connectée",
-    itemCodeLabel: "Code Article:",
+    itemCodeLabel: "Code Art:",
     activeCtrlLabel: "Manette Active:",
     none: "Aucun",
-    deviceLabel: "Appareil:",
     noConnectedGamepads: "Aucune manette connectée",
-    btnViewPhoto: "📸 Photo",
-    btnViewDiagram: "📐 Schéma",
-    modelAuto: "🔍 Détection auto",
-    modelGeneric: "Générique / DirectInput",
-    modelRaw: "Mode RAW (Sans Mappage)",
-    btnGuides: "🔵 Guides",
-    btnSaveDiag: "💾 Sauvegarder",
-    btnPrintReport: "🖨 Imprimer",
-    btnHistory: "📋 Historique",
-    readyWaiting: "Prêt — en attente d'entrée",
-    stickTestTitle: "Test des Sticks Analogiques — Analyse Cartésienne de Précision",
-    btnZoomCenter: "🔍 Micro-Centre ON",
-    btnFullSuite: "⚡ Suite Diagnostic",
+    modelAuto: "🔍 Auto",
+    btnSaveDiag: "Sauvegarder",
+    btnPrintReport: "Imprimer",
+    btnHistory: "Historique",
+    btnDetails: "Détails",
+    stepButtons: "Boutons",
+    stepTriggers: "Gâchettes",
+    stepStickL: "Stick G",
+    stepStickR: "Stick D",
+    stepCert: "Certification",
+    lblOverallVerdict: "CERTIFICATION TECHNIQUE :",
+    chipConnected: "Connecté",
+    stickTestTitle: "Sticks Analogiques — Analyse Cartésienne",
+    btnZoomCenter: "🔍 Micro-Centre",
+    btnFullSuite: "⚡ Suite Sticks",
     btnDriftTest: "▶ Test Repos (3s)",
     btnClearTrace: "🔄 Effacer",
-    stickLeftLabel: "STICK GAUCHE (LX, LY)",
-    stickRightLabel: "STICK DROIT (RX, RY)",
+    stickLeftLabel: "STICK GAUCHE",
+    stickRightLabel: "STICK DROIT",
     metricOffset: "Déviation:",
-    metricAngle: "Angle:",
-    metricRestDrift: "Dérive Repos:",
-    metricJitter: "Jitter:",
-    metricCircularity: "Circularité:",
-    metricSnapback: "Retour:",
-    driftInitialHint: "ℹ Relâchez les deux sticks et appuyez sur \"⚡ Suite Diagnostic\" pour un test guidé ou \"▶ Test Repos (3s)\" pour mesurer la dérive.",
-    triggersTestTitle: "Validation des Gâchettes Analogiques (L2 / R2)",
-    triggersPending: "Gâchettes: En attente",
+    metricCircularity: "Circ:",
+    triggersTestTitle: "Gâchettes Analogiques (L2 / R2)",
+    triggersPending: "En attente",
     lblLive: "Actuel:",
-    lblRest: "Repos:",
     lblMax: "Max:",
-    lblRamp: "Course:",
-    buttonsTestTitle: "Matrice de Validation des Boutons (Pression et Relâchement)",
-    btnResetValidation: "🔄 Réinitialiser",
-    rawDiagTitle: "Diagnostic Technique Avancé (Raw Input / Multi-Axes)",
+    buttonsTestTitle: "Matrice des Boutons",
+    btnResetValidation: "🔄",
+    rawDiagTitle: "Détails Techniques (Hardware / Raw)",
     rawAxesTitle: "Axes Bruts (Axes 0..N):",
     rawButtonsTitle: "Boutons Bruts (Buttons 0..N):",
     historyModalTitle: "Historique des Diagnostics Enregistrés",
@@ -293,58 +275,54 @@ const TRANSLATIONS = {
     verdictReview: "RÉVISION",
     verdictFail: "DÉFECTUEUX",
     verdictPending: "EN ATTENTE",
-    ds3HintTitle: "ℹ Note de compatibilité PS3 / DirectInput:",
-    ds3HintBody: "Si une manette PS3 ne répond pas sous Windows, elle nécessite un pilote XInput (DsHidMini / SCPToolkit). Les manettes non mappées sont lues en Mode RAW.",
-    suiteStepRest: "ÉTAPE 1/3: Ne touchez pas aux sticks. Mesure de la dérive au repos et du jitter (3s)...",
-    suiteStepCirc: "ÉTAPE 2/3: Tournez lentement les deux sticks en effectuant des cercles complets à 360° sur le bord...",
-    suiteStepSnap: "ÉTAPE 3/3: Poussez un stick au maximum et relâchez-le d'un coup pour mesurer le retour élastique...",
+    suiteStepRest: "ÉTAPE 1/3: Ne touchez pas aux sticks. Mesure repos et jitter (3s)...",
+    suiteStepCirc: "ÉTAPE 2/3: Tournez lentement les deux sticks à 360° sur le bord...",
+    suiteStepSnap: "ÉTAPE 3/3: Poussez le stick au bord et relâchez-le d'un coup...",
     suiteDone: "✓ Diagnostic des sticks terminé.",
     savedSuccess: "✓ Diagnostic enregistré pour l'article:",
+    instructionStep1: "Étape 1: Appuyez sur tous les boutons jusqu'à ce qu'ils soient verts.",
+    instructionStep2: "Étape 2: Pressez à fond les deux gâchettes (L2 et R2).",
+    instructionStep3: "Étape 3: Tournez le Stick Gauche en cercles complets à 360°.",
+    instructionStep4: "Étape 4: Tournez le Stick Droit en cercles complets à 360°.",
+    instructionStep5: "Étape 5: Inspection terminée. Cliquez sur Sauvegarder ou Imprimer.",
   },
   de: {
-    appTitle: "Gamepad Diagnostic Station",
+    appTitle: "Gamepad Tester Pro",
     waitingGamepad: "Warte auf Controller…",
-    emptyStateConnectMsg: "Schließe deinen Controller an und drücke eine Taste, um zu beginnen...",
-    emptyStateSub: "Sofortige automatische Erkennung • Kompatibel mit PS5, PS4, PS3, PS2, Xbox und Generisch",
+    emptyStateConnectMsg: "Schließe deinen Controller an und drücke eine Taste",
     connectedMsg: "Controller verbunden",
-    itemCodeLabel: "Artikel-Nr.:",
+    itemCodeLabel: "Art.-Nr:",
     activeCtrlLabel: "Aktiver Controller:",
     none: "Keiner",
-    deviceLabel: "Gerät:",
     noConnectedGamepads: "Keine Controller verbunden",
-    btnViewPhoto: "📸 Foto",
-    btnViewDiagram: "📐 Diagramm",
-    modelAuto: "🔍 Automatisch",
-    modelGeneric: "Generisch / DirectInput",
-    modelRaw: "RAW-Modus (Ohne Mapping)",
-    btnGuides: "🔵 Hilfslinien",
-    btnSaveDiag: "💾 Speichern",
-    btnPrintReport: "🖨 Drucken",
-    btnHistory: "📋 Verlauf",
-    readyWaiting: "Bereit — warte auf Eingabe",
-    stickTestTitle: "Analogstick-Diagnose — Präzise Kartesische Analyse",
-    btnZoomCenter: "🔍 Mikro-Zentrum EIN",
-    btnFullSuite: "⚡ Diagnose-Suite",
+    modelAuto: "🔍 Auto",
+    btnSaveDiag: "Speichern",
+    btnPrintReport: "Drucken",
+    btnHistory: "Verlauf",
+    btnDetails: "Details",
+    stepButtons: "Tasten",
+    stepTriggers: "Trigger",
+    stepStickL: "Stick L",
+    stepStickR: "Stick R",
+    stepCert: "Zertifizierung",
+    lblOverallVerdict: "TECHNISCHE ZERTIFIZIERUNG:",
+    chipConnected: "Verbunden",
+    stickTestTitle: "Analogsticks — Kartesische Analyse",
+    btnZoomCenter: "🔍 Mikro-Zentrum",
+    btnFullSuite: "⚡ Stick-Suite",
     btnDriftTest: "▶ Ruhe-Test (3s)",
     btnClearTrace: "🔄 Löschen",
-    stickLeftLabel: "LINKER STICK (LX, LY)",
-    stickRightLabel: "RECHTER STICK (RX, RY)",
+    stickLeftLabel: "LINKER STICK",
+    stickRightLabel: "RECHTER STICK",
     metricOffset: "Abweichung:",
-    metricAngle: "Winkel:",
-    metricRestDrift: "Ruhe-Drift:",
-    metricJitter: "Jitter:",
     metricCircularity: "Rundheit:",
-    metricSnapback: "Rückstellung:",
-    driftInitialHint: "ℹ Beide Sticks loslassen und \"⚡ Diagnose-Suite\" für geführten Test oder \"▶ Ruhe-Test (3s)\" drücken.",
-    triggersTestTitle: "Analoge Trigger-Prüfung (L2 / R2)",
-    triggersPending: "Trigger: Ausstehend",
+    triggersTestTitle: "Analoge Trigger (L2 / R2)",
+    triggersPending: "Ausstehend",
     lblLive: "Aktuell:",
-    lblRest: "Ruhe:",
     lblMax: "Max:",
-    lblRamp: "Weg:",
-    buttonsTestTitle: "Tasten-Validierungsmatrix (Drücken & Loslassen)",
-    btnResetValidation: "🔄 Zurücksetzen",
-    rawDiagTitle: "Erweiterte Technische Diagnose (Raw Input / Multi-Achsen)",
+    buttonsTestTitle: "Tastenmatrix",
+    btnResetValidation: "🔄",
+    rawDiagTitle: "Technische Details (Hardware / Raw)",
     rawAxesTitle: "Rohe Achsen (Axes 0..N):",
     rawButtonsTitle: "Rohe Tasten (Buttons 0..N):",
     historyModalTitle: "Gespeicherter Prüfungsverlauf",
@@ -364,14 +342,25 @@ const TRANSLATIONS = {
     verdictReview: "PRÜFUNG",
     verdictFail: "DEFEKT",
     verdictPending: "AUSSTEHEND",
-    ds3HintTitle: "ℹ PS3 / DirectInput Kompatibilitätshinweis:",
-    ds3HintBody: "Falls ein PS3-Controller unter Windows nicht reagiert, ist ein XInput-Treiber (DsHidMini / SCPToolkit) erforderlich. Nicht standardisierte Controller werden im RAW-Modus gelesen.",
-    suiteStepRest: "SCHRITT 1/3: Sticks nicht berühren. Messung von Ruhe-Drift und Jitter (3s)...",
-    suiteStepCirc: "SCHRITT 2/3: Beide Sticks langsam in vollständigen 360°-Kreisen am Rand drehen...",
-    suiteStepSnap: "SCHRITT 3/3: Stick an den Rand bewegen und schlagartig loslassen für Rückstelltest...",
+    suiteStepRest: "SCHRITT 1/3: Sticks nicht berühren. Messung Ruhe und Jitter (3s)...",
+    suiteStepCirc: "SCHRITT 2/3: Beide Sticks langsam in vollständigen 360°-Kreisen drehen...",
+    suiteStepSnap: "SCHRITT 3/3: Stick an den Rand drücken und schlagartig loslassen...",
     suiteDone: "✓ Stick-Diagnose abgeschlossen.",
     savedSuccess: "✓ Prüfbericht gespeichert für Artikel:",
+    instructionStep1: "Schritt 1: Alle Tasten drücken, bis sie grün aufleuchten.",
+    instructionStep2: "Schritt 2: Beide analogen Trigger voll durchdrücken (L2 und R2).",
+    instructionStep3: "Schritt 3: Den linken Stick in vollen 360°-Kreisen drehen.",
+    instructionStep4: "Schritt 4: Den rechten Stick in vollen 360°-Kreisen drehen.",
+    instructionStep5: "Schritt 5: Prüfung abgeschlossen. Prüfbericht speichern oder drucken.",
   }
+};
+
+const LANG_FLAGS = {
+  es: '🇪🇸',
+  en: '🇬🇧',
+  it: '🇮🇹',
+  fr: '🇫🇷',
+  de: '🇩🇪'
 };
 
 let currentLang = 'es';
@@ -388,10 +377,11 @@ function setLanguage(lang) {
     localStorage.setItem('gamepad_tester_lang', lang);
   } catch (e) {}
 
-  // Update active state in switcher
-  document.querySelectorAll('.lang-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.lang === lang);
-  });
+  // Update floating trigger button flag
+  const flag = LANG_FLAGS[lang] || '🇪🇸';
+  if (dom.langTrigger) {
+    dom.langTrigger.textContent = flag;
+  }
 
   // Update DOM elements with data-i18n
   document.querySelectorAll('[data-i18n]').forEach(el => {
@@ -405,11 +395,13 @@ function setLanguage(lang) {
     el.placeholder = t(key);
   });
 
-  // Re-render button matrix titles and live telemetry text
-  if (state.activeGpIndex === null) {
+  if (state.activeGpIndex === null && dom.statusText) {
     dom.statusText.textContent = t('waitingGamepad');
   }
+
   updateVerdictBadgesUI();
+  updateWorkflowProgress();
+  updateOverallVerdict();
 }
 
 function initLanguage() {
@@ -490,7 +482,7 @@ function getButtonLabel(model, index) {
       14: 'D-Pad Izquierda',
       15: 'D-Pad Derecha',
       16: 'PS Button',
-      17: 'Touchpad Click',
+      17: 'Touchpad',
     };
     return psNames[index] || `Botón ${index}`;
   }
@@ -520,6 +512,19 @@ function getButtonLabel(model, index) {
   }
 
   return BTN_NAMES[index] || `Botón ${index}`;
+}
+
+function getControllerFriendlyName(model) {
+  const names = {
+    'ps5': 'PlayStation 5 (DualSense)',
+    'ps4': 'PlayStation 4 (DualShock 4)',
+    'ps3': 'PlayStation 3 (DualShock 3)',
+    'ps2': 'PlayStation 2 (DualShock 2)',
+    'xbox-series-s': 'Xbox Series X|S',
+    'xbox-one': 'Xbox One',
+    'generic': 'Mando Genérico'
+  };
+  return names[model] || model.toUpperCase();
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -572,37 +577,49 @@ function getNormalizedAxes(gp, profile) {
 // 4. DOM REFERENCES
 // ─────────────────────────────────────────────────────────────
 const dom = {
+  // Top Navbar
   statusDot:           document.getElementById('status-dot'),
   statusText:          document.getElementById('status-text'),
   itemCodeInput:       document.getElementById('item-code-input'),
-  activeCtrlName:      document.getElementById('active-ctrl-name'),
-  activeCtrlIdx:       document.getElementById('active-ctrl-idx'),
   activeGamepadSelect: document.getElementById('active-gamepad-select'),
   modelSelect:         document.getElementById('model-select'),
-  debugToggle:         document.getElementById('debug-toggle'),
-  btnViewPhoto:        document.getElementById('btn-view-photo'),
-  btnViewDiagram:      document.getElementById('btn-view-diagram'),
-  stickZoomBtn:        document.getElementById('stick-zoom-btn'),
-  stickSuiteBtn:       document.getElementById('stick-suite-btn'),
-  driftBtn:            document.getElementById('drift-btn'),
-  stickClearTraceBtn:  document.getElementById('stick-clear-trace-btn'),
   btnSaveDiag:         document.getElementById('btn-save-diag'),
   btnPrintReport:      document.getElementById('btn-print-report'),
   btnOpenHistory:      document.getElementById('btn-open-history'),
+  btnToggleDetails:    document.getElementById('btn-toggle-details'),
+
+  // Guided Workflow
+  workflowBar:         document.querySelector('.workflow-bar'),
+  stepBtn:             document.getElementById('step-btn'),
+  checkBtn:            document.getElementById('check-btn'),
+  stepTrig:            document.getElementById('step-trig'),
+  checkTrig:           document.getElementById('check-trig'),
+  stepStickL:          document.getElementById('step-stick-l'),
+  checkStickL:         document.getElementById('check-stick-l'),
+  stepStickR:          document.getElementById('step-stick-r'),
+  checkStickR:         document.getElementById('check-stick-r'),
+  stepCert:            document.getElementById('step-cert'),
+  checkCert:           document.getElementById('check-cert'),
+  guidedInstructionBanner: document.getElementById('guided-instruction-banner'),
+  guidedInstructionText:   document.getElementById('guided-instruction-text'),
 
   // Stage Left
   emptyStateView:      document.getElementById('empty-state-view'),
   photoViewBox:        document.getElementById('photo-view-box'),
-  diagramViewBox:      document.getElementById('diagram-view-box'),
   photoImg:            document.getElementById('photo-img'),
   photoOverlaySvg:     document.getElementById('photo-overlay-svg'),
-  svgContainer:        document.getElementById('svg-container'),
-  feedbackLabel:       document.getElementById('controller-feedback-label'),
-  ctrlIdInfo:          document.getElementById('ctrl-id-info'),
-  ctrlProfileBadge:    document.getElementById('ctrl-profile-badge'),
-  ds3DriverHint:       document.getElementById('ds3-driver-hint'),
+
+  // Compact Under-Controller Chip
+  ctrlBottomChip:      document.getElementById('ctrl-bottom-chip'),
+  chipModelName:       document.getElementById('chip-model-name'),
+  chipStatusText:      document.getElementById('chip-status-text'),
+  chipBtnProgress:     document.getElementById('chip-btn-progress'),
 
   // Large Stick Testing Center
+  stickZoomBtn:        document.getElementById('stick-zoom-btn'),
+  stickSuiteBtn:       document.getElementById('stick-suite-btn'),
+  driftBtn:            document.getElementById('drift-btn'),
+  stickClearTraceBtn:  document.getElementById('stick-clear-trace-btn'),
   stickLCanvas:        document.getElementById('stick-l-canvas'),
   stickRCanvas:        document.getElementById('stick-r-canvas'),
   stickLStatusDot:     document.getElementById('stick-l-status-dot'),
@@ -612,18 +629,16 @@ const dom = {
   stickLX:             document.getElementById('stick-l-x'),
   stickLY:             document.getElementById('stick-l-y'),
   stickLDist:          document.getElementById('stick-l-dist'),
-  stickLAngle:         document.getElementById('stick-l-angle'),
   stickRX:             document.getElementById('stick-r-x'),
   stickRY:             document.getElementById('stick-r-y'),
   stickRDist:          document.getElementById('stick-r-dist'),
-  stickRAngle:         document.getElementById('stick-r-angle'),
+  stickLCircVal:       document.getElementById('stick-l-circ-val'),
+  stickRCircVal:       document.getElementById('stick-r-circ-val'),
   stickLDriftVal:      document.getElementById('stick-l-drift-val'),
   stickLJitterVal:     document.getElementById('stick-l-jitter-val'),
-  stickLCircVal:       document.getElementById('stick-l-circ-val'),
   stickLSnapVal:       document.getElementById('stick-l-snap-val'),
   stickRDriftVal:      document.getElementById('stick-r-drift-val'),
   stickRJitterVal:     document.getElementById('stick-r-jitter-val'),
-  stickRCircVal:       document.getElementById('stick-r-circ-val'),
   stickRSnapVal:       document.getElementById('stick-r-snap-val'),
   driftResult:         document.getElementById('drift-result'),
 
@@ -647,19 +662,26 @@ const dom = {
   buttonsSummaryBadge: document.getElementById('buttons-summary-badge'),
   btnResetButtonsTest: document.getElementById('btn-reset-buttons-test'),
 
-  // Raw Diagnostics
-  rawDiagToggle:       document.getElementById('raw-diag-toggle'),
-  rawDiagArrow:        document.getElementById('raw-diag-arrow'),
-  rawDiagBody:         document.getElementById('raw-diag-body'),
+  // Overall Quality Verdict Card
+  cardVerdict:         document.getElementById('card-verdict'),
+  overallVerdictStamp: document.getElementById('overall-verdict-stamp'),
+  btnQuickSave:        document.getElementById('btn-quick-save'),
+
+  // Raw Technical Drawer
+  rawDiagCard:         document.getElementById('raw-diag-card'),
+  btnCloseDetails:     document.getElementById('btn-close-details'),
   rawId:               document.getElementById('raw-id'),
   rawIndex:            document.getElementById('raw-index'),
   rawMapping:          document.getElementById('raw-mapping'),
-  rawConnected:        document.getElementById('raw-connected'),
   rawTotalBtns:        document.getElementById('raw-total-btns'),
   rawTotalAxes:        document.getElementById('raw-total-axes'),
-  rawTimestamp:        document.getElementById('raw-timestamp'),
   rawAxesList:         document.getElementById('raw-axes-list'),
   rawButtonsList:      document.getElementById('raw-buttons-list'),
+
+  // Floating Language Selector
+  floatingLang:        document.getElementById('floating-lang'),
+  langTrigger:         document.getElementById('lang-trigger'),
+  langMenu:            document.getElementById('lang-menu'),
 
   // History Modal
   historyModal:        document.getElementById('history-modal'),
@@ -700,7 +722,6 @@ const dom = {
   printBtnStuck:       document.getElementById('print-btn-stuck'),
   printBtnVerdict:     document.getElementById('print-btn-verdict'),
   printFinalStamp:     document.getElementById('print-final-stamp'),
-  printFinalDetails:   document.getElementById('print-final-details'),
 };
 
 // ─────────────────────────────────────────────────────────────
@@ -710,8 +731,6 @@ let state = {
   activeGpIndex:        null,
   knownGamepads:        new Map(),
   model:                'ps4',
-  viewMode:             'photo',
-  debugMode:            false,
   centerZoom:           true,
   rawAccordionOpen:     false,
   lastActiveSwitchTime: 0,
@@ -734,7 +753,7 @@ let state = {
   // Suite state
   suite: {
     running: false,
-    step: 0, // 1: rest drift, 2: circularity, 3: snapback
+    step: 0,
     startTime: 0,
   },
 
@@ -755,16 +774,14 @@ let state = {
   // Button Validation Matrix
   buttonStates:         {}, // idx -> { pressed: false, clicks: 0, pressStartTime: 0, isStuck: false }
 
+  // Overall Quality Certification
+  overallVerdict:       'PENDING',
+
   // Visual caches
   photoBtns:            {},
   photoStickL:          null,
   photoStickR:          null,
   photoLightbar:        null,
-  diagramRendered:      false,
-  diagramBtns:          {},
-  diagramStickL:        null,
-  diagramStickR:        null,
-  diagramLightbar:      null,
 };
 
 // ─────────────────────────────────────────────────────────────
@@ -830,8 +847,6 @@ function updateGamepadSelectorUI() {
     opt.value = '-1';
     opt.textContent = t('noConnectedGamepads');
     select.appendChild(opt);
-    dom.activeCtrlName.textContent = t('none');
-    dom.activeCtrlIdx.textContent  = '—';
     return;
   }
 
@@ -845,31 +860,24 @@ function updateGamepadSelectorUI() {
 
   if (state.activeGpIndex !== null && state.knownGamepads.has(state.activeGpIndex)) {
     select.value = String(state.activeGpIndex);
-    const activeInfo = state.knownGamepads.get(state.activeGpIndex);
-    dom.activeCtrlName.textContent = activeInfo.id.length > 20 ? activeInfo.id.slice(0, 20) + '…' : activeInfo.id;
-    dom.activeCtrlIdx.textContent  = `#${state.activeGpIndex}`;
   }
 }
 
 function setActiveGamepad(idx) {
   if (idx === null || idx === undefined || idx < 0) {
     state.activeGpIndex = null;
-    dom.statusDot.className    = 'status-dot disconnected';
-    dom.statusText.textContent = t('waitingGamepad');
-    dom.emptyStateView.style.display = 'flex';
-    dom.photoViewBox.style.display   = 'none';
-    dom.diagramViewBox.style.display = 'none';
-
-    dom.activeCtrlName.textContent = t('none');
-    dom.activeCtrlIdx.textContent  = '—';
-    dom.ctrlIdInfo.textContent     = '';
-    dom.ctrlProfileBadge.textContent = 'Perfil: Ninguno';
-    dom.ds3DriverHint.style.display  = 'none';
+    if (dom.statusDot) dom.statusDot.className = 'status-dot disconnected';
+    if (dom.statusText) dom.statusText.textContent = t('waitingGamepad');
+    if (dom.emptyStateView) dom.emptyStateView.style.display = 'flex';
+    if (dom.photoViewBox) dom.photoViewBox.style.display   = 'none';
+    if (dom.ctrlBottomChip) dom.ctrlBottomChip.style.display = 'none';
 
     drawLargeStick(dom.stickLCanvas, 0, 0, true);
     drawLargeStick(dom.stickRCanvas, 0, 0, false);
     resetAllValidationStates();
     resolveModel();
+    updateWorkflowProgress();
+    updateOverallVerdict();
     return;
   }
 
@@ -878,21 +886,12 @@ function setActiveGamepad(idx) {
   const gp = gamepads[idx];
   const id = gp ? gp.id : t('connectedMsg');
 
-  dom.statusDot.className    = 'status-dot connected';
-  dom.statusText.textContent = id.length > 32 ? id.slice(0, 32) + '…' : id;
+  if (dom.statusDot) dom.statusDot.className = 'status-dot connected';
+  if (dom.statusText) dom.statusText.textContent = id.length > 28 ? id.slice(0, 28) + '…' : id;
 
-  dom.emptyStateView.style.display = 'none';
-  if (state.viewMode === 'photo') {
-    dom.photoViewBox.style.display   = 'flex';
-    dom.diagramViewBox.style.display = 'none';
-  } else {
-    dom.photoViewBox.style.display   = 'none';
-    dom.diagramViewBox.style.display = 'flex';
-  }
-
-  dom.activeCtrlName.textContent = id.length > 20 ? id.slice(0, 20) + '…' : id;
-  dom.activeCtrlIdx.textContent  = `#${idx}`;
-  dom.ctrlIdInfo.textContent     = `ID: ${id}`;
+  if (dom.emptyStateView) dom.emptyStateView.style.display = 'none';
+  if (dom.photoViewBox) dom.photoViewBox.style.display   = 'flex';
+  if (dom.ctrlBottomChip) dom.ctrlBottomChip.style.display = 'flex';
 
   if (dom.activeGamepadSelect && dom.activeGamepadSelect.value !== String(idx)) {
     dom.activeGamepadSelect.value = String(idx);
@@ -903,6 +902,8 @@ function setActiveGamepad(idx) {
 
   const btnCount = gp ? Math.min(gp.buttons.length, BTN_NAMES.length + 4) : BTN_NAMES.length;
   buildButtonChips(btnCount);
+  updateWorkflowProgress();
+  updateOverallVerdict();
 }
 
 function resetAllValidationStates() {
@@ -925,6 +926,8 @@ function resetAllValidationStates() {
   updateVerdictBadgesUI();
   updateButtonsSummaryBadge();
   updateTriggersUI();
+  updateWorkflowProgress();
+  updateOverallVerdict();
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -1008,12 +1011,12 @@ function processLiveGamepadInput(gp) {
   // 3. Process Buttons
   processButtonsData(gp, now);
 
-  // 4. Update Raw diagnostics if open
+  // 4. Update Raw diagnostics if drawer is open
   if (state.rawAccordionOpen) {
     updateRawDiagnostics(gp);
   }
 
-  // 5. Update Photo & Diagram overlay interactive highlights
+  // 5. Update Photo overlay interactive highlights
   highlightActiveOverlay(gp, axes);
 }
 
@@ -1027,20 +1030,18 @@ function processStickData(axes, now) {
   const rDist = Math.sqrt(rx * rx + ry * ry);
   const rAngle = (Math.atan2(ry, rx) * 180 / Math.PI + 360) % 360;
 
-  // Real-time text output (4 decimal places)
-  dom.stickLX.textContent    = (lx >= 0 ? '+' : '') + lx.toFixed(4);
-  dom.stickLY.textContent    = (ly >= 0 ? '+' : '') + ly.toFixed(4);
-  dom.stickLDist.textContent = lDist.toFixed(4);
-  dom.stickLAngle.textContent= lAngle.toFixed(1) + '°';
+  // Real-time telemetry output
+  if (dom.stickLX) dom.stickLX.textContent    = (lx >= 0 ? '+' : '') + lx.toFixed(4);
+  if (dom.stickLY) dom.stickLY.textContent    = (ly >= 0 ? '+' : '') + ly.toFixed(4);
+  if (dom.stickLDist) dom.stickLDist.textContent = lDist.toFixed(4);
 
-  dom.stickRX.textContent    = (rx >= 0 ? '+' : '') + rx.toFixed(4);
-  dom.stickRY.textContent    = (ry >= 0 ? '+' : '') + ry.toFixed(4);
-  dom.stickRDist.textContent = rDist.toFixed(4);
-  dom.stickRAngle.textContent= rAngle.toFixed(1) + '°';
+  if (dom.stickRX) dom.stickRX.textContent    = (rx >= 0 ? '+' : '') + rx.toFixed(4);
+  if (dom.stickRY) dom.stickRY.textContent    = (ry >= 0 ? '+' : '') + ry.toFixed(4);
+  if (dom.stickRDist) dom.stickRDist.textContent = rDist.toFixed(4);
 
   // Status dots
-  dom.stickLStatusDot.className = 'stick-status-dot' + (lDist > 0.08 ? ' active' : '');
-  dom.stickRStatusDot.className = 'stick-status-dot' + (rDist > 0.08 ? ' active' : '');
+  if (dom.stickLStatusDot) dom.stickLStatusDot.className = 'stick-status-dot' + (lDist > 0.08 ? ' active' : '');
+  if (dom.stickRStatusDot) dom.stickRStatusDot.className = 'stick-status-dot' + (rDist > 0.08 ? ' active' : '');
 
   // Record path trace (max 400 points)
   state.stickHistoryL.push({ x: lx, y: ly });
@@ -1070,7 +1071,7 @@ function processStickData(axes, now) {
     const durationMs = Math.round(now - state.snapL.startTime);
     state.snapL.tracking = false;
     state.stickMetrics.l.snapback = durationMs;
-    dom.stickLSnapVal.textContent = `${durationMs}ms`;
+    if (dom.stickLSnapVal) dom.stickLSnapVal.textContent = `${durationMs}ms`;
     evaluateStickOverall('l');
   }
 
@@ -1083,7 +1084,7 @@ function processStickData(axes, now) {
     const durationMs = Math.round(now - state.snapR.startTime);
     state.snapR.tracking = false;
     state.stickMetrics.r.snapback = durationMs;
-    dom.stickRSnapVal.textContent = `${durationMs}ms`;
+    if (dom.stickRSnapVal) dom.stickRSnapVal.textContent = `${durationMs}ms`;
     evaluateStickOverall('r');
   }
 
@@ -1110,10 +1111,10 @@ function calculateCircularity(stick) {
 
   if (stick === 'l') {
     state.stickMetrics.l.circularity = coveragePercent;
-    dom.stickLCircVal.textContent = `${coveragePercent}%`;
+    if (dom.stickLCircVal) dom.stickLCircVal.textContent = `${coveragePercent}%`;
   } else {
     state.stickMetrics.r.circularity = coveragePercent;
-    dom.stickRCircVal.textContent = `${coveragePercent}%`;
+    if (dom.stickRCircVal) dom.stickRCircVal.textContent = `${coveragePercent}%`;
   }
   evaluateStickOverall(stick);
 }
@@ -1164,8 +1165,13 @@ function evaluateStickOverall(stick) {
   }
 
   m.verdict = verdict;
-  badgeEl.className = `stick-verdict-badge ${css}`;
-  badgeEl.textContent = text;
+  if (badgeEl) {
+    badgeEl.className = `stick-verdict-badge ${css}`;
+    badgeEl.textContent = text;
+  }
+
+  updateWorkflowProgress();
+  updateOverallVerdict();
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -1186,10 +1192,10 @@ function processTriggersData(gp) {
   tL.max = Math.max(tL.max, l2Val);
   tL.samples++;
 
-  dom.triggerL2Val.textContent = l2Val.toFixed(3);
-  dom.triggerL2Bar.style.width = `${Math.round(l2Val * 100)}%`;
-  dom.triggerL2Rest.textContent = tL.min.toFixed(3);
-  dom.triggerL2Max.textContent  = tL.max.toFixed(3);
+  if (dom.triggerL2Val)  dom.triggerL2Val.textContent = l2Val.toFixed(2);
+  if (dom.triggerL2Bar)  dom.triggerL2Bar.style.width = `${Math.round(l2Val * 100)}%`;
+  if (dom.triggerL2Rest) dom.triggerL2Rest.textContent = tL.min.toFixed(3);
+  if (dom.triggerL2Max)  dom.triggerL2Max.textContent  = tL.max.toFixed(2);
 
   // R2
   const tR = state.triggers.r2;
@@ -1197,16 +1203,18 @@ function processTriggersData(gp) {
   tR.max = Math.max(tR.max, r2Val);
   tR.samples++;
 
-  dom.triggerR2Val.textContent = r2Val.toFixed(3);
-  dom.triggerR2Bar.style.width = `${Math.round(r2Val * 100)}%`;
-  dom.triggerR2Rest.textContent = tR.min.toFixed(3);
-  dom.triggerR2Max.textContent  = tR.max.toFixed(3);
+  if (dom.triggerR2Val)  dom.triggerR2Val.textContent = r2Val.toFixed(2);
+  if (dom.triggerR2Bar)  dom.triggerR2Bar.style.width = `${Math.round(r2Val * 100)}%`;
+  if (dom.triggerR2Rest) dom.triggerR2Rest.textContent = tR.min.toFixed(3);
+  if (dom.triggerR2Max)  dom.triggerR2Max.textContent  = tR.max.toFixed(2);
 
   // Evaluate Triggers
   evaluateTrigger('l2', tL, dom.triggerL2Status, dom.triggerL2Ramp);
   evaluateTrigger('r2', tR, dom.triggerR2Status, dom.triggerR2Ramp);
 
   updateTriggersSummaryBadge();
+  updateWorkflowProgress();
+  updateOverallVerdict();
 }
 
 function evaluateTrigger(key, trig, badgeEl, rampEl) {
@@ -1223,39 +1231,42 @@ function evaluateTrigger(key, trig, badgeEl, rampEl) {
     verdict = 'PASS';
     css = 'badge-pass';
     text = t('verdictPass');
-    rampEl.textContent = '100% Ok';
+    if (rampEl) rampEl.textContent = '100% Ok';
   } else if (!restOk) {
     verdict = 'FAIL';
     css = 'badge-fail';
     text = t('verdictFail');
-    rampEl.textContent = 'Fallo Reposo';
+    if (rampEl) rampEl.textContent = 'Fallo Reposo';
   } else if (trig.max > 0.4 && !maxOk) {
     verdict = 'REVIEW';
     css = 'badge-review';
     text = t('verdictReview');
-    rampEl.textContent = 'No llega al 100%';
+    if (rampEl) rampEl.textContent = 'No llega al 100%';
   }
 
   trig.verdict = verdict;
-  badgeEl.className = `trigger-badge ${css}`;
-  badgeEl.textContent = text;
+  if (badgeEl) {
+    badgeEl.className = `trigger-badge ${css}`;
+    badgeEl.textContent = text;
+  }
 }
 
 function updateTriggersSummaryBadge() {
   const l2 = state.triggers.l2.verdict;
   const r2 = state.triggers.r2.verdict;
   const tag = dom.triggersSummaryTag;
+  if (!tag) return;
 
   if (l2 === 'PASS' && r2 === 'PASS') {
-    tag.textContent = `Gatillos: ${t('verdictPass')}`;
+    tag.textContent = `✓ ${t('verdictPass')}`;
     tag.style.color = 'var(--green)';
     tag.style.borderColor = 'var(--green)';
   } else if (l2 === 'FAIL' || r2 === 'FAIL') {
-    tag.textContent = `Gatillos: ${t('verdictFail')}`;
+    tag.textContent = `✕ ${t('verdictFail')}`;
     tag.style.color = 'var(--red)';
     tag.style.borderColor = 'var(--red)';
   } else if (l2 === 'REVIEW' || r2 === 'REVIEW') {
-    tag.textContent = `Gatillos: ${t('verdictReview')}`;
+    tag.textContent = `! ${t('verdictReview')}`;
     tag.style.color = 'var(--yellow)';
     tag.style.borderColor = 'var(--yellow)';
   } else {
@@ -1265,11 +1276,35 @@ function updateTriggersSummaryBadge() {
   }
 }
 
+function updateTriggersUI() {
+  if (dom.triggerL2Val)  dom.triggerL2Val.textContent = '0.00';
+  if (dom.triggerL2Bar)  dom.triggerL2Bar.style.width = '0%';
+  if (dom.triggerL2Max)  dom.triggerL2Max.textContent = '0.00';
+  if (dom.triggerL2Ramp) dom.triggerL2Ramp.textContent = '—';
+  if (dom.triggerL2Status) {
+    dom.triggerL2Status.className = 'trigger-badge badge-neutral';
+    dom.triggerL2Status.textContent = t('verdictPending');
+  }
+
+  if (dom.triggerR2Val)  dom.triggerR2Val.textContent = '0.00';
+  if (dom.triggerR2Bar)  dom.triggerR2Bar.style.width = '0%';
+  if (dom.triggerR2Max)  dom.triggerR2Max.textContent = '0.00';
+  if (dom.triggerR2Ramp) dom.triggerR2Ramp.textContent = '—';
+  if (dom.triggerR2Status) {
+    dom.triggerR2Status.className = 'trigger-badge badge-neutral';
+    dom.triggerR2Status.textContent = t('verdictPending');
+  }
+
+  updateTriggersSummaryBadge();
+}
+
 // ─────────────────────────────────────────────────────────────
 // 10. FULL BUTTON TESTING MATRIX & STUCK DETECTION
 // ─────────────────────────────────────────────────────────────
 function buildButtonChips(count) {
+  if (!dom.buttonsGrid) return;
   dom.buttonsGrid.innerHTML = '';
+
   for (let i = 0; i < count; i++) {
     const chip = document.createElement('div');
     chip.className = 'btn-chip';
@@ -1299,12 +1334,14 @@ function buildButtonChips(count) {
 function processButtonsData(gp, now) {
   if (!gp || !gp.buttons) return;
 
-  let activePressText = '';
+  let passedCount = 0;
+  let stuckCount = 0;
+  const total = gp.buttons.length;
 
-  for (let i = 0; i < gp.buttons.length; i++) {
+  for (let i = 0; i < total; i++) {
     const b = gp.buttons[i];
     const val = typeof b === 'object' ? b.value : (b ? 1 : 0);
-    const isPressed = typeof b === 'object' ? b.pressed : (val > 0.5);
+    const isPressed = typeof b === 'object' ? b.pressed : (val > 0.4);
 
     const chip = document.getElementById(`btn-chip-${i}`);
     const valEl = document.getElementById(`btn-val-${i}`);
@@ -1354,22 +1391,25 @@ function processButtonsData(gp, now) {
       }
     }
 
-    if (isPressed) {
-      activePressText = `${getButtonLabel(state.model, i)} (${val.toFixed(2)})`;
-    }
+    if (bState.clicks >= 1) passedCount++;
+    if (bState.isStuck) stuckCount++;
   }
 
-  if (activePressText) {
-    dom.feedbackLabel.textContent = `Pulsado: ${activePressText}`;
+  // Update compact progress chip under controller
+  if (dom.chipBtnProgress) {
+    dom.chipBtnProgress.textContent = `${passedCount} / ${total} ✓`;
   }
 
   updateButtonsSummaryBadge();
+  updateWorkflowProgress();
+  updateOverallVerdict();
 }
 
 function updateButtonsSummaryBadge() {
+  if (!dom.buttonsSummaryBadge) return;
   const total = Object.keys(state.buttonStates).length;
   if (total === 0) {
-    dom.buttonsSummaryBadge.textContent = '0 / 0 Validados';
+    dom.buttonsSummaryBadge.textContent = '0 / 0 ✓';
     return;
   }
 
@@ -1381,11 +1421,11 @@ function updateButtonsSummaryBadge() {
   }
 
   if (stuck > 0) {
-    dom.buttonsSummaryBadge.textContent = `⚠ ${stuck} Atascado(s) • ${passed}/${total} Validados`;
+    dom.buttonsSummaryBadge.textContent = `⚠ ${stuck} Atascado(s) • ${passed}/${total} ✓`;
     dom.buttonsSummaryBadge.style.color = 'var(--red)';
   } else {
-    dom.buttonsSummaryBadge.textContent = `${passed} / ${total} Validados`;
-    dom.buttonsSummaryBadge.style.color = (passed === total) ? 'var(--green)' : '#a5b4fc';
+    dom.buttonsSummaryBadge.textContent = `${passed} / ${total} ✓`;
+    dom.buttonsSummaryBadge.style.color = (passed === total) ? 'var(--green)' : 'var(--cyan)';
   }
 }
 
@@ -1400,12 +1440,17 @@ function startDriftCapture() {
   state.drift.samplesL = [];
   state.drift.samplesR = [];
 
-  dom.driftResult.innerHTML = `
-    <div style="display:flex;align-items:center;gap:8px;justify-content:center;color:#a5b4fc;font-weight:700;">
-      <span class="icon">⏱</span>
-      <span>${t('suiteStepRest')}</span>
-    </div>
-  `;
+  if (dom.driftResult) {
+    dom.driftResult.innerHTML = `
+      <div style="display:flex;align-items:center;gap:8px;justify-content:center;color:#a5b4fc;font-weight:700;">
+        <span class="icon">⏱</span>
+        <span>${t('suiteStepRest')}</span>
+      </div>
+    `;
+  }
+  if (dom.guidedInstructionText) {
+    dom.guidedInstructionText.textContent = t('suiteStepRest');
+  }
 }
 
 function finalizeDriftCapture() {
@@ -1430,13 +1475,13 @@ function finalizeDriftCapture() {
 
   state.stickMetrics.l.drift  = maxDevL;
   state.stickMetrics.l.jitter = jitterL;
-  dom.stickLDriftVal.textContent  = maxDevL.toFixed(3);
-  dom.stickLJitterVal.textContent = jitterL.toFixed(3);
+  if (dom.stickLDriftVal) dom.stickLDriftVal.textContent  = maxDevL.toFixed(3);
+  if (dom.stickLJitterVal) dom.stickLJitterVal.textContent = jitterL.toFixed(3);
 
   state.stickMetrics.r.drift  = maxDevR;
   state.stickMetrics.r.jitter = jitterR;
-  dom.stickRDriftVal.textContent  = maxDevR.toFixed(3);
-  dom.stickRJitterVal.textContent = jitterR.toFixed(3);
+  if (dom.stickRDriftVal) dom.stickRDriftVal.textContent  = maxDevR.toFixed(3);
+  if (dom.stickRJitterVal) dom.stickRJitterVal.textContent = jitterR.toFixed(3);
 
   evaluateStickOverall('l');
   evaluateStickOverall('r');
@@ -1445,17 +1490,18 @@ function finalizeDriftCapture() {
   const overallR = state.stickMetrics.r.verdict;
   const isGood = overallL === 'PASS' && overallR === 'PASS';
 
-  dom.driftResult.innerHTML = `
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 8px;">
-      <div>
-        <strong>Drift Reposo:</strong> 
-        Stick L: ${maxDevL.toFixed(3)} | Stick R: ${maxDevR.toFixed(3)}
+  if (dom.driftResult) {
+    dom.driftResult.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 8px;">
+        <div>
+          <strong>Drift:</strong> L: ${maxDevL.toFixed(3)} | R: ${maxDevR.toFixed(3)}
+        </div>
+        <span class="stick-verdict-badge ${isGood ? 'badge-pass' : 'badge-review'}">
+          ${isGood ? t('verdictPass') : t('verdictReview')}
+        </span>
       </div>
-      <span class="stick-verdict-badge ${isGood ? 'badge-pass' : 'badge-review'}">
-        ${isGood ? t('verdictPass') : t('verdictReview')}
-      </span>
-    </div>
-  `;
+    `;
+  }
 }
 
 function startFullSuite() {
@@ -1465,32 +1511,48 @@ function startFullSuite() {
 
   startDriftCapture();
 
-  // Schedule next step instructions
+  // Step 2: Circularity
   setTimeout(() => {
     state.suite.step = 2;
-    dom.driftResult.innerHTML = `
-      <div style="color:var(--accent);font-weight:700;text-align:center;">
-        ${t('suiteStepCirc')}
-      </div>
-    `;
+    if (dom.driftResult) {
+      dom.driftResult.innerHTML = `
+        <div style="color:var(--accent);font-weight:700;text-align:center;">
+          ${t('suiteStepCirc')}
+        </div>
+      `;
+    }
+    if (dom.guidedInstructionText) {
+      dom.guidedInstructionText.textContent = t('suiteStepCirc');
+    }
   }, 3200);
 
+  // Step 3: Snapback
   setTimeout(() => {
     state.suite.step = 3;
-    dom.driftResult.innerHTML = `
-      <div style="color:#00e5ff;font-weight:700;text-align:center;">
-        ${t('suiteStepSnap')}
-      </div>
-    `;
+    if (dom.driftResult) {
+      dom.driftResult.innerHTML = `
+        <div style="color:#00e5ff;font-weight:700;text-align:center;">
+          ${t('suiteStepSnap')}
+        </div>
+      `;
+    }
+    if (dom.guidedInstructionText) {
+      dom.guidedInstructionText.textContent = t('suiteStepSnap');
+    }
   }, 7500);
 
+  // Suite completion
   setTimeout(() => {
     state.suite.running = false;
-    dom.driftResult.innerHTML = `
-      <div style="color:var(--green);font-weight:700;text-align:center;">
-        ${t('suiteDone')}
-      </div>
-    `;
+    if (dom.driftResult) {
+      dom.driftResult.innerHTML = `
+        <div style="color:var(--green);font-weight:700;text-align:center;">
+          ${t('suiteDone')}
+        </div>
+      `;
+    }
+    updateWorkflowProgress();
+    updateOverallVerdict();
   }, 12000);
 }
 
@@ -1585,64 +1647,70 @@ function drawLargeStick(canvas, rawX, rawY, isLeft, history = []) {
 }
 
 // ─────────────────────────────────────────────────────────────
-// 13. RAW INPUT TECHNICAL DIAGNOSTICS
+// 13. RAW INPUT TECHNICAL DIAGNOSTICS (DRAWER)
 // ─────────────────────────────────────────────────────────────
 function updateRawDiagnostics(gp) {
-  if (!gp) return;
-  dom.rawId.textContent        = gp.id || '—';
-  dom.rawIndex.textContent     = String(gp.index);
-  dom.rawMapping.textContent   = gp.mapping || 'non-standard';
-  dom.rawConnected.textContent = gp.connected ? 'true' : 'false';
-  dom.rawTotalBtns.textContent = String(gp.buttons.length);
-  dom.rawTotalAxes.textContent = String(gp.axes.length);
-  dom.rawTimestamp.textContent = String(Math.round(gp.timestamp));
+  if (!gp || !state.rawAccordionOpen) return;
+  if (dom.rawId) dom.rawId.textContent = gp.id || '—';
+  if (dom.rawIndex) dom.rawIndex.textContent = String(gp.index);
+  if (dom.rawMapping) dom.rawMapping.textContent = gp.mapping || 'non-standard';
+  if (dom.rawTotalBtns) dom.rawTotalBtns.textContent = String(gp.buttons.length);
+  if (dom.rawTotalAxes) dom.rawTotalAxes.textContent = String(gp.axes.length);
 
   // Raw Axes list
-  let axesHtml = '';
-  for (let i = 0; i < gp.axes.length; i++) {
-    const val = gp.axes[i] || 0;
-    const pct = Math.round(((val + 1) / 2) * 100);
-    axesHtml += `
-      <div class="raw-axis-row">
-        <span class="raw-axis-tag">Axis ${i}:</span>
-        <span class="raw-axis-val">${val >= 0 ? '+' : ''}${val.toFixed(3)}</span>
-        <div class="raw-axis-bar-bg">
-          <div class="raw-axis-bar-fill" style="width:${pct}%;"></div>
+  if (dom.rawAxesList) {
+    let axesHtml = '';
+    for (let i = 0; i < gp.axes.length; i++) {
+      const val = gp.axes[i] || 0;
+      const pct = Math.round(((val + 1) / 2) * 100);
+      axesHtml += `
+        <div class="raw-axis-row">
+          <span class="raw-axis-tag">Axis ${i}:</span>
+          <span class="raw-axis-val">${val >= 0 ? '+' : ''}${val.toFixed(3)}</span>
+          <div class="raw-axis-bar-bg">
+            <div class="raw-axis-bar-fill" style="width:${pct}%;"></div>
+          </div>
         </div>
-      </div>
-    `;
+      `;
+    }
+    dom.rawAxesList.innerHTML = axesHtml;
   }
-  dom.rawAxesList.innerHTML = axesHtml;
 
   // Raw Buttons list
-  let btnsHtml = '';
-  for (let i = 0; i < gp.buttons.length; i++) {
-    const b = gp.buttons[i];
-    const val = typeof b === 'object' ? b.value : (b ? 1 : 0);
-    const on = typeof b === 'object' ? b.pressed : (val > 0.5);
-    btnsHtml += `
-      <div class="raw-btn-row">
-        <span class="raw-btn-tag">Btn ${i}:</span>
-        <span class="raw-btn-val">${val.toFixed(2)}</span>
-        <div class="raw-btn-indicator ${on ? 'on' : ''}"></div>
-      </div>
-    `;
+  if (dom.rawButtonsList) {
+    let btnsHtml = '';
+    for (let i = 0; i < gp.buttons.length; i++) {
+      const b = gp.buttons[i];
+      const val = typeof b === 'object' ? b.value : (b ? 1 : 0);
+      const on = typeof b === 'object' ? b.pressed : (val > 0.5);
+      btnsHtml += `
+        <div class="raw-btn-row">
+          <span class="raw-btn-tag">Btn ${i}:</span>
+          <span class="raw-btn-val">${val.toFixed(2)}</span>
+          <div class="raw-btn-indicator ${on ? 'on' : ''}"></div>
+        </div>
+      `;
+    }
+    dom.rawButtonsList.innerHTML = btnsHtml;
   }
-  dom.rawButtonsList.innerHTML = btnsHtml;
 }
 
 // ─────────────────────────────────────────────────────────────
-// 14. PHOTO OVERLAY & DIAGRAM HIGHLIGHTING
+// 14. PHOTO OVERLAY & REAL-TIME CONTROLS FEEDBACK
 // ─────────────────────────────────────────────────────────────
 function buildPhotoOverlay(model) {
-  const overlayData = (typeof OFFICIAL_OVERLAYS !== 'undefined' && OFFICIAL_OVERLAYS[model])
-    ? OFFICIAL_OVERLAYS[model]
-    : ((typeof OFFICIAL_OVERLAYS !== 'undefined' && OFFICIAL_OVERLAYS['ps4']) || { buttons: {} });
+  const profile = (typeof CONTROLLER_PROFILES !== 'undefined' && CONTROLLER_PROFILES[model])
+    ? CONTROLLER_PROFILES[model]
+    : ((typeof CONTROLLER_PROFILES !== 'undefined' && CONTROLLER_PROFILES['generic']) || { controls: {} });
+
+  if (dom.photoOverlaySvg) {
+    dom.photoOverlaySvg.setAttribute('viewBox', profile.viewBox || '0 0 1000 1000');
+  }
 
   let svgHtml = `
     <defs>
       <filter id="photo-glow" x="-50%" y="-50%" width="200%" height="200%">
-        <feGaussianBlur stdDeviation="10" result="blur" />
+        <feGaussianBlur stdDeviation="8" result="blur" />
         <feMerge>
           <feMergeNode in="blur" />
           <feMergeNode in="SourceGraphic" />
@@ -1651,43 +1719,55 @@ function buildPhotoOverlay(model) {
     </defs>
   `;
 
-  if (overlayData.lightbar) {
-    const lb = overlayData.lightbar;
-    svgHtml += `<rect id="photo-lightbar" x="${lb.x}" y="${lb.y}" width="${lb.w}" height="${lb.h}" rx="${lb.rx}" class="photo-lightbar" style="color:${lb.color};" />`;
+  if (profile.lightbar) {
+    const lb = profile.lightbar;
+    svgHtml += `<rect id="photo-lightbar" x="${lb.x}" y="${lb.y}" width="${lb.w}" height="${lb.h}" rx="${lb.rx || 4}" class="photo-lightbar" />`;
   }
 
-  for (const [idx, b] of Object.entries(overlayData.buttons)) {
-    const i = parseInt(idx, 10);
-    const color = b.color || '#2979ff';
+  if (profile.controls) {
+    for (const [idxStr, c] of Object.entries(profile.controls)) {
+      const i = parseInt(idxStr, 10);
+      const title = c.name || `Botón ${i}`;
+      const isAnalogTrig = !!c.isAnalog;
 
-    if (b.type === 'circle') {
-      svgHtml += `<circle id="photo-btn-${i}" cx="${b.cx}" cy="${b.cy}" r="${b.r}" class="photo-btn" data-btn="${i}" data-color="${color}" style="color:${color};" />`;
-    } else if (b.type === 'rect') {
-      svgHtml += `<rect id="photo-btn-${i}" x="${b.x}" y="${b.y}" width="${b.w}" height="${b.h}" rx="${b.rx || 10}" class="photo-btn" data-btn="${i}" data-color="${color}" style="color:${color};" />`;
-    } else if (b.type === 'pill') {
-      svgHtml += `<ellipse id="photo-btn-${i}" cx="${b.cx}" cy="${b.cy}" rx="${b.rx}" ry="${b.ry}" class="photo-btn" data-btn="${i}" data-color="${color}" style="color:${color};" />`;
-    } else if (b.type === 'trigger') {
-      svgHtml += `<rect id="photo-btn-${i}" x="${b.x}" y="${b.y}" width="${b.w}" height="${b.h}" rx="${b.rx || 12}" class="photo-btn photo-trigger" data-btn="${i}" data-color="${color}" style="color:${color};" />`;
-    } else if (b.type === 'dpad') {
-      const x = b.cx - b.w / 2;
-      const y = b.cy - b.h / 2;
-      svgHtml += `<rect id="photo-btn-${i}" x="${x}" y="${y}" width="${b.w}" height="${b.h}" rx="6" class="photo-btn" data-btn="${i}" data-color="#ffffff" style="color:#ffffff;" />`;
-    } else if (b.type === 'stick') {
-      const stickId = (i === 10) ? 'photo-stick-l' : 'photo-stick-r';
-      svgHtml += `
-        <circle id="photo-btn-${i}" cx="${b.cx}" cy="${b.cy}" r="${b.r}" class="photo-btn" data-btn="${i}" data-color="${color}" style="color:${color}; stroke-dasharray:4 4;" />
-        <circle id="${stickId}" cx="${b.cx}" cy="${b.cy}" r="${b.r * 0.6}" class="photo-stick-puck" style="transform-origin:${b.cx}px ${b.cy}px;" />
-      `;
+      if (c.type === 'circle') {
+        svgHtml += `<circle id="photo-btn-${i}" cx="${c.cx}" cy="${c.cy}" r="${c.r}" class="photo-btn" data-btn="${i}" data-title="${title}"><title>${title}</title></circle>`;
+      } else if (c.type === 'rect') {
+        svgHtml += `<rect id="photo-btn-${i}" x="${c.x}" y="${c.y}" width="${c.w}" height="${c.h}" rx="${c.rx || 8}" class="photo-btn" data-btn="${i}" data-title="${title}"><title>${title}</title></rect>`;
+      } else if (c.type === 'trigger') {
+        svgHtml += `<rect id="photo-btn-${i}" x="${c.x}" y="${c.y}" width="${c.w}" height="${c.h}" rx="${c.rx || 10}" class="photo-btn photo-trigger" data-btn="${i}" data-analog="${isAnalogTrig}" data-title="${title}"><title>${title}</title></rect>`;
+      } else if (c.type === 'pill') {
+        svgHtml += `<ellipse id="photo-btn-${i}" cx="${c.cx}" cy="${c.cy}" rx="${c.rx}" ry="${c.ry}" class="photo-btn photo-pill" data-btn="${i}" data-title="${title}"><title>${title}</title></ellipse>`;
+      } else if (c.type === 'dpad') {
+        const x = c.cx - (c.w / 2);
+        const y = c.cy - (c.h / 2);
+        svgHtml += `<rect id="photo-btn-${i}" x="${x}" y="${y}" width="${c.w}" height="${c.h}" rx="6" class="photo-btn photo-dpad" data-btn="${i}" data-dir="${c.dir || ''}" data-title="${title}"><title>${title}</title></rect>`;
+      } else if (c.type === 'stick') {
+        const stickId = (i === 10) ? 'photo-stick-l' : 'photo-stick-r';
+        svgHtml += `
+          <circle id="photo-btn-${i}" cx="${c.cx}" cy="${c.cy}" r="${c.r}" class="photo-btn photo-stick" data-btn="${i}" stroke-dasharray="4 4" data-title="${title}"><title>${title}</title></circle>
+          <circle id="${stickId}" cx="${c.cx}" cy="${c.cy}" r="${c.r * 0.55}" class="photo-stick-puck" style="transform-origin:${c.cx}px ${c.cy}px;" />
+        `;
+      }
     }
   }
 
-  dom.photoOverlaySvg.innerHTML = svgHtml;
-  dom.photoOverlaySvg.classList.toggle('debug-guides', !!state.debugMode);
+  if (dom.photoOverlaySvg) {
+    dom.photoOverlaySvg.innerHTML = svgHtml;
+  }
 
   state.photoBtns = {};
-  for (let i = 0; i <= 17; i++) {
+  for (let i = 0; i <= 20; i++) {
     const el = document.getElementById(`photo-btn-${i}`);
-    if (el) state.photoBtns[i] = el;
+    if (el) {
+      state.photoBtns[i] = el;
+      // Re-apply passed / stuck status if already checked
+      const bState = state.buttonStates[i];
+      if (bState) {
+        if (bState.isStuck) el.classList.add('stuck');
+        else if (bState.clicks >= 1) el.classList.add('passed');
+      }
+    }
   }
   state.photoStickL   = document.getElementById('photo-stick-l');
   state.photoStickR   = document.getElementById('photo-stick-r');
@@ -1697,39 +1777,48 @@ function buildPhotoOverlay(model) {
 function highlightActiveOverlay(gp, axes) {
   if (!gp) return;
 
-  // Highlight buttons on Photo Overlay
-  if (state.viewMode === 'photo') {
-    for (let i = 0; i < gp.buttons.length; i++) {
-      const b = gp.buttons[i];
-      const val = typeof b === 'object' ? b.value : (b ? 1 : 0);
-      const isPressed = typeof b === 'object' ? b.pressed : (val > 0.4);
-      const el = state.photoBtns[i];
+  for (let i = 0; i < gp.buttons.length; i++) {
+    const b = gp.buttons[i];
+    const val = typeof b === 'object' ? b.value : (b ? 1 : 0);
+    const isPressed = typeof b === 'object' ? b.pressed : (val > 0.4);
+    const el = state.photoBtns[i];
+    const bState = state.buttonStates[i];
 
-      if (el) {
-        if (isPressed) {
-          el.classList.add('active');
-          const color = el.getAttribute('data-color') || '#2979ff';
-          el.style.fill = color;
-          el.style.stroke = '#fff';
-        } else {
-          el.classList.remove('active');
-          el.style.fill = 'rgba(0,0,0,0.01)';
-          el.style.stroke = 'rgba(255,255,255,0.08)';
+    if (el) {
+      if (isPressed) {
+        el.classList.add('pressed');
+      } else {
+        el.classList.remove('pressed');
+      }
+
+      if (bState) {
+        if (bState.isStuck) {
+          el.classList.add('stuck');
+          el.classList.remove('passed');
+        } else if (bState.clicks >= 1) {
+          el.classList.add('passed');
+          el.classList.remove('stuck');
         }
       }
     }
+  }
 
-    // Move stick pucks on photo overlay
-    if (state.photoStickL) {
-      const tx = axes.lx * 20;
-      const ty = axes.ly * 20;
-      state.photoStickL.style.transform = `translate(${tx}px, ${ty}px)`;
-    }
-    if (state.photoStickR) {
-      const tx = axes.rx * 20;
-      const ty = axes.ry * 20;
-      state.photoStickR.style.transform = `translate(${tx}px, ${ty}px)`;
-    }
+  // Move stick pucks on photo overlay
+  if (state.photoStickL) {
+    const tx = axes.lx * 20;
+    const ty = axes.ly * 20;
+    state.photoStickL.style.transform = `translate(${tx}px, ${ty}px)`;
+    const btn10 = gp.buttons[10];
+    const isL3 = btn10 ? (typeof btn10 === 'object' ? btn10.pressed : btn10 > 0.5) : false;
+    state.photoStickL.classList.toggle('pressed', isL3);
+  }
+  if (state.photoStickR) {
+    const tx = axes.rx * 20;
+    const ty = axes.ry * 20;
+    state.photoStickR.style.transform = `translate(${tx}px, ${ty}px)`;
+    const btn11 = gp.buttons[11];
+    const isR3 = btn11 ? (typeof btn11 === 'object' ? btn11.pressed : btn11 > 0.5) : false;
+    state.photoStickR.classList.toggle('pressed', isR3);
   }
 }
 
@@ -1743,16 +1832,152 @@ function resolveModel() {
     state.model = gp ? detectControllerModel(gp.id, gp.mapping) : 'ps4';
   }
 
-  dom.ctrlProfileBadge.textContent = `Perfil: ${state.model.toUpperCase()}`;
-  dom.ds3DriverHint.style.display = (state.model === 'ps3') ? 'block' : 'none';
+  if (dom.chipModelName) {
+    dom.chipModelName.textContent = getControllerFriendlyName(state.model);
+  }
 
   // Load photo
-  dom.photoImg.src = `assets/controllers/${state.model}.png`;
+  if (dom.photoImg) {
+    dom.photoImg.src = `assets/controllers/${state.model}.png`;
+  }
   buildPhotoOverlay(state.model);
 }
 
 // ─────────────────────────────────────────────────────────────
-// 15. PERSISTENCE & HISTORY STORE (DiagnosticStore)
+// 15. GUIDED WORKFLOW PROGRESSION & REAL-TIME CERTIFICATION
+// ─────────────────────────────────────────────────────────────
+function updateWorkflowProgress() {
+  if (state.activeGpIndex === null) {
+    // Empty state
+    if (dom.stepBtn)    { dom.stepBtn.className = 'step-chip'; if (dom.checkBtn) dom.checkBtn.textContent = '○'; }
+    if (dom.stepTrig)   { dom.stepTrig.className = 'step-chip'; if (dom.checkTrig) dom.checkTrig.textContent = '○'; }
+    if (dom.stepStickL) { dom.stepStickL.className = 'step-chip'; if (dom.checkStickL) dom.checkStickL.textContent = '○'; }
+    if (dom.stepStickR) { dom.stepStickR.className = 'step-chip'; if (dom.checkStickR) dom.checkStickR.textContent = '○'; }
+    if (dom.stepCert)   { dom.stepCert.className = 'step-chip'; if (dom.checkCert) dom.checkCert.textContent = '○'; }
+
+    if (dom.guidedInstructionText) {
+      dom.guidedInstructionText.textContent = t('emptyStateConnectMsg');
+    }
+    return;
+  }
+
+  const totalBtns = Object.keys(state.buttonStates).length || 16;
+  const passedBtns = Object.values(state.buttonStates).filter(b => b.clicks >= 1).length;
+  const stuckBtns = Object.values(state.buttonStates).filter(b => b.isStuck).length;
+  const buttonsDone = (totalBtns > 0 && passedBtns >= totalBtns && stuckBtns === 0);
+
+  const tL = state.triggers.l2;
+  const tR = state.triggers.r2;
+  const triggersDone = (tL.verdict === 'PASS' && tR.verdict === 'PASS') || (tL.max >= 0.94 && tR.max >= 0.94);
+
+  const sl = state.stickMetrics.l;
+  const sr = state.stickMetrics.r;
+  const stickLDone = (sl.verdict === 'PASS' || (sl.circularity !== null && sl.circularity >= 80));
+  const stickRDone = (sr.verdict === 'PASS' || (sr.circularity !== null && sr.circularity >= 80));
+
+  const certDone = buttonsDone && triggersDone && stickLDone && stickRDone;
+
+  // Determine current active step
+  let activeStep = 1;
+  if (!buttonsDone) activeStep = 1;
+  else if (!triggersDone) activeStep = 2;
+  else if (!stickLDone) activeStep = 3;
+  else if (!stickRDone) activeStep = 4;
+  else activeStep = 5;
+
+  // Step 1: Buttons
+  if (dom.stepBtn) {
+    dom.stepBtn.className = buttonsDone ? 'step-chip passed' : (activeStep === 1 ? 'step-chip active' : 'step-chip');
+    if (dom.checkBtn) dom.checkBtn.textContent = buttonsDone ? '✓' : '○';
+  }
+  // Step 2: Triggers
+  if (dom.stepTrig) {
+    dom.stepTrig.className = triggersDone ? 'step-chip passed' : (activeStep === 2 ? 'step-chip active' : 'step-chip');
+    if (dom.checkTrig) dom.checkTrig.textContent = triggersDone ? '✓' : '○';
+  }
+  // Step 3: Stick L
+  if (dom.stepStickL) {
+    dom.stepStickL.className = stickLDone ? 'step-chip passed' : (activeStep === 3 ? 'step-chip active' : 'step-chip');
+    if (dom.checkStickL) dom.checkStickL.textContent = stickLDone ? '✓' : '○';
+  }
+  // Step 4: Stick R
+  if (dom.stepStickR) {
+    dom.stepStickR.className = stickRDone ? 'step-chip passed' : (activeStep === 4 ? 'step-chip active' : 'step-chip');
+    if (dom.checkStickR) dom.checkStickR.textContent = stickRDone ? '✓' : '○';
+  }
+  // Step 5: Cert
+  if (dom.stepCert) {
+    dom.stepCert.className = certDone ? 'step-chip passed' : (activeStep === 5 ? 'step-chip active' : 'step-chip');
+    if (dom.checkCert) dom.checkCert.textContent = certDone ? '✓' : '○';
+  }
+
+  // Dynamic instruction banner (only update if not running diagnostic suite)
+  if (dom.guidedInstructionText && !state.suite.running) {
+    if (activeStep === 1) {
+      dom.guidedInstructionText.textContent = `${t('instructionStep1')} (${passedBtns}/${totalBtns})`;
+    } else if (activeStep === 2) {
+      dom.guidedInstructionText.textContent = t('instructionStep2');
+    } else if (activeStep === 3) {
+      dom.guidedInstructionText.textContent = t('instructionStep3');
+    } else if (activeStep === 4) {
+      dom.guidedInstructionText.textContent = t('instructionStep4');
+    } else {
+      dom.guidedInstructionText.textContent = t('instructionStep5');
+    }
+  }
+}
+
+function updateOverallVerdict() {
+  const sl = state.stickMetrics.l;
+  const sr = state.stickMetrics.r;
+  const tL = state.triggers.l2;
+  const tR = state.triggers.r2;
+
+  const totalBtns = Object.keys(state.buttonStates).length || 16;
+  const passedBtns = Object.values(state.buttonStates).filter(b => b.clicks >= 1).length;
+  const stuckBtns = Object.values(state.buttonStates).filter(b => b.isStuck).length;
+
+  let btnVerdict = 'PENDING';
+  if (stuckBtns > 0) {
+    btnVerdict = 'FAIL';
+  } else if (totalBtns > 0 && passedBtns >= totalBtns) {
+    btnVerdict = 'PASS';
+  } else if (passedBtns > 0) {
+    btnVerdict = 'REVIEW';
+  }
+
+  let overall = 'PENDING';
+  let stampText = t('verdictPending');
+  let stampClass = 'stamp-pending';
+
+  // Check failures
+  if (sl.verdict === 'FAIL' || sr.verdict === 'FAIL' || tL.verdict === 'FAIL' || tR.verdict === 'FAIL' || btnVerdict === 'FAIL') {
+    overall = 'FAIL';
+    stampText = `✕ ${t('verdictFail')}`;
+    stampClass = 'stamp-fail';
+  } else if (sl.verdict === 'REVIEW' || sr.verdict === 'REVIEW' || tL.verdict === 'REVIEW' || tR.verdict === 'REVIEW') {
+    overall = 'REVIEW';
+    stampText = `! ${t('verdictReview')}`;
+    stampClass = 'stamp-review';
+  } else if (btnVerdict === 'PASS' && (tL.verdict === 'PASS' || tL.samples < 2) && (tR.verdict === 'PASS' || tR.samples < 2) && sl.verdict === 'PASS' && sr.verdict === 'PASS') {
+    overall = 'PASS';
+    stampText = `✓ ${t('verdictPass')}`;
+    stampClass = 'stamp-pass';
+  } else if (passedBtns > 0 || sl.verdict !== 'PENDING' || sr.verdict !== 'PENDING') {
+    overall = 'REVIEW';
+    stampText = t('verdictReview');
+    stampClass = 'stamp-review';
+  }
+
+  state.overallVerdict = overall;
+  if (dom.overallVerdictStamp) {
+    dom.overallVerdictStamp.className = `verdict-stamp ${stampClass}`;
+    dom.overallVerdictStamp.textContent = stampText;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// 16. PERSISTENCE & HISTORY STORE (DiagnosticStore)
 // ─────────────────────────────────────────────────────────────
 const DiagnosticStore = {
   KEY: 'gamepad_diagnostics_records',
@@ -1792,7 +2017,7 @@ const DiagnosticStore = {
 };
 
 function saveCurrentSessionDiagnostic() {
-  const itemCode = (dom.itemCodeInput.value || '18427').trim();
+  const itemCode = (dom.itemCodeInput && dom.itemCodeInput.value ? dom.itemCodeInput.value : '18427').trim();
   const dateStr = new Date().toLocaleString();
 
   const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
@@ -1848,7 +2073,9 @@ function renderHistoryTable(filter = '') {
     );
   }
 
+  if (!dom.historyTableBody) return;
   dom.historyTableBody.innerHTML = '';
+
   if (filtered.length === 0) {
     dom.historyTableBody.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--text-muted);padding:14px;">No hay diagnósticos guardados</td></tr>`;
     return;
@@ -1860,11 +2087,11 @@ function renderHistoryTable(filter = '') {
       <td><strong>${r.itemCode}</strong></td>
       <td>${r.date}</td>
       <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${r.device}">${r.device}</td>
-      <td><span class="stick-verdict-badge badge-${r.stickL.verdict.toLowerCase()}">${r.stickL.verdict}</span></td>
-      <td><span class="stick-verdict-badge badge-${r.stickR.verdict.toLowerCase()}">${r.stickR.verdict}</span></td>
-      <td><span class="stick-verdict-badge badge-${r.triggers.l2Verdict.toLowerCase()}">${r.triggers.l2Verdict}</span></td>
+      <td><span class="stick-verdict-badge badge-${(r.stickL.verdict || 'pending').toLowerCase()}">${r.stickL.verdict || '—'}</span></td>
+      <td><span class="stick-verdict-badge badge-${(r.stickR.verdict || 'pending').toLowerCase()}">${r.stickR.verdict || '—'}</span></td>
+      <td><span class="stick-verdict-badge badge-${(r.triggers.l2Verdict || 'pending').toLowerCase()}">${r.triggers.l2Verdict || '—'}</span></td>
       <td>${r.buttons.passed}/${r.buttons.total}</td>
-      <td><span class="stick-verdict-badge badge-${r.overallVerdict.toLowerCase()}">${r.overallVerdict}</span></td>
+      <td><span class="stick-verdict-badge badge-${(r.overallVerdict || 'pending').toLowerCase()}">${r.overallVerdict}</span></td>
       <td>
         <button class="mini-btn" onclick="printSavedRecord('${r.id}')" title="Imprimir este informe">🖨</button>
         <button class="mini-btn-danger" onclick="deleteSavedRecord('${r.id}')" title="Eliminar">✕</button>
@@ -1885,18 +2112,17 @@ window.printSavedRecord = function(id) {
 window.deleteSavedRecord = function(id) {
   if (confirm('¿Eliminar este registro del historial?')) {
     DiagnosticStore.delete(id);
-    renderHistoryTable(dom.historySearchInput.value);
+    renderHistoryTable(dom.historySearchInput ? dom.historySearchInput.value : '');
   }
 };
 
 // ─────────────────────────────────────────────────────────────
-// 16. A4 PRINTABLE REPORT GENERATOR & SVG BARCODE
+// 17. A4 PRINTABLE REPORT GENERATOR & SVG BARCODE
 // ─────────────────────────────────────────────────────────────
 function generateSvgBarcode(code) {
   const clean = String(code).replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
   let bars = '';
   let x = 10;
-  // Pseudorandom deterministic bar widths for crisp barcode rendering
   for (let i = 0; i < clean.length; i++) {
     const charCode = clean.charCodeAt(i);
     const pattern = [(charCode % 3) + 1, ((charCode >> 1) % 2) + 1, ((charCode >> 2) % 3) + 1, 2];
@@ -1907,7 +2133,6 @@ function generateSvgBarcode(code) {
       x += w * 2.2;
     });
   }
-  // Guard bars
   return `<svg width="${x + 10}" height="45" xmlns="http://www.w3.org/2000/svg">
     <rect x="2" y="5" width="2" height="35" fill="#000"/>
     <rect x="6" y="5" width="2" height="35" fill="#000"/>
@@ -1918,49 +2143,53 @@ function generateSvgBarcode(code) {
 }
 
 function populatePrintReport(record) {
-  const itemCode = record ? record.itemCode : (dom.itemCodeInput.value || '18427').trim();
+  const itemCode = record ? record.itemCode : ((dom.itemCodeInput && dom.itemCodeInput.value) || '18427').trim();
   const dateStr  = record ? record.date : new Date().toLocaleString();
-  const devName  = record ? record.device : dom.activeCtrlName.textContent;
+  const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
+  const gp = state.activeGpIndex !== null ? gamepads[state.activeGpIndex] : null;
+  const devName  = record ? record.device : (gp ? gp.id : 'Mando Genérico');
   const profile  = record ? record.profile : state.model;
 
-  dom.printBarcodeSvg.innerHTML = generateSvgBarcode(itemCode);
-  dom.printBarcodeText.textContent = `ART-${itemCode}`;
-  dom.printItemCode.textContent = itemCode;
-  dom.printDate.textContent = dateStr;
-  dom.printDeviceName.textContent = devName;
-  dom.printDeviceProfile.textContent = profile.toUpperCase();
-  dom.printDeviceId.textContent = devName;
+  if (dom.printBarcodeSvg)  dom.printBarcodeSvg.innerHTML = generateSvgBarcode(itemCode);
+  if (dom.printBarcodeText) dom.printBarcodeText.textContent = `ART-${itemCode}`;
+  if (dom.printItemCode)    dom.printItemCode.textContent = itemCode;
+  if (dom.printDate)        dom.printDate.textContent = dateStr;
+  if (dom.printDeviceName)  dom.printDeviceName.textContent = devName;
+  if (dom.printDeviceProfile) dom.printDeviceProfile.textContent = profile.toUpperCase();
+  if (dom.printDeviceId)    dom.printDeviceId.textContent = devName;
 
   const sl = record ? record.stickL : state.stickMetrics.l;
   const sr = record ? record.stickR : state.stickMetrics.r;
 
-  dom.printSlDrift.textContent = sl.drift !== null ? sl.drift.toFixed(3) : '0.012';
-  dom.printSlJitter.textContent= sl.jitter !== null ? sl.jitter.toFixed(3) : '0.002';
-  dom.printSlCirc.textContent  = sl.circ !== null ? `${sl.circ}%` : '98%';
-  dom.printSlSnap.textContent  = sl.snap !== null ? `${sl.snap}ms` : '18ms';
-  dom.printSlVerdict.textContent = sl.verdict || 'PASS';
+  if (dom.printSlDrift)   dom.printSlDrift.textContent = sl.drift !== null ? sl.drift.toFixed(3) : '0.012';
+  if (dom.printSlJitter)  dom.printSlJitter.textContent= sl.jitter !== null ? sl.jitter.toFixed(3) : '0.002';
+  if (dom.printSlCirc)    dom.printSlCirc.textContent  = sl.circ !== null ? `${sl.circ}%` : '98%';
+  if (dom.printSlSnap)    dom.printSlSnap.textContent  = sl.snap !== null ? `${sl.snap}ms` : '18ms';
+  if (dom.printSlVerdict) dom.printSlVerdict.textContent = sl.verdict || 'PASS';
 
-  dom.printSrDrift.textContent = sr.drift !== null ? sr.drift.toFixed(3) : '0.015';
-  dom.printSrJitter.textContent= sr.jitter !== null ? sr.jitter.toFixed(3) : '0.002';
-  dom.printSrCirc.textContent  = sr.circ !== null ? `${sr.circ}%` : '97%';
-  dom.printSrSnap.textContent  = sr.snap !== null ? `${sr.snap}ms` : '20ms';
-  dom.printSrVerdict.textContent = sr.verdict || 'PASS';
+  if (dom.printSrDrift)   dom.printSrDrift.textContent = sr.drift !== null ? sr.drift.toFixed(3) : '0.015';
+  if (dom.printSrJitter)  dom.printSrJitter.textContent= sr.jitter !== null ? sr.jitter.toFixed(3) : '0.002';
+  if (dom.printSrCirc)    dom.printSrCirc.textContent  = sr.circ !== null ? `${sr.circ}%` : '97%';
+  if (dom.printSrSnap)    dom.printSrSnap.textContent  = sr.snap !== null ? `${sr.snap}ms` : '20ms';
+  if (dom.printSrVerdict) dom.printSrVerdict.textContent = sr.verdict || 'PASS';
 
   const tL = record ? record.triggers.l2Verdict : state.triggers.l2.verdict;
   const tR = record ? record.triggers.r2Verdict : state.triggers.r2.verdict;
-  dom.printL2Verdict.textContent = tL || 'PASS';
-  dom.printR2Verdict.textContent = tR || 'PASS';
+  if (dom.printL2Verdict) dom.printL2Verdict.textContent = tL || 'PASS';
+  if (dom.printR2Verdict) dom.printR2Verdict.textContent = tR || 'PASS';
 
   const btnTotal = record ? record.buttons.total : Object.keys(state.buttonStates).length || 16;
   const btnPassed= record ? record.buttons.passed : Object.values(state.buttonStates).filter(b => b.clicks >= 1).length;
   const btnStuck = record ? record.buttons.stuck : Object.values(state.buttonStates).filter(b => b.isStuck).length;
 
-  dom.printBtnCount.textContent = `${btnPassed} / ${btnTotal}`;
-  dom.printBtnStuck.textContent = `${btnStuck} (${btnStuck === 0 ? 'Ninguno' : 'Defecto'})`;
-  dom.printBtnVerdict.textContent = btnStuck === 0 ? 'PASS' : 'FAIL';
+  if (dom.printBtnCount)   dom.printBtnCount.textContent = `${btnPassed} / ${btnTotal}`;
+  if (dom.printBtnStuck)   dom.printBtnStuck.textContent = `${btnStuck} (${btnStuck === 0 ? 'Ninguno' : 'Defecto'})`;
+  if (dom.printBtnVerdict) dom.printBtnVerdict.textContent = btnStuck === 0 ? 'PASS' : 'FAIL';
 
   const overall = record ? record.overallVerdict : (btnStuck === 0 && sl.verdict !== 'FAIL' && sr.verdict !== 'FAIL' ? 'PASS' : 'REVIEW');
-  dom.printFinalStamp.textContent = overall === 'PASS' ? 'APTO (PASS)' : (overall === 'REVIEW' ? 'A REVISIÓN (REVIEW)' : 'NO APTO (FAIL)');
+  if (dom.printFinalStamp) {
+    dom.printFinalStamp.textContent = overall === 'PASS' ? 'APTO (PASS)' : (overall === 'REVIEW' ? 'A REVISIÓN (REVIEW)' : 'NO APTO (FAIL)');
+  }
 }
 
 function updateVerdictBadgesUI() {
@@ -1970,135 +2199,154 @@ function updateVerdictBadgesUI() {
 }
 
 // ─────────────────────────────────────────────────────────────
-// 17. INITIALIZATION & EVENT LISTENERS
+// 18. INITIALIZATION & EVENT LISTENERS
 // ─────────────────────────────────────────────────────────────
 function initEventListeners() {
-  // Language Switcher buttons
-  document.querySelectorAll('.lang-btn').forEach(btn => {
+  // Floating Language Switcher menu items
+  document.querySelectorAll('#lang-menu button[data-lang]').forEach(btn => {
     btn.addEventListener('click', (e) => {
-      setLanguage(e.target.dataset.lang);
+      const target = e.currentTarget || e.target;
+      setLanguage(target.dataset.lang);
     });
   });
 
   // Active Gamepad Select
-  dom.activeGamepadSelect.addEventListener('change', (e) => {
-    const val = parseInt(e.target.value, 10);
-    setActiveGamepad(val >= 0 ? val : null);
-  });
+  if (dom.activeGamepadSelect) {
+    dom.activeGamepadSelect.addEventListener('change', (e) => {
+      const val = parseInt(e.target.value, 10);
+      setActiveGamepad(val >= 0 ? val : null);
+    });
+  }
 
   // Model Profile Select
-  dom.modelSelect.addEventListener('change', () => {
-    resolveModel();
-  });
+  if (dom.modelSelect) {
+    dom.modelSelect.addEventListener('change', () => {
+      resolveModel();
+    });
+  }
 
-  // Debug Guides Toggle
-  dom.debugToggle.addEventListener('click', () => {
-    state.debugMode = !state.debugMode;
-    dom.debugToggle.classList.toggle('active', state.debugMode);
-    dom.photoOverlaySvg.classList.toggle('debug-guides', state.debugMode);
-  });
-
-  // Photo / Diagram View buttons
-  dom.btnViewPhoto.addEventListener('click', () => {
-    state.viewMode = 'photo';
-    dom.btnViewPhoto.classList.add('active');
-    dom.btnViewDiagram.classList.remove('active');
-    if (state.activeGpIndex !== null) {
-      dom.photoViewBox.style.display   = 'flex';
-      dom.diagramViewBox.style.display = 'none';
-    }
-  });
-
-  dom.btnViewDiagram.addEventListener('click', () => {
-    state.viewMode = 'diagram';
-    dom.btnViewDiagram.classList.add('active');
-    dom.btnViewPhoto.classList.remove('active');
-    if (state.activeGpIndex !== null) {
-      dom.photoViewBox.style.display   = 'none';
-      dom.diagramViewBox.style.display = 'flex';
-      if (!state.diagramRendered && typeof renderControllerDiagram === 'function') {
-        renderControllerDiagram(state.model);
-        state.diagramRendered = true;
+  // Toggle Technical Details Drawer
+  if (dom.btnToggleDetails) {
+    dom.btnToggleDetails.addEventListener('click', () => {
+      state.rawAccordionOpen = !state.rawAccordionOpen;
+      if (dom.rawDiagCard) {
+        dom.rawDiagCard.style.display = state.rawAccordionOpen ? 'flex' : 'none';
       }
-    }
-  });
+      dom.btnToggleDetails.classList.toggle('active', state.rawAccordionOpen);
+    });
+  }
+
+  if (dom.btnCloseDetails) {
+    dom.btnCloseDetails.addEventListener('click', () => {
+      state.rawAccordionOpen = false;
+      if (dom.rawDiagCard) {
+        dom.rawDiagCard.style.display = 'none';
+      }
+      if (dom.btnToggleDetails) {
+        dom.btnToggleDetails.classList.remove('active');
+      }
+    });
+  }
 
   // Micro-Center Zoom button
-  dom.stickZoomBtn.addEventListener('click', () => {
-    state.centerZoom = !state.centerZoom;
-    dom.stickZoomBtn.classList.toggle('active', state.centerZoom);
-  });
+  if (dom.stickZoomBtn) {
+    dom.stickZoomBtn.addEventListener('click', () => {
+      state.centerZoom = !state.centerZoom;
+      dom.stickZoomBtn.classList.toggle('active', state.centerZoom);
+    });
+  }
 
   // Diagnostic Stick Suite & Drift buttons
-  dom.stickSuiteBtn.addEventListener('click', startFullSuite);
-  dom.driftBtn.addEventListener('click', startDriftCapture);
-  dom.stickClearTraceBtn.addEventListener('click', () => {
-    state.stickHistoryL = [];
-    state.stickHistoryR = [];
-    state.circleBinsL.fill(0);
-    state.circleBinsR.fill(0);
-  });
+  if (dom.stickSuiteBtn) dom.stickSuiteBtn.addEventListener('click', startFullSuite);
+  if (dom.driftBtn)      dom.driftBtn.addEventListener('click', startDriftCapture);
+  if (dom.stickClearTraceBtn) {
+    dom.stickClearTraceBtn.addEventListener('click', () => {
+      state.stickHistoryL = [];
+      state.stickHistoryR = [];
+      state.circleBinsL.fill(0);
+      state.circleBinsR.fill(0);
+      if (dom.stickLCanvas) drawLargeStick(dom.stickLCanvas, 0, 0, true, []);
+      if (dom.stickRCanvas) drawLargeStick(dom.stickRCanvas, 0, 0, false, []);
+    });
+  }
 
   // Reset button testing matrix
-  dom.btnResetButtonsTest.addEventListener('click', () => {
-    for (const b of Object.values(state.buttonStates)) {
-      b.clicks = 0;
-      b.isStuck = false;
-    }
-    updateButtonsSummaryBadge();
-  });
-
-  // Raw Diagnostics Accordion
-  dom.rawDiagToggle.addEventListener('click', () => {
-    state.rawAccordionOpen = !state.rawAccordionOpen;
-    dom.rawDiagArrow.classList.toggle('open', state.rawAccordionOpen);
-    dom.rawDiagBody.style.display = state.rawAccordionOpen ? 'flex' : 'none';
-  });
+  if (dom.btnResetButtonsTest) {
+    dom.btnResetButtonsTest.addEventListener('click', () => {
+      for (const b of Object.values(state.buttonStates)) {
+        b.clicks = 0;
+        b.isStuck = false;
+      }
+      if (dom.photoOverlaySvg) {
+        dom.photoOverlaySvg.querySelectorAll('.photo-btn').forEach(btn => {
+          btn.classList.remove('passed', 'stuck', 'pressed');
+        });
+      }
+      buildButtonChips(Object.keys(state.buttonStates).length || 16);
+      updateWorkflowProgress();
+      updateOverallVerdict();
+    });
+  }
 
   // Session Actions
-  dom.btnSaveDiag.addEventListener('click', saveCurrentSessionDiagnostic);
-  dom.btnPrintReport.addEventListener('click', () => {
-    populatePrintReport(null);
-    window.print();
-  });
+  if (dom.btnSaveDiag)  dom.btnSaveDiag.addEventListener('click', saveCurrentSessionDiagnostic);
+  if (dom.btnQuickSave) dom.btnQuickSave.addEventListener('click', saveCurrentSessionDiagnostic);
+  if (dom.btnPrintReport) {
+    dom.btnPrintReport.addEventListener('click', () => {
+      populatePrintReport(null);
+      window.print();
+    });
+  }
 
   // History Modal
-  dom.btnOpenHistory.addEventListener('click', () => {
-    dom.historyModal.style.display = 'flex';
-    renderHistoryTable();
-  });
-  dom.modalCloseBtn.addEventListener('click', () => {
-    dom.historyModal.style.display = 'none';
-  });
-  dom.historyModal.addEventListener('click', (e) => {
-    if (e.target === dom.historyModal) dom.historyModal.style.display = 'none';
-  });
-
-  dom.historySearchInput.addEventListener('input', (e) => {
-    renderHistoryTable(e.target.value);
-  });
-
-  dom.btnExportJson.addEventListener('click', () => {
-    const records = DiagnosticStore.getAll();
-    const blob = new Blob([JSON.stringify(records, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `gamepad_diagnostics_${Date.now()}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-  });
-
-  dom.btnClearHistory.addEventListener('click', () => {
-    if (confirm('¿Vaciar todo el historial de diagnósticos locales?')) {
-      DiagnosticStore.clear();
+  if (dom.btnOpenHistory) {
+    dom.btnOpenHistory.addEventListener('click', () => {
+      if (dom.historyModal) dom.historyModal.style.display = 'flex';
       renderHistoryTable();
-    }
-  });
+    });
+  }
+  if (dom.modalCloseBtn) {
+    dom.modalCloseBtn.addEventListener('click', () => {
+      if (dom.historyModal) dom.historyModal.style.display = 'none';
+    });
+  }
+  if (dom.historyModal) {
+    dom.historyModal.addEventListener('click', (e) => {
+      if (e.target === dom.historyModal) dom.historyModal.style.display = 'none';
+    });
+  }
+
+  if (dom.historySearchInput) {
+    dom.historySearchInput.addEventListener('input', (e) => {
+      renderHistoryTable(e.target.value);
+    });
+  }
+
+  if (dom.btnExportJson) {
+    dom.btnExportJson.addEventListener('click', () => {
+      const records = DiagnosticStore.getAll();
+      const blob = new Blob([JSON.stringify(records, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `gamepad_diagnostics_${Date.now()}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+  }
+
+  if (dom.btnClearHistory) {
+    dom.btnClearHistory.addEventListener('click', () => {
+      if (confirm('¿Vaciar todo el historial de diagnósticos locales?')) {
+        DiagnosticStore.clear();
+        renderHistoryTable();
+      }
+    });
+  }
 }
 
 // ─────────────────────────────────────────────────────────────
-// 18. DOM CONTENT LOADED ENTRY POINT
+// 19. DOM CONTENT LOADED ENTRY POINT
 // ─────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   initLanguage();
@@ -2108,4 +2356,6 @@ document.addEventListener('DOMContentLoaded', () => {
   buildButtonChips(16);
   drawLargeStick(dom.stickLCanvas, 0, 0, true);
   drawLargeStick(dom.stickRCanvas, 0, 0, false);
+  updateWorkflowProgress();
+  updateOverallVerdict();
 });

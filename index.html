@@ -4,85 +4,103 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Gamepad Tester — Estación de Diagnóstico Profesional</title>
-  <link rel="stylesheet" href="style.css?v=3.0">
+  <link rel="stylesheet" href="style.css?v=3.5">
 </head>
 <body>
 
-<!-- ── COMPACT TOP NAVBAR & WORKSTATION CONTROLS ──────────────── -->
+<!-- ── CLEAN COMPACT TOP NAVBAR ──────────────────────────────── -->
 <header>
   <div class="header-left">
-    <h1><span class="icon">🎮</span> <span data-i18n="appTitle">Gamepad Diagnostic Station</span></h1>
-    <div class="status-badge">
+    <h1><span class="icon">🎮</span> <span data-i18n="appTitle">Gamepad Tester Pro</span></h1>
+    
+    <div class="status-badge" id="main-status-badge">
       <span class="status-dot" id="status-dot"></span>
       <span id="status-text" data-i18n="waitingGamepad">Esperando mando…</span>
     </div>
 
     <!-- Internal Item / Equipment Code Input -->
     <div class="item-code-wrap" title="Código interno / Número de artículo para trazabilidad">
-      <label for="item-code-input" class="code-label"><span class="icon">🏷️</span> <span data-i18n="itemCodeLabel">Nº Artículo:</span></label>
-      <input id="item-code-input" type="text" placeholder="18427" value="18427" maxlength="24" autocomplete="off" spellcheck="false">
-    </div>
-
-    <!-- Active Controller Badge -->
-    <div class="active-controller-badge" id="active-ctrl-badge" title="Mando activo para pruebas">
-      <span class="badge-label" data-i18n="activeCtrlLabel">Mando Activo:</span>
-      <span class="badge-name" id="active-ctrl-name" data-i18n="none">Ninguno</span>
-      <span class="badge-sub" id="active-ctrl-idx">—</span>
+      <span class="code-label"><span class="icon">🏷️</span> <span data-i18n="itemCodeLabel">Nº Art:</span></span>
+      <input id="item-code-input" type="text" placeholder="18427" value="18427" maxlength="20" autocomplete="off" spellcheck="false">
     </div>
   </div>
 
   <div class="header-controls">
-    <!-- Language Switcher -->
-    <div class="lang-switcher" id="lang-switcher" title="Cambiar idioma / Change language">
-      <button data-lang="es" class="lang-btn active">ES</button>
-      <button data-lang="en" class="lang-btn">EN</button>
-      <button data-lang="it" class="lang-btn">IT</button>
-      <button data-lang="fr" class="lang-btn">FR</button>
-      <button data-lang="de" class="lang-btn">DE</button>
-    </div>
-
-    <!-- Multi-controller device selector -->
+    <!-- Active Controller Selector -->
     <div class="ctrl-select-wrap">
-      <label for="active-gamepad-select" data-i18n="deviceLabel">Dispositivo:</label>
       <select id="active-gamepad-select" title="Seleccionar mando para testear">
         <option value="-1" data-i18n="noConnectedGamepads">Sin mandos conectados</option>
       </select>
     </div>
 
-    <div class="panel-view-switcher">
-      <button id="btn-view-photo" class="active" title="Vista con foto oficial del mando" data-i18n="btnViewPhoto">📸 Foto</button>
-      <button id="btn-view-diagram" title="Vista con diagrama vectorial" data-i18n="btnViewDiagram">📐 Esquema</button>
-    </div>
-
-    <select id="model-select" title="Perfil de asignación y modelo visual">
-      <option value="auto" data-i18n="modelAuto">🔍 Auto-detectar</option>
-      <option value="ps5">PS5 (DualSense)</option>
-      <option value="ps4">PS4 (DualShock 4)</option>
-      <option value="ps3">PS3 (DualShock 3)</option>
-      <option value="ps2">PS2 (DualShock 2)</option>
-      <option value="xbox-series-s">Xbox Series S/X</option>
-      <option value="xbox-one">Xbox One / 360</option>
-      <option value="generic" data-i18n="modelGeneric">Genérico / DirectInput</option>
-      <option value="raw" data-i18n="modelRaw">Modo RAW (Sin Mapeo)</option>
+    <!-- Model Profile Selector -->
+    <select id="model-select" class="compact-select" title="Perfil de asignación visual">
+      <option value="auto" data-i18n="modelAuto">🔍 Auto</option>
+      <option value="ps5">PS5</option>
+      <option value="ps4">PS4</option>
+      <option value="ps3">PS3</option>
+      <option value="ps2">PS2</option>
+      <option value="xbox-series-s">Xbox Series</option>
+      <option value="xbox-one">Xbox One</option>
+      <option value="generic">Genérico</option>
     </select>
 
-    <button id="debug-toggle" title="Mostrar guías de botones interactivos" data-i18n="btnGuides">🔵 Guías</button>
-
-    <!-- Session Actions -->
-    <button id="btn-save-diag" class="action-btn-secondary" title="Guardar informe de diagnóstico en memoria local" data-i18n="btnSaveDiag">💾 Guardar</button>
-    <button id="btn-print-report" class="action-btn-primary" title="Imprimir informe técnico oficial en formato A4" data-i18n="btnPrintReport">🖨 Imprimir</button>
-    <button id="btn-open-history" class="mini-btn-ghost" title="Ver historial de mandos analizados" data-i18n="btnHistory">📋 Historial</button>
+    <!-- Essential Actions with Icons -->
+    <button id="btn-save-diag" class="action-btn" title="Guardar diagnóstico en historial"><span class="icon">💾</span> <span data-i18n="btnSaveDiag">Guardar</span></button>
+    <button id="btn-print-report" class="action-btn-primary" title="Imprimir informe oficial A4"><span class="icon">🖨</span> <span data-i18n="btnPrintReport">Imprimir</span></button>
+    <button id="btn-open-history" class="action-btn" title="Ver historial de revisiones"><span class="icon">🕘</span> <span data-i18n="btnHistory">Historial</span></button>
+    <button id="btn-toggle-details" class="action-btn-ghost" title="Desplegar diagnóstico técnico avanzado"><span class="icon">⚙</span> <span data-i18n="btnDetails">Detalles</span></button>
   </div>
 </header>
+
+<!-- ── GUIDED WORKFLOW STEP PROGRESS BAR ─────────────────────── -->
+<div class="workflow-bar">
+  <div class="workflow-steps">
+    <div class="step-chip active" id="step-btn">
+      <span class="step-num">1</span>
+      <span class="step-name" data-i18n="stepButtons">Botones</span>
+      <span class="step-check" id="check-btn">○</span>
+    </div>
+    <div class="step-sep">➔</div>
+    <div class="step-chip" id="step-trig">
+      <span class="step-num">2</span>
+      <span class="step-name" data-i18n="stepTriggers">Gatillos</span>
+      <span class="step-check" id="check-trig">○</span>
+    </div>
+    <div class="step-sep">➔</div>
+    <div class="step-chip" id="step-stick-l">
+      <span class="step-num">3</span>
+      <span class="step-name" data-i18n="stepStickL">Stick Izq.</span>
+      <span class="step-check" id="check-stick-l">○</span>
+    </div>
+    <div class="step-sep">➔</div>
+    <div class="step-chip" id="step-stick-r">
+      <span class="step-num">4</span>
+      <span class="step-name" data-i18n="stepStickR">Stick Der.</span>
+      <span class="step-check" id="check-stick-r">○</span>
+    </div>
+    <div class="step-sep">➔</div>
+    <div class="step-chip" id="step-cert">
+      <span class="step-num">5</span>
+      <span class="step-name" data-i18n="stepCert">Certificación</span>
+      <span class="step-check" id="check-cert">○</span>
+    </div>
+  </div>
+
+  <!-- Single Short Guided Instruction Banner -->
+  <div class="guided-banner" id="guided-instruction-banner">
+    <span class="guided-text" id="guided-instruction-text" data-i18n="emptyStateConnectMsg">Conecta tu mando y pulsa cualquier botón para comenzar</span>
+  </div>
+</div>
 
 <!-- ── MAIN DASHBOARD (32% LEFT / 68% RIGHT) ─────────────────── -->
 <main class="app-layout">
 
-  <!-- ── LEFT: CONTROLLER VISUAL STAGE & HARDWARE INFO (32%) ── -->
+  <!-- ── LEFT: CONTROLLER VISUAL STAGE & CONTROLLER STATE (32%) ── -->
   <section class="stage-section">
     <div class="controller-stage" id="ctrl-stage">
       
-      <!-- Polished 2D Minimal Gamepad Empty State -->
+      <!-- Minimalist 2D SVG Empty State -->
       <div id="empty-state-view" class="empty-state-view">
         <div class="empty-gamepad-svg-wrap">
           <svg class="empty-gamepad-svg" viewBox="0 0 400 280" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -90,10 +108,6 @@
               <linearGradient id="bodyGrad" x1="200" y1="20" x2="200" y2="260" gradientUnits="userSpaceOnUse">
                 <stop offset="0%" stop-color="#1e1e2d" />
                 <stop offset="100%" stop-color="#111119" />
-              </linearGradient>
-              <linearGradient id="accentGlow" x1="0" y1="0" x2="400" y2="280" gradientUnits="userSpaceOnUse">
-                <stop offset="0%" stop-color="#6366f1" stop-opacity="0.4" />
-                <stop offset="100%" stop-color="#00e5ff" stop-opacity="0.2" />
               </linearGradient>
               <filter id="svgGlow" x="-20%" y="-20%" width="140%" height="140%">
                 <feGaussianBlur stdDeviation="8" result="blur" />
@@ -108,26 +122,20 @@
             <path d="M125 45 C160 40 240 40 275 45 C320 50 355 90 365 145 C375 200 350 255 315 255 C290 255 270 215 250 195 C230 180 170 180 150 195 C130 215 110 255 85 255 C50 255 25 200 35 145 C45 90 80 50 125 45 Z" 
                   fill="url(#bodyGrad)" stroke="#313146" stroke-width="3" filter="url(#svgGlow)"/>
 
-            <!-- Grip Inset Lines -->
-            <path d="M75 160 C65 190 75 235 90 240" stroke="#43435f" stroke-width="2.5" stroke-linecap="round"/>
-            <path d="M325 160 C335 190 325 235 310 240" stroke="#43435f" stroke-width="2.5" stroke-linecap="round"/>
-
-            <!-- Bumpers / Shoulder Arches -->
             <path d="M95 48 C115 36 150 34 165 38" stroke="#4f46e5" stroke-width="3" stroke-linecap="round"/>
             <path d="M305 48 C285 36 250 34 235 38" stroke="#4f46e5" stroke-width="3" stroke-linecap="round"/>
 
-            <!-- Center Touchpad / Guide Panel -->
             <rect x="155" y="60" width="90" height="50" rx="10" fill="#171722" stroke="#333348" stroke-width="2"/>
             <line x1="175" y1="72" x2="225" y2="72" stroke="#6366f1" stroke-width="2.5" stroke-linecap="round" opacity="0.8"/>
 
-            <!-- D-Pad (Left) -->
+            <!-- D-Pad -->
             <g transform="translate(105, 120)">
               <rect x="-7" y="-24" width="14" height="48" rx="4" fill="#252538" stroke="#3d3d58" stroke-width="1.5"/>
               <rect x="-24" y="-7" width="48" height="14" rx="4" fill="#252538" stroke="#3d3d58" stroke-width="1.5"/>
               <circle cx="0" cy="0" r="4" fill="#151520"/>
             </g>
 
-            <!-- Face Buttons (Right: ABXY / Triangle, Circle, Cross, Square) -->
+            <!-- Face Buttons -->
             <g transform="translate(295, 120)">
               <circle cx="0" cy="-18" r="7" fill="#252538" stroke="#00e676" stroke-width="1.5"/>
               <circle cx="18" cy="0" r="7" fill="#252538" stroke="#ff1744" stroke-width="1.5"/>
@@ -135,84 +143,68 @@
               <circle cx="-18" cy="0" r="7" fill="#252538" stroke="#ff4081" stroke-width="1.5"/>
             </g>
 
-            <!-- Analog Sticks (Twin Symmetrical) -->
-            <!-- Left Stick -->
+            <!-- Sticks -->
             <g transform="translate(155, 168)">
               <circle cx="0" cy="0" r="22" fill="#14141e" stroke="#313146" stroke-width="2"/>
               <circle cx="0" cy="0" r="14" fill="#222234" stroke="#6366f1" stroke-width="2"/>
-              <circle cx="0" cy="0" r="4" fill="#6366f1" opacity="0.6"/>
             </g>
-
-            <!-- Right Stick -->
             <g transform="translate(245, 168)">
               <circle cx="0" cy="0" r="22" fill="#14141e" stroke="#313146" stroke-width="2"/>
               <circle cx="0" cy="0" r="14" fill="#222234" stroke="#6366f1" stroke-width="2"/>
-              <circle cx="0" cy="0" r="4" fill="#6366f1" opacity="0.6"/>
             </g>
 
-            <!-- Center Home Icon -->
             <circle cx="200" cy="130" r="8" fill="#1b1b28" stroke="#6366f1" stroke-width="1.5"/>
           </svg>
         </div>
-        <p class="empty-state-msg" id="empty-state-msg" data-i18n="emptyStateConnectMsg">
-          Conecta tu mando y pulsa cualquier botón para comenzar...
+        <p class="empty-state-msg" data-i18n="emptyStateConnectMsg">
+          Conecta tu mando y pulsa cualquier botón
         </p>
-        <span class="empty-state-sub" data-i18n="emptyStateSub">
-          Detección automática instantánea • Compatible con PS5, PS4, PS3, PS2, Xbox y Genéricos
-        </span>
       </div>
 
-      <!-- 1. Photorealistic View -->
+      <!-- Photorealistic View with Interactive Overlay Map -->
       <div id="photo-view-box" class="photo-view-box" style="display:none;">
         <div class="photo-stage-wrapper">
           <img id="photo-img" class="photo-img" src="assets/controllers/ps4.png" alt="Mando Oficial">
-          <svg id="photo-overlay-svg" class="photo-overlay" viewBox="0 0 1024 1024" preserveAspectRatio="xMidYMid meet"></svg>
+          <svg id="photo-overlay-svg" class="photo-overlay" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid meet"></svg>
         </div>
       </div>
 
-      <!-- 2. Technical Vector Diagram View -->
-      <div id="diagram-view-box" style="display:none; width:100%;">
-        <div id="svg-container"></div>
+      <!-- Under Controller: Clean Compact Status Chip -->
+      <div class="ctrl-bottom-chip" id="ctrl-bottom-chip" style="display:none;">
+        <span class="chip-model" id="chip-model-name">DualShock 4</span>
+        <span class="chip-dot">●</span>
+        <span class="chip-status" id="chip-status-text">Conectado</span>
+        <span class="chip-progress" id="chip-btn-progress">0 / 16 ✓</span>
       </div>
 
-      <!-- Live Button Feedback & Info -->
-      <div id="controller-feedback-label" class="feedback-label" data-i18n="readyWaiting">Listo — esperando interacción</div>
-      <div id="ctrl-id-info" class="ctrl-id-text"></div>
-      <div id="ctrl-profile-badge" class="ctrl-profile-tag">Perfil: Estándar</div>
-
-      <!-- PS3 / Driver diagnosis note -->
-      <div id="ds3-driver-hint" class="driver-hint-box" style="display:none;">
-        <span class="hint-title" data-i18n="ds3HintTitle">ℹ Nota de compatibilidad PS3 / DirectInput:</span>
-        <span class="hint-body" data-i18n="ds3HintBody">Si un mando PS3 no responde en Windows, requiere driver XInput (DsHidMini / SCPToolkit). Los mandos sin mapeo nativo se leen en <strong>Modo RAW</strong>.</span>
-      </div>
     </div>
   </section>
 
-  <!-- ── RIGHT: LARGE ANALOG STICKS & TESTING TOOLS (68%) ── -->
+  <!-- ── RIGHT: PRIMARY DIAGNOSTIC BENCH (68%) ─────────────────── -->
   <aside class="sidebar-section">
 
-    <!-- 1. Large Analog Sticks Testing Center -->
+    <!-- 1. Analog Stick Testing Center (Visual Focus) -->
     <div class="card card-sticks-large">
       <div class="card-header">
         <div class="header-title-group">
           <span class="icon">🕹</span>
-          <span data-i18n="stickTestTitle">Test de Sticks Analógicos — Análisis Cartesiano de Precisión</span>
+          <span data-i18n="stickTestTitle">Sticks Analógicos — Análisis Cartesiano</span>
         </div>
         <div class="header-actions">
-          <button id="stick-zoom-btn" class="mini-btn" title="Amplificar visualmente la zona central de reposo" data-i18n="btnZoomCenter">🔍 Micro-Centro ON</button>
-          <button id="stick-suite-btn" class="action-btn-primary" title="Iniciar batería completa guiada de diagnóstico de sticks" data-i18n="btnFullSuite">⚡ Suite Diagnóstico</button>
-          <button id="drift-btn" class="mini-btn-accent" title="Medir deriva en reposo durante 3 segundos" data-i18n="btnDriftTest">▶ Test Reposo (3s)</button>
-          <button id="stick-clear-trace-btn" class="mini-btn" title="Limpiar trayectoria dibujada" data-i18n="btnClearTrace">🔄 Limpiar</button>
+          <button id="stick-zoom-btn" class="mini-btn" title="Amplificar zona central" data-i18n="btnZoomCenter">🔍 Micro-Centro</button>
+          <button id="stick-suite-btn" class="action-btn-primary" title="Iniciar análisis de sticks" data-i18n="btnFullSuite">⚡ Suite Sticks</button>
+          <button id="drift-btn" class="mini-btn" title="Test de reposo (3s)" data-i18n="btnDriftTest">▶ Reposo (3s)</button>
+          <button id="stick-clear-trace-btn" class="mini-btn" title="Limpiar trayectoria" data-i18n="btnClearTrace">🔄 Limpiar</button>
         </div>
       </div>
 
       <div class="card-body sticks-large-body">
         <div class="sticks-grid">
 
-          <!-- Left Stick Tester -->
+          <!-- Left Stick Panel -->
           <div class="stick-panel" id="stick-panel-l">
             <div class="stick-panel-header">
-              <span class="stick-tag" data-i18n="stickLeftLabel">STICK IZQUIERDO (LX, LY)</span>
+              <span class="stick-tag" data-i18n="stickLeftLabel">STICK IZQUIERDO</span>
               <span class="stick-verdict-badge badge-neutral" id="stick-l-verdict" data-i18n="verdictPending">PENDIENTE</span>
               <span class="stick-status-dot" id="stick-l-status-dot"></span>
             </div>
@@ -220,7 +212,7 @@
               <canvas id="stick-l-canvas" class="stick-canvas-large" width="400" height="400"></canvas>
             </div>
             
-            <!-- Real-time Numerical Values -->
+            <!-- Real-time Essential Telemetry -->
             <div class="stick-metrics-grid">
               <div class="metric-cell">
                 <span class="metric-label">X:</span>
@@ -235,36 +227,16 @@
                 <span class="metric-val" id="stick-l-dist">0.0000</span>
               </div>
               <div class="metric-cell">
-                <span class="metric-label" data-i18n="metricAngle">Ángulo:</span>
-                <span class="metric-val" id="stick-l-angle">0.0°</span>
-              </div>
-            </div>
-
-            <!-- Precision Quality Metrics -->
-            <div class="stick-submetrics-row">
-              <div class="submetric-box" title="Error en reposo sin tocar">
-                <span class="submetric-lbl" data-i18n="metricRestDrift">Deriva Reposo:</span>
-                <span class="submetric-val" id="stick-l-drift-val">—</span>
-              </div>
-              <div class="submetric-box" title="Ruido / Jitter del potenciómetro">
-                <span class="submetric-lbl" data-i18n="metricJitter">Jitter:</span>
-                <span class="submetric-val" id="stick-l-jitter-val">—</span>
-              </div>
-              <div class="submetric-box" title="Cobertura en rotación circular de 360°">
-                <span class="submetric-lbl" data-i18n="metricCircularity">Circularidad:</span>
-                <span class="submetric-val" id="stick-l-circ-val">—</span>
-              </div>
-              <div class="submetric-box" title="Velocidad de retorno al soltar el stick">
-                <span class="submetric-lbl" data-i18n="metricSnapback">Retorno:</span>
-                <span class="submetric-val" id="stick-l-snap-val">—</span>
+                <span class="metric-label" data-i18n="metricCircularity">Circ:</span>
+                <span class="metric-val" id="stick-l-circ-val">—</span>
               </div>
             </div>
           </div>
 
-          <!-- Right Stick Tester -->
+          <!-- Right Stick Panel -->
           <div class="stick-panel" id="stick-panel-r">
             <div class="stick-panel-header">
-              <span class="stick-tag" data-i18n="stickRightLabel">STICK DERECHO (RX, RY)</span>
+              <span class="stick-tag" data-i18n="stickRightLabel">STICK DERECHO</span>
               <span class="stick-verdict-badge badge-neutral" id="stick-r-verdict" data-i18n="verdictPending">PENDIENTE</span>
               <span class="stick-status-dot" id="stick-r-status-dot"></span>
             </div>
@@ -272,7 +244,7 @@
               <canvas id="stick-r-canvas" class="stick-canvas-large" width="400" height="400"></canvas>
             </div>
 
-            <!-- Real-time Numerical Values -->
+            <!-- Real-time Essential Telemetry -->
             <div class="stick-metrics-grid">
               <div class="metric-cell">
                 <span class="metric-label">X:</span>
@@ -287,52 +259,25 @@
                 <span class="metric-val" id="stick-r-dist">0.0000</span>
               </div>
               <div class="metric-cell">
-                <span class="metric-label" data-i18n="metricAngle">Ángulo:</span>
-                <span class="metric-val" id="stick-r-angle">0.0°</span>
-              </div>
-            </div>
-
-            <!-- Precision Quality Metrics -->
-            <div class="stick-submetrics-row">
-              <div class="submetric-box" title="Error en reposo sin tocar">
-                <span class="submetric-lbl" data-i18n="metricRestDrift">Deriva Reposo:</span>
-                <span class="submetric-val" id="stick-r-drift-val">—</span>
-              </div>
-              <div class="submetric-box" title="Ruido / Jitter del potenciómetro">
-                <span class="submetric-lbl" data-i18n="metricJitter">Jitter:</span>
-                <span class="submetric-val" id="stick-r-jitter-val">—</span>
-              </div>
-              <div class="submetric-box" title="Cobertura en rotación circular de 360°">
-                <span class="submetric-lbl" data-i18n="metricCircularity">Circularidad:</span>
-                <span class="submetric-val" id="stick-r-circ-val">—</span>
-              </div>
-              <div class="submetric-box" title="Velocidad de retorno al soltar el stick">
-                <span class="submetric-lbl" data-i18n="metricSnapback">Retorno:</span>
-                <span class="submetric-val" id="stick-r-snap-val">—</span>
+                <span class="metric-label" data-i18n="metricCircularity">Circ:</span>
+                <span class="metric-val" id="stick-r-circ-val">—</span>
               </div>
             </div>
           </div>
 
-        </div>
-
-        <!-- Guided Stick Suite Instruction Banner -->
-        <div class="drift-results-panel" id="drift-result">
-          <div class="drift-initial-hint">
-            <span data-i18n="driftInitialHint">ℹ Suelta ambos sticks y pulsa <strong>"⚡ Suite Diagnóstico"</strong> para análisis guiado o <strong>"▶ Test Reposo (3s)"</strong> para medir deriva de centro.</span>
-          </div>
         </div>
       </div>
     </div>
 
-    <!-- 2. Analog Trigger Testing (L2 / R2) -->
+    <!-- 2. Analog Triggers Validation (L2 / R2) -->
     <div class="card card-triggers">
       <div class="card-header">
         <div class="header-title-group">
           <span class="icon">🎯</span>
-          <span data-i18n="triggersTestTitle">Validación de Gatillos Analógicos (L2 / R2)</span>
+          <span data-i18n="triggersTestTitle">Gatillos Analógicos (L2 / R2)</span>
         </div>
         <div class="header-actions">
-          <span class="triggers-summary-tag" id="triggers-summary-tag" data-i18n="triggersPending">Gatillos: Pendiente</span>
+          <span class="triggers-summary-tag" id="triggers-summary-tag" data-i18n="triggersPending">Pendiente</span>
         </div>
       </div>
       <div class="card-body triggers-body">
@@ -341,34 +286,32 @@
           <!-- L2 Trigger -->
           <div class="trigger-panel" id="trigger-panel-l2">
             <div class="trigger-meta-row">
-              <span class="trigger-title">L2 / LT (Boton 6)</span>
+              <span class="trigger-title">L2 / LT</span>
               <span class="trigger-badge badge-neutral" id="trigger-l2-status" data-i18n="verdictPending">PENDIENTE</span>
             </div>
             <div class="trigger-meter-wrap">
               <div class="trigger-meter-bar" id="trigger-l2-bar" style="width: 0%;"></div>
             </div>
             <div class="trigger-stats-row">
-              <span class="trigger-stat"><strong data-i18n="lblLive">Actual:</strong> <span id="trigger-l2-val">0.000</span></span>
-              <span class="trigger-stat"><strong data-i18n="lblRest">Reposo:</strong> <span id="trigger-l2-rest">0.000</span></span>
-              <span class="trigger-stat"><strong data-i18n="lblMax">Máximo:</strong> <span id="trigger-l2-max">0.000</span></span>
-              <span class="trigger-stat"><strong data-i18n="lblRamp">Recorrido:</strong> <span id="trigger-l2-ramp">—</span></span>
+              <span><strong data-i18n="lblLive">Actual:</strong> <span id="trigger-l2-val">0.00</span></span>
+              <span><strong data-i18n="lblMax">Máx:</strong> <span id="trigger-l2-max">0.00</span></span>
+              <span id="trigger-l2-ramp">—</span>
             </div>
           </div>
 
           <!-- R2 Trigger -->
           <div class="trigger-panel" id="trigger-panel-r2">
             <div class="trigger-meta-row">
-              <span class="trigger-title">R2 / RT (Boton 7)</span>
+              <span class="trigger-title">R2 / RT</span>
               <span class="trigger-badge badge-neutral" id="trigger-r2-status" data-i18n="verdictPending">PENDIENTE</span>
             </div>
             <div class="trigger-meter-wrap">
               <div class="trigger-meter-bar" id="trigger-r2-bar" style="width: 0%;"></div>
             </div>
             <div class="trigger-stats-row">
-              <span class="trigger-stat"><strong data-i18n="lblLive">Actual:</strong> <span id="trigger-r2-val">0.000</span></span>
-              <span class="trigger-stat"><strong data-i18n="lblRest">Reposo:</strong> <span id="trigger-r2-rest">0.000</span></span>
-              <span class="trigger-stat"><strong data-i18n="lblMax">Máximo:</strong> <span id="trigger-r2-max">0.000</span></span>
-              <span class="trigger-stat"><strong data-i18n="lblRamp">Recorrido:</strong> <span id="trigger-r2-ramp">—</span></span>
+              <span><strong data-i18n="lblLive">Actual:</strong> <span id="trigger-r2-val">0.00</span></span>
+              <span><strong data-i18n="lblMax">Máx:</strong> <span id="trigger-r2-max">0.00</span></span>
+              <span id="trigger-r2-ramp">—</span>
             </div>
           </div>
 
@@ -376,54 +319,63 @@
       </div>
     </div>
 
-    <!-- 3. Full Button Testing Matrix Card -->
+    <!-- 3. Compact Button Validation Matrix -->
     <div class="card card-buttons">
       <div class="card-header">
         <div class="header-title-group">
           <span class="icon">⌨</span>
-          <span data-i18n="buttonsTestTitle">Matriz de Validación de Botones (Pulsación y Retorno)</span>
+          <span data-i18n="buttonsTestTitle">Matriz de Botones</span>
         </div>
         <div class="header-actions">
-          <span class="btn-summary-badge" id="buttons-summary-badge">0 / 0 Validados</span>
-          <button id="btn-reset-buttons-test" class="mini-btn" title="Reiniciar verificación de botones" data-i18n="btnResetValidation">🔄 Reiniciar</button>
+          <span class="btn-summary-badge" id="buttons-summary-badge">0 / 0 ✓</span>
+          <button id="btn-reset-buttons-test" class="mini-btn" title="Reiniciar verificación" data-i18n="btnResetValidation">🔄</button>
         </div>
       </div>
       <div class="card-body">
         <div class="buttons-grid" id="buttons-grid">
-          <div style="color:var(--text-muted);font-size:.78rem;text-align:center;width:100%;padding:10px 0;" data-i18n="waitingGamepad">
-            Esperando mando…
-          </div>
+          <!-- Rendered dynamically as compact cards: [ BUTTON_NAME  ✓ ] -->
         </div>
       </div>
     </div>
 
-    <!-- 4. Advanced Diagnostics (Raw Input Mode) — Collapsible -->
-    <div class="card card-raw-diag">
-      <div class="card-header accordion-header" id="raw-diag-toggle" title="Clic para desplegar / ocultar diagnóstico avanzado">
+    <!-- 4. Overall Certified Quality Verdict Card -->
+    <div class="card card-verdict" id="card-verdict">
+      <div class="verdict-banner">
+        <span class="verdict-label" data-i18n="lblOverallVerdict">CERTIFICACIÓN TÉCNICA:</span>
+        <span class="verdict-stamp stamp-pending" id="overall-verdict-stamp" data-i18n="verdictPending">PENDIENTE</span>
+        <button id="btn-quick-save" class="action-btn-primary" style="margin-left:auto;"><span class="icon">💾</span> <span data-i18n="btnSaveDiag">Guardar</span></button>
+      </div>
+    </div>
+
+    <!-- 5. Collapsible Advanced Technical Details (Drawer) -->
+    <div class="card card-raw-diag" id="raw-diag-card" style="display:none;">
+      <div class="card-header">
         <div class="header-title-group">
           <span class="icon">⚙</span>
-          <span data-i18n="rawDiagTitle">Diagnóstico Técnico Avanzado (Raw Input / Multi-Ejes)</span>
+          <span data-i18n="rawDiagTitle">Detalles Técnicos (Hardware / Raw)</span>
         </div>
-        <span class="accordion-arrow" id="raw-diag-arrow">▼</span>
+        <button id="btn-close-details" class="mini-btn">✕</button>
       </div>
-      <div class="card-body raw-diag-body" id="raw-diag-body" style="display:none;">
+      <div class="card-body raw-diag-body">
         <div class="raw-meta-grid">
           <div class="meta-item"><strong>ID:</strong> <span id="raw-id">—</span></div>
           <div class="meta-item"><strong>Índice:</strong> <span id="raw-index">—</span></div>
           <div class="meta-item"><strong>Mapping:</strong> <span id="raw-mapping">—</span></div>
-          <div class="meta-item"><strong>Conectado:</strong> <span id="raw-connected">—</span></div>
           <div class="meta-item"><strong>Total Botones:</strong> <span id="raw-total-btns">0</span></div>
           <div class="meta-item"><strong>Total Ejes:</strong> <span id="raw-total-axes">0</span></div>
-          <div class="meta-item"><strong>Timestamp:</strong> <span id="raw-timestamp">0</span></div>
+          <div class="meta-item"><strong>Jitter Stick L:</strong> <span id="stick-l-jitter-val">—</span></div>
+          <div class="meta-item"><strong>Jitter Stick R:</strong> <span id="stick-r-jitter-val">—</span></div>
+          <div class="meta-item"><strong>Retorno Stick L:</strong> <span id="stick-l-snap-val">—</span></div>
+          <div class="meta-item"><strong>Retorno Stick R:</strong> <span id="stick-r-snap-val">—</span></div>
         </div>
         <div class="raw-streams-grid">
           <div class="raw-stream-col">
             <h4 class="raw-subtitle" data-i18n="rawAxesTitle">Ejes Crudos (Axes 0..N):</h4>
-            <div id="raw-axes-list" class="raw-axes-list">Sin datos</div>
+            <div id="raw-axes-list" class="raw-axes-list"></div>
           </div>
           <div class="raw-stream-col">
             <h4 class="raw-subtitle" data-i18n="rawButtonsTitle">Botones Crudos (Buttons 0..N):</h4>
-            <div id="raw-buttons-list" class="raw-buttons-list">Sin datos</div>
+            <div id="raw-buttons-list" class="raw-buttons-list"></div>
           </div>
         </div>
       </div>
@@ -432,6 +384,18 @@
   </aside>
 
 </main>
+
+<!-- ── MINIMAL FLOATING LANGUAGE SELECTOR (BOTTOM LEFT) ──────── -->
+<div class="floating-lang" id="floating-lang">
+  <button class="floating-lang-trigger" id="lang-trigger" title="Cambiar idioma">🇪🇸</button>
+  <div class="floating-lang-menu" id="lang-menu">
+    <button data-lang="es" title="Español">🇪🇸</button>
+    <button data-lang="en" title="English">🇬🇧</button>
+    <button data-lang="it" title="Italiano">🇮🇹</button>
+    <button data-lang="fr" title="Français">🇫🇷</button>
+    <button data-lang="de" title="Deutsch">🇩🇪</button>
+  </div>
+</div>
 
 <!-- ── SAVED DIAGNOSTICS HISTORY MODAL ────────────────────────── -->
 <div id="history-modal" class="modal-backdrop" style="display:none;">
@@ -465,7 +429,7 @@
             </tr>
           </thead>
           <tbody id="history-table-body">
-            <!-- Populated dynamically -->
+            <!-- Dynamically populated -->
           </tbody>
         </table>
       </div>
@@ -473,12 +437,12 @@
   </div>
 </div>
 
-<!-- ── PRINTABLE A4 DIAGNOSTIC REPORT (HIDDEN ON SCREEN, VISIBLE ON PRINT) ── -->
+<!-- ── PRINTABLE A4 DIAGNOSTIC REPORT (OPTIMIZED FOR PRINT) ──── -->
 <section id="printable-report" class="print-sheet" style="display:none;">
   <div class="print-header">
     <div class="print-brand">
       <h2>INSPECCIÓN TÉCNICA DE CONTROL DE CALIDAD</h2>
-      <p class="print-subtitle">Gamepad Hardware Quality Assurance & Certification Report</p>
+      <p class="print-subtitle">Gamepad Quality Assurance & Diagnostic Certificate</p>
     </div>
     <div class="print-barcode-box">
       <div id="print-barcode-svg"></div>
@@ -489,9 +453,9 @@
   <div class="print-info-grid">
     <div class="print-info-item"><strong>Nº de Artículo:</strong> <span id="print-item-code">18427</span></div>
     <div class="print-info-item"><strong>Fecha y Hora:</strong> <span id="print-date">--/--/---- --:--</span></div>
-    <div class="print-info-item"><strong>Estación / Técnico:</strong> <span id="print-station">Banco Técnico #1</span></div>
+    <div class="print-info-item"><strong>Estación:</strong> <span>Banco Técnico #1</span></div>
     <div class="print-info-item"><strong>Dispositivo:</strong> <span id="print-device-name">--</span></div>
-    <div class="print-info-item"><strong>Perfil Asignado:</strong> <span id="print-device-profile">--</span></div>
+    <div class="print-info-item"><strong>Perfil:</strong> <span id="print-device-profile">--</span></div>
     <div class="print-info-item"><strong>Identificador Hardware:</strong> <span id="print-device-id">--</span></div>
   </div>
 
@@ -556,7 +520,7 @@
     </tbody>
   </table>
 
-  <div class="print-section-title">3. MATRIZ DE BOTONES FÍSICOS Y PULSACIONES</div>
+  <div class="print-section-title">3. MATRIZ DE BOTONES FÍSICOS</div>
   <div class="print-buttons-summary">
     <div class="print-btn-stat"><strong>Botones Validados:</strong> <span id="print-btn-count">16 / 16</span></div>
     <div class="print-btn-stat"><strong>Botones Atascados:</strong> <span id="print-btn-stuck">0 (Ninguno)</span></div>
@@ -566,7 +530,7 @@
   <div class="print-final-verdict-box">
     <div class="verdict-label">CERTIFICACIÓN FINAL DE CALIDAD:</div>
     <div class="verdict-stamp" id="print-final-stamp">APTO (PASS)</div>
-    <div class="verdict-details" id="print-final-details">El controlador cumple todas las especificaciones de tolerancia en sticks, gatillos y botones.</div>
+    <div class="verdict-details">El controlador cumple todas las especificaciones de tolerancia en sticks, gatillos y botones.</div>
   </div>
 
   <div class="print-footer-grid">
@@ -581,8 +545,8 @@
   </div>
 </section>
 
-<script src="controllers-overlay.js?v=3.0"></script>
-<script src="controllers-svg.js?v=3.0"></script>
-<script src="app.js?v=3.0"></script>
+<script src="controllers-overlay.js?v=3.5"></script>
+<script src="controllers-svg.js?v=3.5"></script>
+<script src="app.js?v=3.5"></script>
 </body>
 </html>
