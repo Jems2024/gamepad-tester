@@ -788,8 +788,22 @@ let state = {
   stickHistoryL:        [],
   stickHistoryR:        [],
   stickMetrics: {
-    l: { drift: null, jitter: null, circularity: null, snapback: null, verdict: 'PENDING' },
-    r: { drift: null, jitter: null, circularity: null, snapback: null, verdict: 'PENDING' },
+    l: { 
+      drift: null, 
+      jitter: null, 
+      circularity: null, 
+      snapback: null, 
+      verdict: 'PENDING',
+      tests: { center: null, range: null, smoothness: null, circularity: null, returnToCenter: null }
+    },
+    r: { 
+      drift: null, 
+      jitter: null, 
+      circularity: null, 
+      snapback: null, 
+      verdict: 'PENDING',
+      tests: { center: null, range: null, smoothness: null, circularity: null, returnToCenter: null }
+    },
   },
   // Circular coverage radial bins (16 bins = 22.5 deg each)
   circleBinsL:          new Array(16).fill(0),
@@ -968,8 +982,22 @@ function resetAllValidationStates() {
   state.circleBinsL.fill(0);
   state.circleBinsR.fill(0);
   state.stickMetrics = {
-    l: { drift: null, jitter: null, circularity: null, snapback: null, verdict: 'PENDING' },
-    r: { drift: null, jitter: null, circularity: null, snapback: null, verdict: 'PENDING' },
+    l: { 
+      drift: null, 
+      jitter: null, 
+      circularity: null, 
+      snapback: null, 
+      verdict: 'PENDING',
+      tests: { center: null, range: null, smoothness: null, circularity: null, returnToCenter: null }
+    },
+    r: { 
+      drift: null, 
+      jitter: null, 
+      circularity: null, 
+      snapback: null, 
+      verdict: 'PENDING',
+      tests: { center: null, range: null, smoothness: null, circularity: null, returnToCenter: null }
+    },
   };
   state.triggers = {
     l2: { min: 1.0, max: 0.0, restOk: null, maxOk: null, smoothOk: true, samples: 0, verdict: 'PENDING' },
@@ -1179,41 +1207,50 @@ function evaluateStickOverall(stick) {
   const m = state.stickMetrics[stick];
   const badgeEl = stick === 'l' ? dom.stickLVerdict : dom.stickRVerdict;
 
-  let isFail = false;
-  let isReview = false;
+  if (!m.tests) {
+    m.tests = { center: null, range: null, smoothness: null, circularity: null, returnToCenter: null };
+  }
 
+  // 1. Center / Drift test
   if (m.drift !== null) {
-    if (m.drift > BENCHMARKS.STICK.DRIFT_ACCEPTABLE) isFail = true;
-    else if (m.drift > BENCHMARKS.STICK.DRIFT_EXCELLENT) isReview = true;
+    if (m.drift > BENCHMARKS.STICK.DRIFT_ACCEPTABLE) m.tests.center = 'FAIL';
+    else if (m.drift > BENCHMARKS.STICK.DRIFT_EXCELLENT) m.tests.center = 'REVIEW';
+    else m.tests.center = 'PASS';
   }
 
-  if (m.jitter !== null && m.jitter > BENCHMARKS.STICK.JITTER_MAX) {
-    isReview = true;
+  // 2. Smoothness / Jitter test
+  if (m.jitter !== null) {
+    m.tests.smoothness = (m.jitter > BENCHMARKS.STICK.JITTER_MAX) ? 'REVIEW' : 'PASS';
   }
 
+  // 3. Circularity test
   if (m.circularity !== null) {
-    if (m.circularity < BENCHMARKS.STICK.CIRC_ACCEPTABLE) isFail = true;
-    else if (m.circularity < BENCHMARKS.STICK.CIRC_EXCELLENT) isReview = true;
+    if (m.circularity < BENCHMARKS.STICK.CIRC_ACCEPTABLE) m.tests.circularity = 'FAIL';
+    else if (m.circularity < BENCHMARKS.STICK.CIRC_EXCELLENT) m.tests.circularity = 'REVIEW';
+    else m.tests.circularity = 'PASS';
   }
 
-  if (m.snapback !== null && m.snapback > BENCHMARKS.STICK.SNAPBACK_MAX_MS) {
-    isReview = true;
+  // 4. Return to Center / Snapback test
+  if (m.snapback !== null) {
+    m.tests.returnToCenter = (m.snapback > BENCHMARKS.STICK.SNAPBACK_MAX_MS) ? 'REVIEW' : 'PASS';
   }
+
+  const testVals = Object.values(m.tests).filter(v => v !== null);
 
   let verdict = 'PENDING';
   let css = 'badge-neutral';
   let text = t('verdictPending');
 
-  if (m.drift !== null || m.circularity !== null) {
-    if (isFail) {
+  if (testVals.length > 0) {
+    if (testVals.includes('FAIL')) {
       verdict = 'FAIL';
       css = 'badge-fail';
       text = t('verdictFail');
-    } else if (isReview) {
+    } else if (testVals.includes('REVIEW')) {
       verdict = 'REVIEW';
       css = 'badge-review';
       text = t('verdictReview');
-    } else {
+    } else if (testVals.includes('PASS')) {
       verdict = 'PASS';
       css = 'badge-pass';
       text = t('verdictPass');
@@ -1371,7 +1408,7 @@ function buildButtonChips(count) {
     chip.innerHTML = `
       <div class="btn-chip-header">
         <span class="btn-name" title="${label}">${label}</span>
-        <span class="chip-check" id="btn-check-${i}">○</span>
+        <span class="chip-check" id="btn-check-${i}">0/3</span>
       </div>
       <span class="btn-val" id="btn-val-${i}">0.00</span>
       <div class="bar-wrap">
@@ -1390,7 +1427,7 @@ function buildButtonChips(count) {
 function processButtonsData(gp, now) {
   if (!gp || !gp.buttons) return;
 
-  let passedCount = 0;
+  let validatedCount = 0;
   let stuckCount = 0;
   const total = gp.buttons.length;
 
@@ -1412,48 +1449,59 @@ function processButtonsData(gp, now) {
     }
     const bState = state.buttonStates[i];
 
-    // Detect press event (rising edge)
+    // Edge Detection:
+    // Rising edge: false -> true = press
     if (isPressed && !bState.pressed) {
       bState.pressed = true;
       bState.pressStartTime = now;
-      bState.clicks++;
     }
-    // Detect release event (falling edge)
+    // Falling edge: true -> false = release (increment count ONLY on complete release cycle)
     else if (!isPressed && bState.pressed) {
       bState.pressed = false;
       bState.isStuck = false;
+      // Require 3 complete cycles
+      if (bState.clicks < 3) {
+        bState.clicks++;
+      }
     }
 
-    // Stuck button detection (> 3.5s held)
+    // Stuck button detection (> 3.5s held down)
     if (isPressed && (now - bState.pressStartTime > 3500)) {
       bState.isStuck = true;
     }
 
+    const isValidated = bState.clicks >= 3;
+
     if (chip) {
       chip.classList.toggle('pressed', isPressed);
-      chip.classList.toggle('passed', bState.clicks >= 1);
+      chip.classList.toggle('testing', bState.clicks > 0 && !isValidated);
+      chip.classList.toggle('passed', isValidated);
+      chip.classList.toggle('validated', isValidated);
       chip.classList.toggle('stuck', bState.isStuck);
     }
     if (checkEl) {
       if (bState.isStuck) {
         checkEl.textContent = '⚠';
         checkEl.style.color = 'var(--red)';
-      } else if (bState.clicks >= 1) {
+      } else if (isValidated) {
         checkEl.textContent = '✓';
-        checkEl.style.color = 'var(--green)';
+        checkEl.style.color = '#22c55e';
+      } else if (bState.clicks > 0) {
+        checkEl.textContent = `${bState.clicks}/3`;
+        checkEl.style.color = 'var(--cyan)';
       } else {
-        checkEl.textContent = '○';
+        checkEl.textContent = '0/3';
         checkEl.style.color = 'var(--text-muted)';
       }
     }
 
-    if (bState.clicks >= 1) passedCount++;
+    if (isValidated) validatedCount++;
     if (bState.isStuck) stuckCount++;
   }
 
   // Update compact progress chip under controller
   if (dom.chipBtnProgress) {
-    dom.chipBtnProgress.textContent = `${passedCount} / ${total} ✓`;
+    dom.chipBtnProgress.textContent = `${validatedCount} / ${total} ✓`;
   }
 
   updateButtonsSummaryBadge();
@@ -1472,7 +1520,7 @@ function updateButtonsSummaryBadge() {
   let passed = 0;
   let stuck = 0;
   for (const s of Object.values(state.buttonStates)) {
-    if (s.clicks >= 1) passed++;
+    if (s.clicks >= 3) passed++;
     if (s.isStuck) stuck++;
   }
 
@@ -1481,7 +1529,7 @@ function updateButtonsSummaryBadge() {
     dom.buttonsSummaryBadge.style.color = 'var(--red)';
   } else {
     dom.buttonsSummaryBadge.textContent = `${passed} / ${total} ✓`;
-    dom.buttonsSummaryBadge.style.color = (passed === total) ? 'var(--green)' : 'var(--cyan)';
+    dom.buttonsSummaryBadge.style.color = (passed === total) ? '#22c55e' : 'var(--cyan)';
   }
 }
 
@@ -1824,7 +1872,7 @@ function buildPhotoOverlay(model) {
       const bState = state.buttonStates[i];
       if (bState) {
         if (bState.isStuck) el.classList.add('stuck');
-        else if (bState.clicks >= 1) el.classList.add('passed');
+        else if (bState.clicks >= 3) el.classList.add('passed');
       }
     }
   }
@@ -1854,7 +1902,7 @@ function highlightActiveOverlay(gp, axes) {
         if (bState.isStuck) {
           el.classList.add('stuck');
           el.classList.remove('passed');
-        } else if (bState.clicks >= 1) {
+        } else if (bState.clicks >= 3) {
           el.classList.add('passed');
           el.classList.remove('stuck');
         }
@@ -1930,7 +1978,7 @@ function updateWorkflowProgress() {
   }
 
   const totalBtns = Object.keys(state.buttonStates).length || 16;
-  const passedBtns = Object.values(state.buttonStates).filter(b => b.clicks >= 1).length;
+  const passedBtns = Object.values(state.buttonStates).filter(b => b.clicks >= 3).length;
   const stuckBtns = Object.values(state.buttonStates).filter(b => b.isStuck).length;
   const buttonsDone = (totalBtns > 0 && passedBtns >= totalBtns && stuckBtns === 0);
 
@@ -2002,7 +2050,7 @@ function updateOverallVerdict() {
   const tR = state.triggers.r2;
 
   const totalBtns = Object.keys(state.buttonStates).length || 16;
-  const passedBtns = Object.values(state.buttonStates).filter(b => b.clicks >= 1).length;
+  const passedBtns = Object.values(state.buttonStates).filter(b => b.clicks >= 3).length;
   const stuckBtns = Object.values(state.buttonStates).filter(b => b.isStuck).length;
 
   let btnVerdict = 'PENDING';
@@ -2247,7 +2295,7 @@ function populatePrintReport(record) {
   if (dom.printR2Verdict) dom.printR2Verdict.textContent = tR || 'PASS';
 
   const btnTotal = record ? record.buttons.total : Object.keys(state.buttonStates).length || 16;
-  const btnPassed= record ? record.buttons.passed : Object.values(state.buttonStates).filter(b => b.clicks >= 1).length;
+  const btnPassed= record ? record.buttons.passed : Object.values(state.buttonStates).filter(b => b.clicks >= 3).length;
   const btnStuck = record ? record.buttons.stuck : Object.values(state.buttonStates).filter(b => b.isStuck).length;
 
   if (dom.printBtnCount)   dom.printBtnCount.textContent = `${btnPassed} / ${btnTotal}`;

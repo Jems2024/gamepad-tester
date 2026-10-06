@@ -405,11 +405,12 @@ header h1 {
   stroke-width: 3.5 !important;
   filter: drop-shadow(0 0 10px #00e5ff);
 }
-/* Validated / Passed (Green) */
+/* Validated / Passed (Green #22c55e) */
 .photo-btn.passed {
-  stroke: var(--green) !important;
-  fill: rgba(16, 185, 129, 0.25) !important;
-  stroke-width: 2.5 !important;
+  stroke: #22c55e !important;
+  fill: rgba(34, 197, 94, 0.28) !important;
+  stroke-width: 3 !important;
+  filter: drop-shadow(0 0 8px rgba(34, 197, 94, 0.45));
 }
 /* Failed / Stuck (Red) */
 .photo-btn.stuck {
@@ -700,29 +701,44 @@ header h1 {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 3px 6px;
+  padding: 4px 7px;
   background: var(--surface2);
   border: 1px solid var(--border);
-  border-radius: 4px;
-  font-size: 0.66rem;
-  font-weight: 600;
-  transition: border-color 0.08s, background 0.08s;
+  border-radius: 5px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  transition: all 0.12s ease;
 }
 .btn-chip.pressed {
-  border-color: var(--cyan);
-  background: rgba(0, 229, 255, 0.18);
-  box-shadow: 0 0 6px var(--cyan-glow);
+  border-color: #00e5ff !important;
+  background: rgba(0, 229, 255, 0.22) !important;
+  box-shadow: 0 0 10px rgba(0, 229, 255, 0.45);
 }
-.btn-chip.passed {
-  border-color: rgba(16, 185, 129, 0.6);
-  background: rgba(16, 185, 129, 0.08);
+.btn-chip.testing {
+  border-color: rgba(0, 229, 255, 0.5);
+  background: rgba(0, 229, 255, 0.08);
 }
-.btn-chip.passed .chip-check {
-  color: var(--green);
+.btn-chip.passed,
+.btn-chip.validated {
+  border: 2px solid #22c55e !important;
+  background: rgba(34, 197, 94, 0.16) !important;
+  box-shadow: 0 0 10px rgba(34, 197, 94, 0.35) !important;
+  color: #ffffff !important;
+}
+.btn-chip.passed .chip-check,
+.btn-chip.validated .chip-check {
+  color: #22c55e !important;
+  font-weight: 900;
+  font-size: 0.72rem;
+}
+.btn-chip.passed .btn-name,
+.btn-chip.validated .btn-name {
+  color: #ffffff !important;
+  font-weight: 700;
 }
 .btn-chip.stuck {
-  border-color: var(--red) !important;
-  background: rgba(239, 68, 68, 0.25) !important;
+  border: 2px solid var(--red) !important;
+  background: rgba(239, 68, 68, 0.28) !important;
   animation: pulseRed 0.8s infinite;
 }
 .btn-name {
