@@ -783,16 +783,21 @@ function detectControllerModel(id = '', mapping = '') {
     s.includes('1345')
   ) return 'ps2';
 
-  // Unified Xbox (Xbox Series, Xbox One, Xbox 360, XInput)
+  // Xbox Detection: Series X|S vs Xbox One / 360
+  if (s.includes('series') || s.includes('0b12') || s.includes('0b13')) {
+    return 'xbox-series-s';
+  }
   if (
     s.includes('xbox') ||
     s.includes('xinput') ||
     s.includes('360') ||
-    s.includes('series') ||
     s.includes('045e') ||
-    s.includes('0b12') ||
-    s.includes('0b13')
-  ) return 'xbox';
+    s.includes('028e') ||
+    s.includes('02d1') ||
+    s.includes('02dd')
+  ) {
+    return 'xbox-one';
+  }
 
   // Fallback for generic USB adapters (many cheap PS2-to-USB converters report as "usb gamepad" or "generic usb joystick")
   if (s.includes('usb gamepad') || s.includes('generic usb') || s.includes('usb joystick')) {
@@ -2417,6 +2422,105 @@ function buildPhotoOverlay(model) {
   state.photoStickL   = document.getElementById('photo-stick-l');
   state.photoStickR   = document.getElementById('photo-stick-r');
   state.photoLightbar = document.getElementById('photo-lightbar');
+
+  if (typeof OVERLAY_CALIBRATION_MODE !== 'undefined' && OVERLAY_CALIBRATION_MODE) {
+    initOverlayCalibration(model, profile);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// DEVELOPER OVERLAY CALIBRATION TOOL
+// Set OVERLAY_CALIBRATION_MODE = true in console or config to enable
+// ─────────────────────────────────────────────────────────────
+let OVERLAY_CALIBRATION_MODE = false;
+
+function initOverlayCalibration(model, profile) {
+  let hud = document.getElementById('calibration-hud');
+  if (!hud) {
+    hud = document.createElement('div');
+    hud.id = 'calibration-hud';
+    hud.style.cssText = 'position:fixed;bottom:16px;left:16px;background:rgba(10,14,23,0.95);border:1px solid #00e5ff;color:#fff;padding:12px;border-radius:8px;font-family:monospace;font-size:12px;z-index:999999;box-shadow:0 8px 24px rgba(0,0,0,0.8);max-width:320px;';
+    hud.innerHTML = `
+      <div style="font-weight:bold;color:#00e5ff;margin-bottom:6px;">🛠 Overlay Calibration (${model})</div>
+      <div id="calib-selected" style="color:#aaa;margin-bottom:6px;">Click any button hotspot to select</div>
+      <div id="calib-coords" style="color:#22c55e;margin-bottom:8px;">-</div>
+      <div style="display:flex;gap:6px;">
+        <button id="calib-btn-copy" style="background:#00e5ff;color:#000;border:none;padding:4px 8px;border-radius:4px;cursor:pointer;font-weight:bold;">Copy JSON</button>
+        <button id="calib-btn-log" style="background:#334155;color:#fff;border:none;padding:4px 8px;border-radius:4px;cursor:pointer;">Log Profile</button>
+      </div>
+      <div style="font-size:10px;color:#64748b;margin-top:6px;">Arrows: 1px | Shift+Arrows: 5px</div>
+    `;
+    document.body.appendChild(hud);
+
+    document.getElementById('calib-btn-copy').addEventListener('click', () => {
+      navigator.clipboard.writeText(JSON.stringify(profile.controls, null, 2));
+      alert('Profile controls copied to clipboard!');
+    });
+    document.getElementById('calib-btn-log').addEventListener('click', () => {
+      console.log('CONTROLLER_PROFILES["' + model + '"]:', profile);
+    });
+  }
+
+  let selectedIdx = null;
+
+  function updateHud() {
+    const selEl = document.getElementById('calib-selected');
+    const coordEl = document.getElementById('calib-coords');
+    if (selectedIdx === null || !profile.controls[selectedIdx]) {
+      if (selEl) selEl.textContent = 'Click any button hotspot to select';
+      if (coordEl) coordEl.textContent = '-';
+      return;
+    }
+    const c = profile.controls[selectedIdx];
+    if (selEl) selEl.textContent = `[${selectedIdx}] ${c.name || 'Btn'}`;
+    if (coordEl) {
+      if (c.cx !== undefined) {
+        coordEl.textContent = `cx: ${c.cx}, cy: ${c.cy}` + (c.r ? `, r: ${c.r}` : (c.rx ? `, rx: ${c.rx}, ry: ${c.ry}` : ''));
+      } else {
+        coordEl.textContent = `x: ${c.x}, y: ${c.y}, w: ${c.w}, h: ${c.h}`;
+      }
+    }
+  }
+
+  for (const [idxStr, c] of Object.entries(profile.controls)) {
+    const el = document.getElementById(`photo-btn-${idxStr}`);
+    if (el) {
+      el.style.pointerEvents = 'auto';
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        selectedIdx = parseInt(idxStr, 10);
+        document.querySelectorAll('.photo-btn').forEach(b => b.style.outline = 'none');
+        el.style.outline = '2px dashed #ffff00';
+        updateHud();
+      });
+    }
+  }
+
+  window.onkeydown = (e) => {
+    if (!OVERLAY_CALIBRATION_MODE || selectedIdx === null) return;
+    const c = profile.controls[selectedIdx];
+    if (!c) return;
+    const step = e.shiftKey ? 5 : 1;
+    let dx = 0, dy = 0;
+    if (e.key === 'ArrowLeft') dx = -step;
+    else if (e.key === 'ArrowRight') dx = step;
+    else if (e.key === 'ArrowUp') dy = -step;
+    else if (e.key === 'ArrowDown') dy = step;
+    else return;
+
+    e.preventDefault();
+    if (c.cx !== undefined) {
+      c.cx += dx;
+      c.cy += dy;
+    } else {
+      c.x += dx;
+      c.y += dy;
+    }
+    buildPhotoOverlay(model);
+    const newEl = document.getElementById(`photo-btn-${selectedIdx}`);
+    if (newEl) newEl.style.outline = '2px dashed #ffff00';
+    updateHud();
+  };
 }
 
 function highlightActiveOverlay(gp, axes) {
@@ -2491,7 +2595,10 @@ function resolveModel() {
 
   // Load photo
   if (dom.photoImg) {
-    dom.photoImg.src = `assets/controllers/${state.model}.png`;
+    const imgName = (state.model === 'xbox' || state.model === 'xbox-one')
+      ? 'xbox-one'
+      : (state.model === 'generic' ? 'ps4' : state.model);
+    dom.photoImg.src = `assets/controllers/${imgName}.png`;
   }
   buildPhotoOverlay(state.model);
   fitPhotoStage();
