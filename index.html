@@ -162,19 +162,19 @@
               <canvas id="stick-l-canvas" class="stick-canvas-large" width="400" height="400"></canvas>
             </div>
             
-            <!-- 3 Simple Diagnostic Phases -->
+            <!-- Simplified 3-Item Diagnostic Status: Reposo, Movimiento, Resultado -->
             <div class="stick-phases-row">
               <div class="stick-phase-item" id="phase-l-rest">
-                <span class="phase-name">Reposo</span>
+                <span class="phase-name" data-i18n="phaseRest">Reposo</span>
                 <span class="phase-val" id="phase-l-rest-val">○</span>
               </div>
               <div class="stick-phase-item" id="phase-l-move">
-                <span class="phase-name">Movimiento</span>
+                <span class="phase-name" data-i18n="phaseMove">Movimiento</span>
                 <span class="phase-val" id="phase-l-move-val">0/8</span>
               </div>
-              <div class="stick-phase-item" id="phase-l-snap">
-                <span class="phase-name">Retorno</span>
-                <span class="phase-val" id="phase-l-snap-val">○</span>
+              <div class="stick-phase-item" id="phase-l-result">
+                <span class="phase-name" data-i18n="phaseResult">Resultado</span>
+                <span class="phase-val" id="phase-l-result-val">—</span>
               </div>
             </div>
 
@@ -193,7 +193,7 @@
                 <span class="metric-val" id="stick-l-dist">0.0000</span>
               </div>
               <div class="metric-cell">
-                <span class="metric-label">8 Zonas:</span>
+                <span class="metric-label" data-i18n="metricZones">8 Zonas:</span>
                 <span class="metric-val" id="stick-l-circ-val">0/8</span>
               </div>
             </div>
@@ -210,19 +210,19 @@
               <canvas id="stick-r-canvas" class="stick-canvas-large" width="400" height="400"></canvas>
             </div>
 
-            <!-- 3 Simple Diagnostic Phases -->
+            <!-- Simplified 3-Item Diagnostic Status: Reposo, Movimiento, Resultado -->
             <div class="stick-phases-row">
               <div class="stick-phase-item" id="phase-r-rest">
-                <span class="phase-name">Reposo</span>
+                <span class="phase-name" data-i18n="phaseRest">Reposo</span>
                 <span class="phase-val" id="phase-r-rest-val">○</span>
               </div>
               <div class="stick-phase-item" id="phase-r-move">
-                <span class="phase-name">Movimiento</span>
+                <span class="phase-name" data-i18n="phaseMove">Movimiento</span>
                 <span class="phase-val" id="phase-r-move-val">0/8</span>
               </div>
-              <div class="stick-phase-item" id="phase-r-snap">
-                <span class="phase-name">Retorno</span>
-                <span class="phase-val" id="phase-r-snap-val">○</span>
+              <div class="stick-phase-item" id="phase-r-result">
+                <span class="phase-name" data-i18n="phaseResult">Resultado</span>
+                <span class="phase-val" id="phase-r-result-val">—</span>
               </div>
             </div>
 
@@ -369,13 +369,16 @@
 
 <!-- ── MINIMAL FLOATING LANGUAGE SELECTOR (BOTTOM LEFT) ──────── -->
 <div class="floating-lang" id="floating-lang">
-  <button class="floating-lang-trigger" id="lang-trigger" title="Cambiar idioma">🇪🇸</button>
+  <button class="floating-lang-trigger" id="lang-trigger" title="Idioma / Language" aria-label="Cambiar idioma">
+    <span class="flag-icon">🇪🇸</span>
+    <span class="lang-code">ES</span>
+  </button>
   <div class="floating-lang-menu" id="lang-menu">
-    <button data-lang="es" title="Español">🇪🇸</button>
-    <button data-lang="en" title="English">🇬🇧</button>
-    <button data-lang="it" title="Italiano">🇮🇹</button>
-    <button data-lang="fr" title="Français">🇫🇷</button>
-    <button data-lang="de" title="Deutsch">🇩🇪</button>
+    <button data-lang="es" class="lang-opt active" title="Español"><span class="flag-icon">🇪🇸</span> <span>Español</span></button>
+    <button data-lang="en" class="lang-opt" title="English"><span class="flag-icon">🇬🇧</span> <span>English</span></button>
+    <button data-lang="it" class="lang-opt" title="Italiano"><span class="flag-icon">🇮🇹</span> <span>Italiano</span></button>
+    <button data-lang="fr" class="lang-opt" title="Français"><span class="flag-icon">🇫🇷</span> <span>Français</span></button>
+    <button data-lang="de" class="lang-opt" title="Deutsch"><span class="flag-icon">🇩🇪</span> <span>Deutsch</span></button>
   </div>
 </div>
 
@@ -423,8 +426,8 @@
 <section id="printable-report" class="print-sheet" style="display:none;">
   <div class="print-header">
     <div class="print-brand">
-      <h2>INSPECCIÓN TÉCNICA DE CONTROL DE CALIDAD</h2>
-      <p class="print-subtitle">Gamepad Quality Assurance & Diagnostic Certificate</p>
+      <h2 data-i18n="printReportTitle">INSPECCIÓN TÉCNICA DE CONTROL DE CALIDAD</h2>
+      <p class="print-subtitle" data-i18n="printReportSubtitle">Gamepad Quality Assurance & Diagnostic Certificate</p>
     </div>
     <div class="print-barcode-box">
       <div id="print-barcode-svg"></div>
@@ -433,67 +436,69 @@
   </div>
 
   <div class="print-info-grid">
-    <div class="print-info-item"><strong>Nº de Artículo:</strong> <span id="print-item-code">18427</span></div>
-    <div class="print-info-item"><strong>Fecha y Hora:</strong> <span id="print-date">--/--/---- --:--</span></div>
-    <div class="print-info-item"><strong>Estación:</strong> <span>Banco Técnico #1</span></div>
-    <div class="print-info-item"><strong>Dispositivo:</strong> <span id="print-device-name">--</span></div>
-    <div class="print-info-item"><strong>Perfil:</strong> <span id="print-device-profile">--</span></div>
-    <div class="print-info-item"><strong>Identificador Hardware:</strong> <span id="print-device-id">--</span></div>
+    <div class="print-info-item"><strong data-i18n="printItemCodeLbl">Nº de Artículo:</strong> <span id="print-item-code">18427</span></div>
+    <div class="print-info-item"><strong data-i18n="printDateLbl">Fecha y Hora:</strong> <span id="print-date">--/--/---- --:--</span></div>
+    <div class="print-info-item"><strong data-i18n="printStationLbl">Estación:</strong> <span data-i18n="printStationVal">Banco Técnico #1</span></div>
+    <div class="print-info-item"><strong data-i18n="printDeviceLbl">Dispositivo:</strong> <span id="print-device-name">--</span></div>
+    <div class="print-info-item"><strong data-i18n="printProfileLbl">Perfil:</strong> <span id="print-device-profile">--</span></div>
+    <div class="print-info-item"><strong data-i18n="printHwIdLbl">Identificador Hardware:</strong> <span id="print-device-id">--</span></div>
   </div>
 
-  <div class="print-section-title">1. DIAGNÓSTICO DE STICKS ANALÓGICOS (DRIFT, COBERTURA Y RETORNO)</div>
+  <div class="print-section-title" data-i18n="printSectionSticks">1. DIAGNÓSTICO DE STICKS ANALÓGICOS (DRIFT Y MOVIMIENTO)</div>
   <table class="print-table">
     <thead>
       <tr>
-        <th>Componente</th>
-        <th>Deriva Reposo (Drift)</th>
-        <th>Jitter / Ruido</th>
-        <th>Circularidad (360°)</th>
-        <th>Tiempo Retorno</th>
-        <th>Veredicto</th>
+        <th data-i18n="printThComponent">Componente</th>
+        <th data-i18n="printThDrift">Deriva Reposo (Drift)</th>
+        <th data-i18n="printThJitter">Jitter / Ruido</th>
+        <th data-i18n="printThZones">Movimiento (8 Zonas)</th>
+        <th data-i18n="printThVerdict">Veredicto</th>
       </tr>
     </thead>
     <tbody>
       <tr>
-        <td><strong>Stick Izquierdo (LX, LY)</strong></td>
+        <td><strong data-i18n="stickLeftLabel">Stick Izquierdo (LX, LY)</strong></td>
         <td id="print-sl-drift">—</td>
         <td id="print-sl-jitter">—</td>
         <td id="print-sl-circ">—</td>
-        <td id="print-sl-snap">—</td>
         <td id="print-sl-verdict" class="print-badge">—</td>
       </tr>
       <tr>
-        <td><strong>Stick Derecho (RX, RY)</strong></td>
+        <td><strong data-i18n="stickRightLabel">Stick Derecho (RX, RY)</strong></td>
         <td id="print-sr-drift">—</td>
         <td id="print-sr-jitter">—</td>
         <td id="print-sr-circ">—</td>
-        <td id="print-sr-snap">—</td>
         <td id="print-sr-verdict" class="print-badge">—</td>
       </tr>
     </tbody>
   </table>
 
-  <div class="print-section-title">2. VALIDACIÓN DE GATILLOS ANALÓGICOS (L2 / R2)</div>
+  <!-- Secondary technical metrics: return info stored cleanly -->
+  <div class="print-tech-subrow">
+    <span class="print-tech-subtext"><strong data-i18n="printTechnicalDetailsLbl">Detalles Técnicos Stick L:</strong> <span id="print-sl-snap">—</span> | <strong data-i18n="printTechnicalDetailsR">Stick R:</strong> <span id="print-sr-snap">—</span></span>
+  </div>
+
+  <div class="print-section-title" data-i18n="printSectionTriggers">2. VALIDACIÓN DE GATILLOS ANALÓGICOS (L2 / R2)</div>
   <table class="print-table">
     <thead>
       <tr>
-        <th>Gatillo</th>
-        <th>Valor Reposo</th>
-        <th>Recorrido Máximo</th>
-        <th>Linealidad de Presión</th>
-        <th>Veredicto</th>
+        <th data-i18n="printThTrigger">Gatillo</th>
+        <th data-i18n="printThRestVal">Valor Reposo</th>
+        <th data-i18n="printThMaxVal">Recorrido Máximo</th>
+        <th data-i18n="printThLinearity">Linealidad de Presión</th>
+        <th data-i18n="printThVerdict">Veredicto</th>
       </tr>
     </thead>
     <tbody>
       <tr>
-        <td><strong>Gatillo Izquierdo (L2 / LT)</strong></td>
+        <td><strong>L2 / LT</strong></td>
         <td id="print-l2-rest">0.000</td>
         <td id="print-l2-max">1.000</td>
         <td id="print-l2-ramp">Progresivo</td>
         <td id="print-l2-verdict" class="print-badge">—</td>
       </tr>
       <tr>
-        <td><strong>Gatillo Derecho (R2 / RT)</strong></td>
+        <td><strong>R2 / RT</strong></td>
         <td id="print-r2-rest">0.000</td>
         <td id="print-r2-max">1.000</td>
         <td id="print-r2-ramp">Progresivo</td>
@@ -502,26 +507,26 @@
     </tbody>
   </table>
 
-  <div class="print-section-title">3. MATRIZ DE BOTONES FÍSICOS</div>
+  <div class="print-section-title" data-i18n="printSectionButtons">3. MATRIZ DE BOTONES FÍSICOS</div>
   <div class="print-buttons-summary">
-    <div class="print-btn-stat"><strong>Botones Validados:</strong> <span id="print-btn-count">16 / 16</span></div>
-    <div class="print-btn-stat"><strong>Botones Atascados:</strong> <span id="print-btn-stuck">0 (Ninguno)</span></div>
-    <div class="print-btn-stat"><strong>Veredicto Botonera:</strong> <span id="print-btn-verdict" class="print-badge">—</span></div>
+    <div class="print-btn-stat"><strong data-i18n="printBtnCountLbl">Botones Validados:</strong> <span id="print-btn-count">16 / 16</span></div>
+    <div class="print-btn-stat"><strong data-i18n="printBtnStuckLbl">Botones Atascados:</strong> <span id="print-btn-stuck">0 (Ninguno)</span></div>
+    <div class="print-btn-stat"><strong data-i18n="printBtnVerdictLbl">Veredicto Botonera:</strong> <span id="print-btn-verdict" class="print-badge">—</span></div>
   </div>
 
   <div class="print-final-verdict-box">
-    <div class="verdict-label">CERTIFICACIÓN FINAL DE CALIDAD:</div>
+    <div class="verdict-label" data-i18n="lblOverallVerdict">CERTIFICACIÓN FINAL DE CALIDAD:</div>
     <div class="verdict-stamp" id="print-final-stamp">APTO (PASS)</div>
-    <div class="verdict-details">El controlador cumple todas las especificaciones de tolerancia en sticks, gatillos y botones.</div>
+    <div class="verdict-details" id="print-verdict-details" data-i18n="printVerdictDetails">El controlador cumple todas las especificaciones comerciales de funcionamiento para resale.</div>
   </div>
 
   <div class="print-footer-grid">
     <div class="print-notes-col">
-      <strong>Observaciones / Intervención realizada:</strong>
+      <strong data-i18n="printNotesLbl">Observaciones / Intervención realizada:</strong>
       <div class="print-notes-lines"></div>
     </div>
     <div class="print-sig-col">
-      <strong>Firma del Técnico Responsable:</strong>
+      <strong data-i18n="printSigLbl">Firma del Técnico Responsable:</strong>
       <div class="print-sig-box"></div>
     </div>
   </div>

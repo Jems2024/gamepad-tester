@@ -402,10 +402,10 @@ header h1 {
 }
 /* Live Pressed */
 .photo-btn.pressed {
-  fill: rgba(0, 229, 255, 0.45) !important;
+  fill: rgba(0, 229, 255, 0.55) !important;
   stroke: #00e5ff !important;
-  stroke-width: 3.5 !important;
-  filter: drop-shadow(0 0 10px #00e5ff);
+  stroke-width: 4 !important;
+  filter: drop-shadow(0 0 12px #00e5ff) !important;
 }
 /* Validated / Passed (Green #22c55e) */
 .photo-btn.passed {
@@ -413,6 +413,13 @@ header h1 {
   fill: rgba(34, 197, 94, 0.28) !important;
   stroke-width: 3 !important;
   filter: drop-shadow(0 0 8px rgba(34, 197, 94, 0.45));
+}
+/* Validated AND Pressed Again (Visibly bright emerald glow) */
+.photo-btn.passed.pressed {
+  stroke: #4ade80 !important;
+  fill: rgba(74, 222, 128, 0.7) !important;
+  stroke-width: 4.5 !important;
+  filter: drop-shadow(0 0 16px #4ade80) !important;
 }
 /* Failed / Stuck (Red) */
 .photo-btn.stuck {
@@ -673,10 +680,10 @@ header h1 {
 }
 
 .stick-verdict-badge {
-  font-size: 0.58rem;
+  font-size: 0.65rem;
   font-weight: 800;
-  padding: 1px 5px;
-  border-radius: 3px;
+  padding: 2px 7px;
+  border-radius: 4px;
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
@@ -685,6 +692,21 @@ header h1 {
 .badge-fail { background: rgba(239, 68, 68, 0.25); color: var(--red); border: 1px solid var(--red); }
 .badge-testing { background: rgba(0, 229, 255, 0.18); color: var(--cyan); border: 1px solid var(--cyan); }
 .badge-neutral, .badge-pending { background: var(--surface3); color: var(--text-muted); border: 1px solid var(--border); }
+
+/* Print technical details secondary info */
+.print-tech-subrow {
+  margin-top: -6px;
+  margin-bottom: 12px;
+  font-size: 0.70rem;
+  color: #555;
+  padding: 4px 6px;
+  background: #f8f8fb;
+  border: 1px dashed #ccc;
+  border-radius: 4px;
+}
+.print-tech-subtext strong {
+  color: #333;
+}
 
 /* ── 7. COMPACT ANALOG TRIGGERS (L2 / R2) ──────────────────── */
 .card-triggers .triggers-body { padding: 5px 8px; }
@@ -744,61 +766,87 @@ header h1 {
 }
 
 /* ── 8. COMPACT BUTTON VALIDATION MATRIX ───────────────────── */
-.card-buttons .card-body { padding: 5px 8px; }
+.card-buttons .card-body { padding: 6px 10px; }
 .btn-summary-badge {
-  font-size: 0.64rem;
-  font-weight: 700;
+  font-size: 0.72rem;
+  font-weight: 800;
   color: var(--cyan);
   background: var(--surface2);
   border: 1px solid var(--border);
-  padding: 1px 6px;
+  padding: 2px 8px;
   border-radius: 4px;
 }
 .buttons-grid {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
-  gap: 4px;
+  gap: 5px;
 }
 
 .btn-chip {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 4px 7px;
+  padding: 6px 9px;
   background: var(--surface2);
   border: 1px solid var(--border);
-  border-radius: 5px;
-  font-size: 0.68rem;
+  border-radius: 6px;
+  font-size: 0.72rem;
   font-weight: 700;
-  transition: all 0.12s ease;
+  min-height: 32px;
+  transition: all 0.08s ease;
+  user-select: none;
 }
+
+/* 1. Live Pressed (Not yet validated) */
 .btn-chip.pressed {
   border-color: #00e5ff !important;
-  background: rgba(0, 229, 255, 0.22) !important;
-  box-shadow: 0 0 10px rgba(0, 229, 255, 0.45);
+  background: rgba(0, 229, 255, 0.28) !important;
+  box-shadow: 0 0 12px rgba(0, 229, 255, 0.6) !important;
+  transform: scale(0.96);
 }
+
+/* 2. In progress clicks (1/3 or 2/3) */
 .btn-chip.testing {
   border-color: rgba(0, 229, 255, 0.5);
   background: rgba(0, 229, 255, 0.08);
 }
+
+/* 3. Validated and Released (Green) */
 .btn-chip.passed,
 .btn-chip.validated {
   border: 2px solid #22c55e !important;
   background: rgba(34, 197, 94, 0.16) !important;
-  box-shadow: 0 0 10px rgba(34, 197, 94, 0.35) !important;
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.3) !important;
   color: #ffffff !important;
 }
 .btn-chip.passed .chip-check,
 .btn-chip.validated .chip-check {
   color: #22c55e !important;
   font-weight: 900;
-  font-size: 0.72rem;
+  font-size: 0.78rem;
 }
 .btn-chip.passed .btn-name,
 .btn-chip.validated .btn-name {
   color: #ffffff !important;
   font-weight: 700;
 }
+
+/* 4. Validated AND Pressed Again (Visibly stronger active feedback!) */
+.btn-chip.passed.pressed,
+.btn-chip.validated.pressed {
+  border-color: #4ade80 !important;
+  background: rgba(34, 197, 94, 0.5) !important;
+  box-shadow: 0 0 16px rgba(74, 222, 128, 0.8), inset 0 0 8px rgba(255, 255, 255, 0.35) !important;
+  transform: scale(0.95);
+  color: #ffffff !important;
+}
+.btn-chip.passed.pressed .chip-check,
+.btn-chip.validated.pressed .chip-check {
+  color: #ffffff !important;
+  text-shadow: 0 0 6px #fff;
+}
+
+/* 5. Stuck Button Warning (Red) */
 .btn-chip.stuck {
   border: 2px solid var(--red) !important;
   background: rgba(239, 68, 68, 0.28) !important;
@@ -809,11 +857,11 @@ header h1 {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 75px;
+  max-width: 82px;
 }
 .btn-chip.pressed .btn-name { color: #fff; }
 .chip-check {
-  font-size: 0.64rem;
+  font-size: 0.68rem;
   font-weight: 800;
   color: var(--text-muted);
 }
@@ -933,7 +981,7 @@ header h1 {
   box-shadow: 0 0 5px var(--cyan);
 }
 
-/* ── 11. MINIMAL FLOATING LANGUAGE SELECTOR (BOTTOM LEFT) ──── */
+/* ── 11. FLOATING COMPACT LANGUAGE SELECTOR (BOTTOM LEFT) ──── */
 .floating-lang {
   position: fixed;
   bottom: 14px;
@@ -941,63 +989,97 @@ header h1 {
   z-index: 999;
   display: flex;
   flex-direction: column-reverse;
-  align-items: center;
-  gap: 6px;
+  align-items: flex-start;
+  gap: 8px;
 }
 
 .floating-lang-trigger {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.6);
-  font-size: 1.15rem;
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 99px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 14px rgba(0,0,0,0.65);
   cursor: pointer;
   outline: none;
-  transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+  color: var(--text);
+  font-size: 0.82rem;
+  font-weight: 700;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
 }
 .floating-lang-trigger:hover {
-  transform: scale(1.08);
-  border-color: var(--accent);
-  box-shadow: 0 0 10px var(--accent-glow);
+  transform: translateY(-2px);
+  border-color: var(--cyan);
+  box-shadow: 0 0 12px var(--cyan-glow);
+  background: var(--surface3);
+}
+.floating-lang-trigger .flag-icon {
+  font-size: 1.15rem;
+  line-height: 1;
+}
+.floating-lang-trigger .lang-code {
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: #a5b4fc;
 }
 
 .floating-lang-menu {
-  display: none;
+  display: flex;
   flex-direction: column;
-  background: var(--surface);
+  background: #12121b;
   border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 4px;
-  gap: 2px;
-  box-shadow: 0 6px 16px rgba(0,0,0,0.8);
+  border-radius: 10px;
+  padding: 6px;
+  gap: 4px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.85);
   opacity: 0;
-  transform: translateY(6px) scale(0.95);
-  transition: opacity 0.18s ease, transform 0.18s ease;
+  pointer-events: none;
+  transform: translateY(10px) scale(0.92);
+  transform-origin: bottom left;
+  transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1), transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  min-width: 130px;
 }
 
 .floating-lang:hover .floating-lang-menu,
 .floating-lang.open .floating-lang-menu {
-  display: flex;
   opacity: 1;
+  pointer-events: auto;
   transform: translateY(0) scale(1);
 }
 
-.floating-lang-menu button {
+.floating-lang-menu .lang-opt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   background: transparent;
   border: none;
-  font-size: 1.1rem;
-  padding: 4px 6px;
-  border-radius: 4px;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 6px 10px;
+  border-radius: 6px;
   cursor: pointer;
-  transition: background 0.15s;
+  text-align: left;
+  transition: all 0.15s ease;
+  width: 100%;
 }
-.floating-lang-menu button:hover {
+.floating-lang-menu .lang-opt:hover {
   background: var(--surface2);
+  color: #fff;
+  transform: translateX(3px);
+}
+.floating-lang-menu .lang-opt.active {
+  background: rgba(99, 102, 241, 0.2);
+  border: 1px solid var(--accent);
+  color: #fff;
+  font-weight: 700;
+}
+.floating-lang-menu .lang-opt .flag-icon {
+  font-size: 1.1rem;
 }
 
 /* ── 12. HISTORY MODAL ─────────────────────────────────────── */

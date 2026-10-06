@@ -42,11 +42,15 @@ const TRANSLATIONS = {
     stickTestTitle: "Sticks Analógicos — Análisis Cartesiano",
     btnZoomCenter: "🔍 Micro-Centro",
     btnFullSuite: "⚡ Suite Sticks",
-    btnDriftTest: "▶ Reposo (3s)",
+    btnDriftTest: "▶ Reposo (2s)",
     btnClearTrace: "🔄 Limpiar",
     stickLeftLabel: "STICK IZQUIERDO",
     stickRightLabel: "STICK DERECHO",
+    phaseRest: "Reposo",
+    phaseMove: "Movimiento",
+    phaseResult: "Resultado",
     metricOffset: "Desvío:",
+    metricZones: "8 Zonas:",
     metricCircularity: "Circ:",
     triggersTestTitle: "Gatillos Analógicos (L2 / R2)",
     triggersPending: "Pendiente",
@@ -70,21 +74,55 @@ const TRANSLATIONS = {
     thButtons: "Botones",
     thResult: "Resultado",
     thActions: "Acción",
-    verdictPass: "APTO (PASS)",
+    verdictPass: "APTO",
     verdictReview: "REVISIÓN",
     verdictFail: "DEFECTUOSO",
     verdictPending: "PENDIENTE",
     verdictTesting: "EN PRUEBA",
-    suiteStepRest: "PASO 1/3: No toques los sticks. Midiendo reposo y jitter (3s)...",
-    suiteStepCirc: "PASO 2/3: Gira ambos sticks lentamente en círculos completos de 360°...",
-    suiteStepSnap: "PASO 3/3: Mueve el stick al extremo y suéltalo de golpe...",
-    suiteDone: "✓ Diagnóstico de sticks completado.",
     savedSuccess: "✓ Diagnóstico guardado para el artículo:",
-    instructionStep1: "Paso 1: Pulsa todos los botones en el mando hasta verlos en verde.",
+    instructionStep1: "Paso 1: Pulsa todos los botones en el mando (3 toques cada uno).",
     instructionStep2: "Paso 2: Presiona a fondo ambos gatillos analógicos (L2 y R2).",
-    instructionStep3: "Paso 3: Gira el Stick Izquierdo en círculos completos de 360°.",
-    instructionStep4: "Paso 4: Gira el Stick Derecho en círculos completos de 360°.",
+    instructionStep3: "Paso 3: Realiza la prueba del Stick Izquierdo.",
+    instructionStep4: "Paso 4: Realiza la prueba del Stick Derecho.",
     instructionStep5: "Paso 5: Revisión completada. Pulsa Guardar o Imprimir informe.",
+    promptStickRest: "Reposo: No toques el stick (2s)...",
+    promptStickMove: "Movimiento: Mueve el stick lentamente en un círculo (8 zonas)",
+    printReportTitle: "INSPECCIÓN TÉCNICA DE CONTROL DE CALIDAD",
+    printReportSubtitle: "Gamepad Quality Assurance & Diagnostic Certificate",
+    printItemCodeLbl: "Nº de Artículo:",
+    printDateLbl: "Fecha y Hora:",
+    printStationLbl: "Estación:",
+    printStationVal: "Banco Técnico #1",
+    printDeviceLbl: "Dispositivo:",
+    printProfileLbl: "Perfil:",
+    printHwIdLbl: "Identificador Hardware:",
+    printSectionSticks: "1. DIAGNÓSTICO DE STICKS ANALÓGICOS (DRIFT Y MOVIMIENTO)",
+    printSectionTriggers: "2. VALIDACIÓN DE GATILLOS ANALÓGICOS (L2 / R2)",
+    printSectionButtons: "3. MATRIZ DE BOTONES FÍSICOS",
+    printThComponent: "Componente",
+    printThDrift: "Deriva Reposo (Drift)",
+    printThJitter: "Jitter / Ruido",
+    printThZones: "Movimiento (8 Zonas)",
+    printThTrigger: "Gatillo",
+    printThRestVal: "Valor Reposo",
+    printThMaxVal: "Recorrido Máximo",
+    printThLinearity: "Linealidad de Presión",
+    printThVerdict: "Veredicto",
+    printTechnicalDetailsLbl: "Detalles Técnicos Stick L:",
+    printTechnicalDetailsR: "Stick R:",
+    printBtnCountLbl: "Botones Validados:",
+    printBtnStuckLbl: "Botones Atascados:",
+    printBtnVerdictLbl: "Veredicto Botonera:",
+    printVerdictDetails: "El controlador cumple todas las especificaciones comerciales de funcionamiento para resale.",
+    printNotesLbl: "Observaciones / Intervención realizada:",
+    printSigLbl: "Firma del Técnico Responsable:",
+    stickOk: "✓ Correcto",
+    stickReview: "⚠ Revisión",
+    stickBad: "✕ Defectuoso",
+    triggerOk: "✓ Progresivo",
+    triggerRestFail: "✕ Fallo Reposo",
+    triggerRangeFail: "⚠ Recorrido incompleto",
+    noneWord: "Ninguno",
   },
   en: {
     appTitle: "Gamepad Tester Pro",
@@ -110,11 +148,15 @@ const TRANSLATIONS = {
     stickTestTitle: "Analog Sticks — Cartesian Analysis",
     btnZoomCenter: "🔍 Micro-Center",
     btnFullSuite: "⚡ Sticks Suite",
-    btnDriftTest: "▶ Rest Test (3s)",
+    btnDriftTest: "▶ Rest Test (2s)",
     btnClearTrace: "🔄 Clear",
     stickLeftLabel: "LEFT STICK",
     stickRightLabel: "RIGHT STICK",
+    phaseRest: "Rest",
+    phaseMove: "Movement",
+    phaseResult: "Result",
     metricOffset: "Offset:",
+    metricZones: "8 Zones:",
     metricCircularity: "Circ:",
     triggersTestTitle: "Analog Triggers (L2 / R2)",
     triggersPending: "Pending",
@@ -143,16 +185,50 @@ const TRANSLATIONS = {
     verdictFail: "DEFECTIVE",
     verdictPending: "PENDING",
     verdictTesting: "TESTING",
-    suiteStepRest: "STEP 1/3: Do not touch sticks. Measuring rest drift and jitter (3s)...",
-    suiteStepCirc: "STEP 2/3: Slowly rotate both sticks in full 360° edge circles...",
-    suiteStepSnap: "STEP 3/3: Push stick to extreme edge and release abruptly...",
-    suiteDone: "✓ Sticks diagnostics completed.",
     savedSuccess: "✓ Diagnostic record saved for item:",
-    instructionStep1: "Step 1: Press all physical buttons until they turn green.",
+    instructionStep1: "Step 1: Press all physical buttons (3 presses each).",
     instructionStep2: "Step 2: Fully pull both analog triggers (L2 and R2).",
-    instructionStep3: "Step 3: Rotate Left Stick in full 360° edge circles.",
-    instructionStep4: "Step 4: Rotate Right Stick in full 360° edge circles.",
+    instructionStep3: "Step 3: Test Left Stick (Rest & Circle).",
+    instructionStep4: "Step 4: Test Right Stick (Rest & Circle).",
     instructionStep5: "Step 5: Inspection complete. Click Save or Print report.",
+    promptStickRest: "Rest: Do not touch the stick (2s)...",
+    promptStickMove: "Movement: Slowly move the stick in a circle (8 zones)",
+    printReportTitle: "QUALITY CONTROL TECHNICAL INSPECTION",
+    printReportSubtitle: "Gamepad Quality Assurance & Diagnostic Certificate",
+    printItemCodeLbl: "Item Number:",
+    printDateLbl: "Date and Time:",
+    printStationLbl: "Station:",
+    printStationVal: "Bench #1",
+    printDeviceLbl: "Device:",
+    printProfileLbl: "Profile:",
+    printHwIdLbl: "Hardware Identifier:",
+    printSectionSticks: "1. ANALOG STICKS DIAGNOSTIC (DRIFT & MOVEMENT)",
+    printSectionTriggers: "2. ANALOG TRIGGERS VALIDATION (L2 / R2)",
+    printSectionButtons: "3. PHYSICAL BUTTONS MATRIX",
+    printThComponent: "Component",
+    printThDrift: "Rest Drift",
+    printThJitter: "Jitter / Noise",
+    printThZones: "Movement (8 Zones)",
+    printThTrigger: "Trigger",
+    printThRestVal: "Rest Value",
+    printThMaxVal: "Max Travel",
+    printThLinearity: "Pressure Linearity",
+    printThVerdict: "Verdict",
+    printTechnicalDetailsLbl: "Technical Details Stick L:",
+    printTechnicalDetailsR: "Stick R:",
+    printBtnCountLbl: "Validated Buttons:",
+    printBtnStuckLbl: "Stuck Buttons:",
+    printBtnVerdictLbl: "Buttons Verdict:",
+    printVerdictDetails: "Controller meets all commercial QA specifications for retail resale.",
+    printNotesLbl: "Observations / Performed Service:",
+    printSigLbl: "Technician Signature:",
+    stickOk: "✓ Passed",
+    stickReview: "⚠ Review",
+    stickBad: "✕ Bad",
+    triggerOk: "✓ Progressive",
+    triggerRestFail: "✕ Rest Drift",
+    triggerRangeFail: "⚠ Incomplete Travel",
+    noneWord: "None",
   },
   it: {
     appTitle: "Gamepad Tester Pro",
@@ -178,11 +254,15 @@ const TRANSLATIONS = {
     stickTestTitle: "Stick Analogici — Analisi Cartesiana",
     btnZoomCenter: "🔍 Micro-Centro",
     btnFullSuite: "⚡ Suite Stick",
-    btnDriftTest: "▶ Riposo (3s)",
+    btnDriftTest: "▶ Riposo (2s)",
     btnClearTrace: "🔄 Reimposta",
     stickLeftLabel: "STICK SINISTRO",
     stickRightLabel: "STICK DESTRO",
+    phaseRest: "Riposo",
+    phaseMove: "Movimento",
+    phaseResult: "Risultato",
     metricOffset: "Deriva:",
+    metricZones: "8 Zone:",
     metricCircularity: "Circ:",
     triggersTestTitle: "Grilletti Analogici (L2 / R2)",
     triggersPending: "In sospeso",
@@ -210,16 +290,51 @@ const TRANSLATIONS = {
     verdictReview: "REVISIONE",
     verdictFail: "DIFETTOSO",
     verdictPending: "IN SOSPESO",
-    suiteStepRest: "PASSO 1/3: Non toccare gli stick. Misurazione riposo e jitter (3s)...",
-    suiteStepCirc: "PASSO 2/3: Ruota entrambi gli stick lentamente a 360°...",
-    suiteStepSnap: "PASSO 3/3: Sposta lo stick al limite e rilascialo di colpo...",
-    suiteDone: "✓ Diagnostica stick completata.",
+    verdictTesting: "IN PROVA",
     savedSuccess: "✓ Diagnostica salvata per l'articolo:",
-    instructionStep1: "Passo 1: Premi tutti i pulsanti finché non diventano verdi.",
+    instructionStep1: "Passo 1: Premi tutti i pulsanti (3 volte ciascuno).",
     instructionStep2: "Passo 2: Premi a fondo entrambi i grilletti (L2 e R2).",
-    instructionStep3: "Passo 3: Ruota lo Stick Sinistro in cerchi completi a 360°.",
-    instructionStep4: "Passo 4: Ruota lo Stick Destro in cerchi completi a 360°.",
+    instructionStep3: "Passo 3: Esegui il test dello Stick Sinistro.",
+    instructionStep4: "Passo 4: Esegui il test dello Stick Destro.",
     instructionStep5: "Passo 5: Revisione completata. Clicca Salva o Stampa rapporto.",
+    promptStickRest: "Riposo: Non toccare lo stick (2s)...",
+    promptStickMove: "Movimento: Muovi lentamente lo stick in cerchio (8 zone)",
+    printReportTitle: "ISPEZIONE TECNICA DI CONTROLLO QUALITÀ",
+    printReportSubtitle: "Gamepad Quality Assurance & Diagnostic Certificate",
+    printItemCodeLbl: "Codice Articolo:",
+    printDateLbl: "Data e Ora:",
+    printStationLbl: "Postazione:",
+    printStationVal: "Banco Tecnico #1",
+    printDeviceLbl: "Dispositivo:",
+    printProfileLbl: "Profilo:",
+    printHwIdLbl: "Identificatore Hardware:",
+    printSectionSticks: "1. DIAGNOSTICA STICK ANALOGICI (DRIFT E MOVIMENTO)",
+    printSectionTriggers: "2. VALIDAZIONE GRILLETTI ANALOGICI (L2 / R2)",
+    printSectionButtons: "3. MATRICE PULSANTI FISICI",
+    printThComponent: "Componente",
+    printThDrift: "Deriva Riposo (Drift)",
+    printThJitter: "Jitter / Rumore",
+    printThZones: "Movimento (8 Zone)",
+    printThTrigger: "Grilletto",
+    printThRestVal: "Valore Riposo",
+    printThMaxVal: "Corsa Massima",
+    printThLinearity: "Linearità Pressione",
+    printThVerdict: "Verdetto",
+    printTechnicalDetailsLbl: "Dettagli Tecnici Stick L:",
+    printTechnicalDetailsR: "Stick R:",
+    printBtnCountLbl: "Pulsanti Convalidati:",
+    printBtnStuckLbl: "Pulsanti Bloccati:",
+    printBtnVerdictLbl: "Verdetto Pulsanti:",
+    printVerdictDetails: "Il controller soddisfa tutte le specifiche commerciali per la rivendita.",
+    printNotesLbl: "Osservazioni / Intervento effettuato:",
+    printSigLbl: "Firma del Tecnico:",
+    stickOk: "✓ Corretto",
+    stickReview: "⚠ Revisione",
+    stickBad: "✕ Difettoso",
+    triggerOk: "✓ Progressivo",
+    triggerRestFail: "✕ Errore Riposo",
+    triggerRangeFail: "⚠ Corsa Incompleta",
+    noneWord: "Nessuno",
   },
   fr: {
     appTitle: "Gamepad Tester Pro",
@@ -245,11 +360,15 @@ const TRANSLATIONS = {
     stickTestTitle: "Sticks Analogiques — Analyse Cartésienne",
     btnZoomCenter: "🔍 Micro-Centre",
     btnFullSuite: "⚡ Suite Sticks",
-    btnDriftTest: "▶ Test Repos (3s)",
+    btnDriftTest: "▶ Test Repos (2s)",
     btnClearTrace: "🔄 Effacer",
     stickLeftLabel: "STICK GAUCHE",
     stickRightLabel: "STICK DROIT",
+    phaseRest: "Repos",
+    phaseMove: "Mouvement",
+    phaseResult: "Résultat",
     metricOffset: "Déviation:",
+    metricZones: "8 Zones:",
     metricCircularity: "Circ:",
     triggersTestTitle: "Gâchettes Analogiques (L2 / R2)",
     triggersPending: "En attente",
@@ -277,16 +396,51 @@ const TRANSLATIONS = {
     verdictReview: "RÉVISION",
     verdictFail: "DÉFECTUEUX",
     verdictPending: "EN ATTENTE",
-    suiteStepRest: "ÉTAPE 1/3: Ne touchez pas aux sticks. Mesure repos et jitter (3s)...",
-    suiteStepCirc: "ÉTAPE 2/3: Tournez lentement les deux sticks à 360° sur le bord...",
-    suiteStepSnap: "ÉTAPE 3/3: Poussez le stick au bord et relâchez-le d'un coup...",
-    suiteDone: "✓ Diagnostic des sticks terminé.",
+    verdictTesting: "EN COURS",
     savedSuccess: "✓ Diagnostic enregistré pour l'article:",
-    instructionStep1: "Étape 1: Appuyez sur tous les boutons jusqu'à ce qu'ils soient verts.",
+    instructionStep1: "Étape 1: Appuyez sur tous les boutons (3 fois chacun).",
     instructionStep2: "Étape 2: Pressez à fond les deux gâchettes (L2 et R2).",
-    instructionStep3: "Étape 3: Tournez le Stick Gauche en cercles complets à 360°.",
-    instructionStep4: "Étape 4: Tournez le Stick Droit en cercles complets à 360°.",
+    instructionStep3: "Étape 3: Testez le Stick Gauche.",
+    instructionStep4: "Étape 4: Testez le Stick Droit.",
     instructionStep5: "Étape 5: Inspection terminée. Cliquez sur Sauvegarder ou Imprimer.",
+    promptStickRest: "Repos: Ne touchez pas au stick (2s)...",
+    promptStickMove: "Mouvement: Tournez lentement le stick en cercle (8 zones)",
+    printReportTitle: "INSPECTION TECHNIQUE DE CONTRÔLE QUALITÉ",
+    printReportSubtitle: "Gamepad Quality Assurance & Diagnostic Certificate",
+    printItemCodeLbl: "Code Article:",
+    printDateLbl: "Date et Heure:",
+    printStationLbl: "Poste:",
+    printStationVal: "Banc Technique #1",
+    printDeviceLbl: "Appareil:",
+    printProfileLbl: "Profil:",
+    printHwIdLbl: "Identifiant Matériel:",
+    printSectionSticks: "1. DIAGNOSTIC DES STICKS ANALOGIQUES (DRIFT ET MOUVEMENT)",
+    printSectionTriggers: "2. VALIDATION DES GÂCHETTES ANALOGIQUES (L2 / R2)",
+    printSectionButtons: "3. MATRICE DES BOUTONS PHYSIQUES",
+    printThComponent: "Composant",
+    printThDrift: "Dérive Repos (Drift)",
+    printThJitter: "Jitter / Bruit",
+    printThZones: "Mouvement (8 Zones)",
+    printThTrigger: "Gâchette",
+    printThRestVal: "Valeur Repos",
+    printThMaxVal: "Course Maximale",
+    printThLinearity: "Linéarité Pression",
+    printThVerdict: "Verdict",
+    printTechnicalDetailsLbl: "Détails Techniques Stick G:",
+    printTechnicalDetailsR: "Stick D:",
+    printBtnCountLbl: "Boutons Validés:",
+    printBtnStuckLbl: "Boutons Bloqués:",
+    printBtnVerdictLbl: "Verdict Boutons:",
+    printVerdictDetails: "La manette répond à toutes les spécifications de revente commerciale.",
+    printNotesLbl: "Remarques / Intervention réalisée:",
+    printSigLbl: "Signature du Technicien:",
+    stickOk: "✓ Conforme",
+    stickReview: "⚠ Révision",
+    stickBad: "✕ Défectueux",
+    triggerOk: "✓ Progressif",
+    triggerRestFail: "✕ Échec Repos",
+    triggerRangeFail: "⚠ Course Incomplète",
+    noneWord: "Aucun",
   },
   de: {
     appTitle: "Gamepad Tester Pro",
@@ -312,11 +466,15 @@ const TRANSLATIONS = {
     stickTestTitle: "Analogsticks — Kartesische Analyse",
     btnZoomCenter: "🔍 Mikro-Zentrum",
     btnFullSuite: "⚡ Stick-Suite",
-    btnDriftTest: "▶ Ruhe-Test (3s)",
+    btnDriftTest: "▶ Ruhe-Test (2s)",
     btnClearTrace: "🔄 Löschen",
     stickLeftLabel: "LINKER STICK",
     stickRightLabel: "RECHTER STICK",
+    phaseRest: "Ruhe",
+    phaseMove: "Bewegung",
+    phaseResult: "Ergebnis",
     metricOffset: "Abweichung:",
+    metricZones: "8 Zonen:",
     metricCircularity: "Rundheit:",
     triggersTestTitle: "Analoge Trigger (L2 / R2)",
     triggersPending: "Ausstehend",
@@ -344,16 +502,51 @@ const TRANSLATIONS = {
     verdictReview: "PRÜFUNG",
     verdictFail: "DEFEKT",
     verdictPending: "AUSSTEHEND",
-    suiteStepRest: "SCHRITT 1/3: Sticks nicht berühren. Messung Ruhe und Jitter (3s)...",
-    suiteStepCirc: "SCHRITT 2/3: Beide Sticks langsam in vollständigen 360°-Kreisen drehen...",
-    suiteStepSnap: "SCHRITT 3/3: Stick an den Rand drücken und schlagartig loslassen...",
-    suiteDone: "✓ Stick-Diagnose abgeschlossen.",
+    verdictTesting: "IN PRÜFUNG",
     savedSuccess: "✓ Prüfbericht gespeichert für Artikel:",
-    instructionStep1: "Schritt 1: Alle Tasten drücken, bis sie grün aufleuchten.",
+    instructionStep1: "Schritt 1: Alle Tasten drücken (je 3 Mal).",
     instructionStep2: "Schritt 2: Beide analogen Trigger voll durchdrücken (L2 und R2).",
-    instructionStep3: "Schritt 3: Den linken Stick in vollen 360°-Kreisen drehen.",
-    instructionStep4: "Schritt 4: Den rechten Stick in vollen 360°-Kreisen drehen.",
+    instructionStep3: "Schritt 3: Linken Stick testen.",
+    instructionStep4: "Schritt 4: Rechten Stick testen.",
     instructionStep5: "Schritt 5: Prüfung abgeschlossen. Prüfbericht speichern oder drucken.",
+    promptStickRest: "Ruhe: Stick nicht berühren (2s)...",
+    promptStickMove: "Bewegung: Stick langsam im Kreis bewegen (8 Zonen)",
+    printReportTitle: "TECHNISCHE QUALITÄTSPRÜFUNG",
+    printReportSubtitle: "Gamepad Quality Assurance & Diagnostic Certificate",
+    printItemCodeLbl: "Artikel-Nr.:",
+    printDateLbl: "Datum und Uhrzeit:",
+    printStationLbl: "Prüfplatz:",
+    printStationVal: "Technik-Bank #1",
+    printDeviceLbl: "Gerät:",
+    printProfileLbl: "Profil:",
+    printHwIdLbl: "Hardware-ID:",
+    printSectionSticks: "1. ANALOGSTICKS-DIAGNOSE (DRIFT & BEWEGUNG)",
+    printSectionTriggers: "2. ANALOG-TRIGGER VALIDIERUNG (L2 / R2)",
+    printSectionButtons: "3. PHYSISCHE TASTENMATRIX",
+    printThComponent: "Komponente",
+    printThDrift: "Ruhe-Drift",
+    printThJitter: "Jitter / Rauschen",
+    printThZones: "Bewegung (8 Zonen)",
+    printThTrigger: "Trigger",
+    printThRestVal: "Ruhewert",
+    printThMaxVal: "Maximalweg",
+    printThLinearity: "Druck-Linearität",
+    printThVerdict: "Urteil",
+    printTechnicalDetailsLbl: "Technische Details Stick L:",
+    printTechnicalDetailsR: "Stick R:",
+    printBtnCountLbl: "Validierte Tasten:",
+    printBtnStuckLbl: "Klemmende Tasten:",
+    printBtnVerdictLbl: "Tasten-Urteil:",
+    printVerdictDetails: "Der Controller entspricht allen Prüfvorgaben für den Wiederverkauf.",
+    printNotesLbl: "Bemerkungen / Durchgeführte Arbeiten:",
+    printSigLbl: "Unterschrift des Technikers:",
+    stickOk: "✓ In Ordnung",
+    stickReview: "⚠ Prüfung",
+    stickBad: "✕ Defekt",
+    triggerOk: "✓ Progressiv",
+    triggerRestFail: "✕ Ruhe-Fehler",
+    triggerRangeFail: "⚠ Unvollständig",
+    noneWord: "Keiner",
   }
 };
 
@@ -379,11 +572,19 @@ function setLanguage(lang) {
     localStorage.setItem('gamepad_tester_lang', lang);
   } catch (e) {}
 
-  // Update floating trigger button flag
+  // Update floating trigger button
   const flag = LANG_FLAGS[lang] || '🇪🇸';
   if (dom.langTrigger) {
-    dom.langTrigger.textContent = flag;
+    dom.langTrigger.innerHTML = `
+      <span class="flag-icon">${flag}</span>
+      <span class="lang-code">${lang.toUpperCase()}</span>
+    `;
   }
+
+  // Update menu active button state
+  document.querySelectorAll('#lang-menu .lang-opt').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.lang === lang);
+  });
 
   // Update DOM elements with data-i18n
   document.querySelectorAll('[data-i18n]').forEach(el => {
@@ -411,11 +612,7 @@ function initLanguage() {
   try {
     saved = localStorage.getItem('gamepad_tester_lang');
   } catch (e) {}
-
-  if (!saved) {
-    const nav = (navigator.language || 'es').slice(0, 2).toLowerCase();
-    if (TRANSLATIONS[nav]) saved = nav;
-  }
+  // Default is always Spanish
   setLanguage(saved || 'es');
 }
 
@@ -704,20 +901,20 @@ const dom = {
   stickRSnapVal:       document.getElementById('stick-r-snap-val'),
   driftResult:         document.getElementById('drift-result'),
 
-  // 3-Phase Checklist Elements
+  // Simplified Stick Status Elements (Reposo, Movimiento, Resultado)
   phaseLRestItem:      document.getElementById('phase-l-rest'),
   phaseLRestVal:       document.getElementById('phase-l-rest-val'),
   phaseLMoveItem:      document.getElementById('phase-l-move'),
   phaseLMoveVal:       document.getElementById('phase-l-move-val'),
-  phaseLSnapItem:      document.getElementById('phase-l-snap'),
-  phaseLSnapVal:       document.getElementById('phase-l-snap-val'),
+  phaseLResultItem:    document.getElementById('phase-l-result'),
+  phaseLResultVal:     document.getElementById('phase-l-result-val'),
 
   phaseRRestItem:      document.getElementById('phase-r-rest'),
   phaseRRestVal:       document.getElementById('phase-r-rest-val'),
   phaseRMoveItem:      document.getElementById('phase-r-move'),
   phaseRMoveVal:       document.getElementById('phase-r-move-val'),
-  phaseRSnapItem:      document.getElementById('phase-r-snap'),
-  phaseRSnapVal:       document.getElementById('phase-r-snap-val'),
+  phaseRResultItem:    document.getElementById('phase-r-result'),
+  phaseRResultVal:     document.getElementById('phase-r-result-val'),
 
   // Triggers
   triggersSummaryTag:  document.getElementById('triggers-summary-tag'),
@@ -1258,8 +1455,8 @@ function startStickPhase(stick, newPhase) {
   const restVal  = isLeft ? dom.phaseLRestVal  : dom.phaseRRestVal;
   const moveItem = isLeft ? dom.phaseLMoveItem : dom.phaseRMoveItem;
   const moveVal  = isLeft ? dom.phaseLMoveVal  : dom.phaseRMoveVal;
-  const snapItem = isLeft ? dom.phaseLSnapItem : dom.phaseRSnapItem;
-  const snapVal  = isLeft ? dom.phaseLSnapVal  : dom.phaseRSnapVal;
+  const resultItem = isLeft ? dom.phaseLResultItem : dom.phaseRResultItem;
+  const resultVal  = isLeft ? dom.phaseLResultVal  : dom.phaseRResultVal;
   const badgeEl  = isLeft ? dom.stickLVerdict  : dom.stickRVerdict;
 
   if (badgeEl && !m.completed) {
@@ -1272,10 +1469,10 @@ function startStickPhase(stick, newPhase) {
     m.restSamples = [];
     if (restItem) restItem.className = 'stick-phase-item phase-active';
     if (restVal)  restVal.textContent = '⏱ 2.0s';
+    if (resultItem) resultItem.className = 'stick-phase-item';
+    if (resultVal)  resultVal.textContent = '—';
     if (dom.guidedInstructionText) {
-      dom.guidedInstructionText.textContent = isLeft 
-        ? "Stick Izquierdo — Reposo: No toques el stick (2s)..." 
-        : "Stick Derecho — Reposo: No toques el stick (2s)...";
+      dom.guidedInstructionText.textContent = `${isLeft ? t('stickLeftLabel') : t('stickRightLabel')} — ${t('promptStickRest')}`;
     }
   } else if (newPhase === 'MOVE') {
     m.prevMovePos = null;
@@ -1283,20 +1480,7 @@ function startStickPhase(stick, newPhase) {
     if (moveItem) moveItem.className = 'stick-phase-item phase-active';
     if (moveVal)  moveVal.textContent = `${m.coverage || 0}/8`;
     if (dom.guidedInstructionText) {
-      dom.guidedInstructionText.textContent = isLeft
-        ? "Stick Izquierdo — Movimiento: Mueve el stick lentamente en un círculo (8 zonas)"
-        : "Stick Derecho — Movimiento: Mueve el stick lentamente en un círculo (8 zonas)";
-    }
-  } else if (newPhase === 'RETURN') {
-    m.returnStartTime = performance.now();
-    m.returnStabilizeStart = 0;
-    m.returnSamples = [];
-    if (snapItem) snapItem.className = 'stick-phase-item phase-active';
-    if (snapVal)  snapVal.textContent = '○';
-    if (dom.guidedInstructionText) {
-      dom.guidedInstructionText.textContent = isLeft
-        ? "Stick Izquierdo — Retorno: Suelta el stick"
-        : "Stick Derecho — Retorno: Suelta el stick";
+      dom.guidedInstructionText.textContent = `${isLeft ? t('stickLeftLabel') : t('stickRightLabel')} — ${t('promptStickMove')}`;
     }
   }
 }
@@ -1307,20 +1491,25 @@ function finishStickDiagnostic(stick) {
   m.phase = 'DONE';
   m.completed = true;
 
-  // Update Snap UI
-  const snapItem = isLeft ? dom.phaseLSnapItem : dom.phaseRSnapItem;
-  const snapVal  = isLeft ? dom.phaseLSnapVal  : dom.phaseRSnapVal;
-  if (snapItem) snapItem.className = `stick-phase-item phase-${(m.returnVerdict || 'pass').toLowerCase()}`;
-  if (snapVal)  snapVal.textContent = (m.returnVerdict === 'PASS') ? '✓' : (m.returnVerdict === 'REVIEW' ? '!' : '✕');
-
-  // Authoritative Stick Verdict = worst of the 3 phases
-  const phases = [m.restVerdict, m.moveVerdict, m.returnVerdict].filter(Boolean);
-  if (phases.includes('FAIL')) {
+  // Authoritative Stick Verdict = ONLY based on Rest & Movement
+  // Return-to-center NEVER affects commercial PASS / REVIEW / FAIL
+  const relevantPhases = [m.restVerdict, m.moveVerdict].filter(Boolean);
+  if (relevantPhases.includes('FAIL')) {
     m.verdict = 'FAIL';
-  } else if (phases.includes('REVIEW')) {
+  } else if (relevantPhases.includes('REVIEW')) {
     m.verdict = 'REVIEW';
   } else {
     m.verdict = 'PASS';
+  }
+
+  // Update Resultado item in UI
+  const resultItem = isLeft ? dom.phaseLResultItem : dom.phaseRResultItem;
+  const resultVal  = isLeft ? dom.phaseLResultVal  : dom.phaseRResultVal;
+  if (resultItem) {
+    resultItem.className = `stick-phase-item phase-${m.verdict.toLowerCase()}`;
+  }
+  if (resultVal) {
+    resultVal.textContent = (m.verdict === 'PASS') ? t('verdictPass') : (m.verdict === 'REVIEW' ? t('verdictReview') : t('verdictFail'));
   }
 
   // Update Stick Badge
@@ -1328,17 +1517,17 @@ function finishStickDiagnostic(stick) {
   if (badgeEl) {
     if (m.verdict === 'PASS') {
       badgeEl.className = 'stick-verdict-badge badge-pass';
-      badgeEl.textContent = 'APTO';
+      badgeEl.textContent = t('verdictPass');
     } else if (m.verdict === 'REVIEW') {
       badgeEl.className = 'stick-verdict-badge badge-review';
-      badgeEl.textContent = 'REVISAR';
+      badgeEl.textContent = t('verdictReview');
     } else {
       badgeEl.className = 'stick-verdict-badge badge-fail';
-      badgeEl.textContent = 'FALLO';
+      badgeEl.textContent = t('verdictFail');
     }
   }
 
-  // If Left stick completed: Automatically start Right stick!
+  // Auto-advance to Right stick if Left completed
   if (isLeft) {
     const mr = state.stickMetrics.r;
     if (!mr.completed && mr.phase === 'IDLE') {
@@ -1358,11 +1547,20 @@ function updateStickPhaseStateMachine(stick, x, y, dist, angle, now) {
   const restVal  = isLeft ? dom.phaseLRestVal  : dom.phaseRRestVal;
   const moveItem = isLeft ? dom.phaseLMoveItem : dom.phaseRMoveItem;
   const moveVal  = isLeft ? dom.phaseLMoveVal  : dom.phaseRMoveVal;
-  const snapItem = isLeft ? dom.phaseLSnapItem : dom.phaseRSnapItem;
-  const snapVal  = isLeft ? dom.phaseLSnapVal  : dom.phaseRSnapVal;
 
   const currentStep = getCurrentActiveStep();
   const isTargetStep = isLeft ? (currentStep === 3) : (currentStep === 4);
+
+  // Background return-to-center telemetry measurement (Internal / Hardware raw info only)
+  if (dist < 0.15 && m.returnStartTime > 0 && !m.returnTime) {
+    const elapsedReturn = Math.round(now - m.returnStartTime);
+    m.returnTime = elapsedReturn;
+    m.returnOffset = parseFloat(dist.toFixed(4));
+    m.returnVerdict = (dist <= BENCHMARKS.STICK.RETURN_PASS) ? 'PASS' : (dist <= BENCHMARKS.STICK.RETURN_REVIEW ? 'REVIEW' : 'FAIL');
+    m.tests.returnToCenter = m.returnVerdict;
+    if (isLeft && dom.stickLSnapVal) dom.stickLSnapVal.textContent = `${elapsedReturn}ms (${dist.toFixed(3)})`;
+    else if (!isLeft && dom.stickRSnapVal) dom.stickRSnapVal.textContent = `${elapsedReturn}ms (${dist.toFixed(3)})`;
+  }
 
   // If in IDLE and it's our turn to test, start Phase 1 (REST)
   if (m.phase === 'IDLE' && isTargetStep && state.activeGpIndex !== null) {
@@ -1379,7 +1577,6 @@ function updateStickPhaseStateMachine(stick, x, y, dist, angle, now) {
   // PASS: sustained deviation approximately <= 0.05–0.06
   // REVIEW: approximately 0.06–0.10
   // FAIL: persistent deviation approximately > 0.10–0.12
-  // Minor noise is acceptable. Do not fail from one isolated frame.
   if (m.phase === 'REST') {
     // If operator is pushing the stick (dist > 0.30), wait for release before counting 2s
     if (dist > 0.30) {
@@ -1452,10 +1649,9 @@ function updateStickPhaseStateMachine(stick, x, y, dist, angle, now) {
   // ── PHASE 2: MOVIMIENTO (8 DIRECTIONAL ZONES & MOVEMENT STABILITY) ──
   // Evaluated using USED / SECOND-HAND tolerances:
   // 8/8: PASS candidate
-  // 7/8: allow PASS if movement, range and return are otherwise healthy
+  // 7/8: allow PASS if movement and range are otherwise healthy
   // 6/8: normally REVIEW
   // 5/8 or less: FAIL or strong REVIEW depending on actual response
-  // Minor noise is acceptable. Do not fail on one fast movement or single frame.
   if (m.phase === 'MOVE') {
     if (!m.moveStartTime) m.moveStartTime = now;
 
@@ -1499,9 +1695,9 @@ function updateStickPhaseStateMachine(stick, x, y, dist, angle, now) {
     }
 
     // Phase 2 completion:
-    // - 7/8 or 8/8 reached: immediate transition
-    // - Or if moving for at least 4s and released (dist <= 0.30) with at least 5 directions: advance
-    // - Or timeout after 7.5s and released: advance (never trap the technician!)
+    // - 7/8 or 8/8 reached: immediate completion
+    // - Or moving for at least 4s and released (dist <= 0.30) with at least 5 directions: advance
+    // - Or timeout after 7.5s and released: advance (never trap technician)
     const moveElapsed = now - m.moveStartTime;
     const canAdvancePartial = (visitedCount >= 5 && moveElapsed >= 4000 && dist <= 0.30);
     const timeoutAdvance = (moveElapsed >= 7500 && dist <= 0.30);
@@ -1515,11 +1711,7 @@ function updateStickPhaseStateMachine(stick, x, y, dist, angle, now) {
       m.range = parseFloat(maxRange.toFixed(3));
       m.circularity = Math.round((visitedCount / 8) * 100);
 
-      // Evaluate Movement Quality according to USED / SECOND-HAND CONTROLLER TOLERANCES:
-      // 8/8: PASS candidate
-      // 7/8: allow PASS if movement, range and return are otherwise healthy
-      // 6/8: normally REVIEW
-      // 5/8 or less: FAIL or strong REVIEW depending on actual response
+      // Evaluate Movement Quality according to USED / SECOND-HAND CONTROLLER TOLERANCES
       let moveVerdict = 'PASS';
 
       if (visitedCount <= 4 || m.moveDropouts >= 4 || m.moveGlitches >= 5 || deadDirections >= 4) {
@@ -1529,14 +1721,12 @@ function updateStickPhaseStateMachine(stick, x, y, dist, angle, now) {
       } else if (visitedCount === 6) {
         moveVerdict = 'REVIEW';
       } else if (visitedCount === 7) {
-        // 7/8: allow PASS if movement and range are otherwise healthy
         if (m.moveDropouts >= 2 || m.moveGlitches >= 2 || avgRange < 0.70) {
           moveVerdict = 'REVIEW';
         } else {
           moveVerdict = 'PASS';
         }
       } else {
-        // 8/8: PASS candidate
         if (m.moveDropouts >= 2 || m.moveGlitches >= 2 || avgRange < 0.70) {
           moveVerdict = 'REVIEW';
         } else {
@@ -1559,69 +1749,13 @@ function updateStickPhaseStateMachine(stick, x, y, dist, angle, now) {
         moveVal.textContent = `${visitedCount}/8 ${symbol}`;
       }
 
-      // Automatically transition to Phase 3: RETORNO
-      startStickPhase(stick, 'RETURN');
+      // Mark return start time for passive background telemetry
+      m.returnStartTime = now;
+
+      // Stick diagnostic completes immediately upon completing movement test!
+      finishStickDiagnostic(stick);
     }
     return;
-  }
-
-  // ── PHASE 3: RETORNO (RETURN TO CENTER & STABILIZATION) ──────
-  // Evaluated using USED / SECOND-HAND tolerances:
-  // PASS: returns approximately within radius 0.07–0.08 and remains stable
-  // REVIEW: approximately 0.08–0.12 sustained
-  // FAIL: remains significantly displaced beyond approximately 0.12
-  if (m.phase === 'RETURN') {
-    // Wait until stick enters center region (dist <= 0.16)
-    if (dist <= 0.16) {
-      if (!m.returnStabilizeStart) {
-        m.returnStabilizeStart = now;
-        m.returnSamples = [];
-        if (snapVal) snapVal.textContent = '⏱';
-      }
-      m.returnSamples.push(dist);
-
-      const stabilizeElapsed = now - m.returnStabilizeStart;
-      // Wait 300ms for stabilization (250-400ms window)
-      if (stabilizeElapsed >= 300) {
-        const returnOffset = m.returnSamples.length > 0 ? (m.returnSamples.reduce((a, b) => a + b, 0) / m.returnSamples.length) : dist;
-        const returnDuration = Math.round(now - m.returnStartTime);
-
-        m.returnTime = returnDuration;
-        m.returnOffset = parseFloat(returnOffset.toFixed(4));
-
-        if (isLeft && dom.stickLSnapVal) {
-          dom.stickLSnapVal.textContent = `${returnDuration}ms`;
-        } else if (!isLeft && dom.stickRSnapVal) {
-          dom.stickRSnapVal.textContent = `${returnDuration}ms`;
-        }
-
-        // Return evaluation:
-        // Returns cleanly <= 0.080: PASS | Slight offset <= 0.120: REVIEW | Failed return > 0.120: FAIL
-        if (returnOffset <= BENCHMARKS.STICK.RETURN_PASS) {
-          m.returnVerdict = 'PASS';
-        } else if (returnOffset <= BENCHMARKS.STICK.RETURN_REVIEW) {
-          m.returnVerdict = 'REVIEW';
-        } else {
-          m.returnVerdict = 'FAIL';
-        }
-        m.tests.returnToCenter = m.returnVerdict;
-
-        finishStickDiagnostic(stick);
-      }
-    } else {
-      // If stick is held/stuck outside for > 2500ms
-      const elapsedSinceRelease = now - m.returnStartTime;
-      if (elapsedSinceRelease > 2500) {
-        m.returnTime = 2500;
-        m.returnOffset = dist;
-        m.returnVerdict = 'FAIL';
-        m.tests.returnToCenter = 'FAIL';
-        if (isLeft && dom.stickLSnapVal) dom.stickLSnapVal.textContent = '>2500ms';
-        else if (!isLeft && dom.stickRSnapVal) dom.stickRSnapVal.textContent = '>2500ms';
-
-        finishStickDiagnostic(stick);
-      }
-    }
   }
 }
 
@@ -1659,16 +1793,16 @@ function resetStickDiagnostics(stick) {
   const restVal  = isLeft ? dom.phaseLRestVal  : dom.phaseRRestVal;
   const moveItem = isLeft ? dom.phaseLMoveItem : dom.phaseRMoveItem;
   const moveVal  = isLeft ? dom.phaseLMoveVal  : dom.phaseRMoveVal;
-  const snapItem = isLeft ? dom.phaseLSnapItem : dom.phaseRSnapItem;
-  const snapVal  = isLeft ? dom.phaseLSnapVal  : dom.phaseRSnapVal;
+  const resultItem = isLeft ? dom.phaseLResultItem : dom.phaseRResultItem;
+  const resultVal  = isLeft ? dom.phaseLResultVal  : dom.phaseRResultVal;
   const badgeEl  = isLeft ? dom.stickLVerdict  : dom.stickRVerdict;
 
   if (restItem) restItem.className = 'stick-phase-item';
   if (restVal)  restVal.textContent = '○';
   if (moveItem) moveItem.className = 'stick-phase-item';
   if (moveVal)  moveVal.textContent = '0/8';
-  if (snapItem) snapItem.className = 'stick-phase-item';
-  if (snapVal)  snapVal.textContent = '○';
+  if (resultItem) resultItem.className = 'stick-phase-item';
+  if (resultVal)  resultVal.textContent = '—';
   if (badgeEl) {
     badgeEl.className = 'stick-verdict-badge badge-pending';
     badgeEl.textContent = t('verdictPending');
@@ -1678,6 +1812,9 @@ function resetStickDiagnostics(stick) {
 function evaluateStickOverall(stick) {
   const m = state.stickMetrics[stick];
   const badgeEl = stick === 'l' ? dom.stickLVerdict : dom.stickRVerdict;
+  const isLeft = (stick === 'l');
+  const resultItem = isLeft ? dom.phaseLResultItem : dom.phaseRResultItem;
+  const resultVal  = isLeft ? dom.phaseLResultVal  : dom.phaseRResultVal;
 
   if (!m.completed) {
     if (m.phase !== 'IDLE') {
@@ -1686,36 +1823,48 @@ function evaluateStickOverall(stick) {
         badgeEl.className = 'stick-verdict-badge badge-testing';
         badgeEl.textContent = t('verdictTesting') || 'EN PRUEBA';
       }
+      if (resultItem) resultItem.className = 'stick-phase-item phase-active';
+      if (resultVal)  resultVal.textContent = '…';
     } else {
       m.verdict = 'PENDING';
       if (badgeEl) {
         badgeEl.className = 'stick-verdict-badge badge-pending';
         badgeEl.textContent = t('verdictPending');
       }
+      if (resultItem) resultItem.className = 'stick-phase-item';
+      if (resultVal)  resultVal.textContent = '—';
     }
     return;
   }
 
-  // If completed, stick has authoritative verdict (worst of the 3 phases)
-  const phases = [m.restVerdict, m.moveVerdict, m.returnVerdict].filter(Boolean);
-  if (phases.includes('FAIL')) {
+  // Authoritative Stick Verdict: derived SOLELY from Rest and Movement quality
+  // Return-to-center NEVER modifies commercial pass/review/fail
+  const relevantPhases = [m.restVerdict, m.moveVerdict].filter(Boolean);
+  if (relevantPhases.includes('FAIL')) {
     m.verdict = 'FAIL';
-  } else if (phases.includes('REVIEW')) {
+  } else if (relevantPhases.includes('REVIEW')) {
     m.verdict = 'REVIEW';
   } else {
     m.verdict = 'PASS';
   }
 
+  if (resultItem) {
+    resultItem.className = `stick-phase-item phase-${m.verdict.toLowerCase()}`;
+  }
+  if (resultVal) {
+    resultVal.textContent = (m.verdict === 'PASS') ? t('verdictPass') : (m.verdict === 'REVIEW' ? t('verdictReview') : t('verdictFail'));
+  }
+
   if (badgeEl) {
     if (m.verdict === 'PASS') {
       badgeEl.className = 'stick-verdict-badge badge-pass';
-      badgeEl.textContent = 'APTO';
+      badgeEl.textContent = t('verdictPass');
     } else if (m.verdict === 'REVIEW') {
       badgeEl.className = 'stick-verdict-badge badge-review';
-      badgeEl.textContent = 'REVISAR';
+      badgeEl.textContent = t('verdictReview');
     } else {
       badgeEl.className = 'stick-verdict-badge badge-fail';
-      badgeEl.textContent = 'FALLO';
+      badgeEl.textContent = t('verdictFail');
     }
   }
 
@@ -2421,21 +2570,19 @@ function updateWorkflowProgress() {
     if (dom.checkCert) dom.checkCert.textContent = certDone ? '✓' : '○';
   }
 
-  // Dynamic instruction banner
+  // Dynamic instruction banner (Clean, concise, multilingual)
   if (dom.guidedInstructionText) {
     if (activeStep === 1) {
       dom.guidedInstructionText.textContent = `${t('instructionStep1')} (${passedBtns}/${totalBtns})`;
     } else if (activeStep === 2) {
       dom.guidedInstructionText.textContent = t('instructionStep2');
     } else if (activeStep === 3) {
-      if (sl.phase === 'REST') dom.guidedInstructionText.textContent = "Stick Izquierdo — Reposo: No toques el stick (2s)...";
-      else if (sl.phase === 'MOVE') dom.guidedInstructionText.textContent = `Stick Izquierdo — Movimiento: Mueve el stick lentamente en un círculo (${sl.coverage || 0}/8)`;
-      else if (sl.phase === 'RETURN') dom.guidedInstructionText.textContent = "Stick Izquierdo — Retorno: Suelta el stick";
+      if (sl.phase === 'REST') dom.guidedInstructionText.textContent = `${t('stickLeftLabel')} — ${t('promptStickRest')}`;
+      else if (sl.phase === 'MOVE') dom.guidedInstructionText.textContent = `${t('stickLeftLabel')} — ${t('promptStickMove')} (${sl.coverage || 0}/8)`;
       else dom.guidedInstructionText.textContent = t('instructionStep3');
     } else if (activeStep === 4) {
-      if (sr.phase === 'REST') dom.guidedInstructionText.textContent = "Stick Derecho — Reposo: No toques el stick (2s)...";
-      else if (sr.phase === 'MOVE') dom.guidedInstructionText.textContent = `Stick Derecho — Movimiento: Mueve el stick lentamente en un círculo (${sr.coverage || 0}/8)`;
-      else if (sr.phase === 'RETURN') dom.guidedInstructionText.textContent = "Stick Derecho — Retorno: Suelta el stick";
+      if (sr.phase === 'REST') dom.guidedInstructionText.textContent = `${t('stickRightLabel')} — ${t('promptStickRest')}`;
+      else if (sr.phase === 'MOVE') dom.guidedInstructionText.textContent = `${t('stickRightLabel')} — ${t('promptStickMove')} (${sr.coverage || 0}/8)`;
       else dom.guidedInstructionText.textContent = t('instructionStep4');
     } else {
       dom.guidedInstructionText.textContent = t('instructionStep5');
@@ -2712,15 +2859,13 @@ function populatePrintReport(record) {
   const sl = record ? record.stickL : state.stickMetrics.l;
   const sr = record ? record.stickR : state.stickMetrics.r;
 
-  const slCirc = sl.circularity !== undefined ? sl.circularity : (sl.circ !== undefined ? sl.circ : null);
   const slSnap = sl.returnTime !== undefined ? sl.returnTime : (sl.snap !== undefined ? sl.snap : null);
-  const srCirc = sr.circularity !== undefined ? sr.circularity : (sr.circ !== undefined ? sr.circ : null);
   const srSnap = sr.returnTime !== undefined ? sr.returnTime : (sr.snap !== undefined ? sr.snap : null);
 
-  const formatStickVerdict = (v) => {
-    if (v === 'PASS') return '✓ Correcto';
-    if (v === 'REVIEW') return '⚠ Requiere revisión';
-    if (v === 'FAIL') return '✕ Defectuoso';
+  const formatVerdict = (v) => {
+    if (v === 'PASS') return t('stickOk');
+    if (v === 'REVIEW') return t('stickReview');
+    if (v === 'FAIL') return t('stickBad');
     return '—';
   };
   const getBadgeClass = (v) => {
@@ -2730,74 +2875,76 @@ function populatePrintReport(record) {
     return 'print-badge';
   };
 
-  // Left Stick Customer Metrics
+  // Left Stick Commercial Metrics
   if (dom.printSlDrift) {
     dom.printSlDrift.textContent = sl.drift !== null && sl.drift !== undefined
-      ? (sl.drift <= 0.060 ? `✓ Estable (${sl.drift.toFixed(3)})` : (sl.drift <= 0.105 ? `! Leve (${sl.drift.toFixed(3)})` : `✕ Deriva (${sl.drift.toFixed(3)})`))
+      ? (sl.drift <= 0.060 ? `✓ ${sl.drift.toFixed(3)}` : (sl.drift <= 0.105 ? `! ${sl.drift.toFixed(3)}` : `✕ ${sl.drift.toFixed(3)}`))
       : '—';
   }
   if (dom.printSlJitter) {
     dom.printSlJitter.textContent = sl.jitter !== null && sl.jitter !== undefined
-      ? (sl.jitter <= 0.026 ? '✓ Estable' : '! Inestable')
+      ? (sl.jitter <= 0.026 ? `✓ ${sl.jitter.toFixed(3)}` : `! ${sl.jitter.toFixed(3)}`)
       : '—';
   }
   if (dom.printSlCirc) {
     dom.printSlCirc.textContent = sl.coverage !== null && sl.coverage !== undefined
-      ? `${sl.coverage}/8 Zonas ✓`
-      : (slCirc !== null && slCirc !== undefined ? `${slCirc}%` : '—');
+      ? `${sl.coverage}/8 ✓`
+      : '—';
   }
   if (dom.printSlSnap) {
-    dom.printSlSnap.textContent = slSnap !== null && slSnap !== undefined ? `${slSnap}ms ✓` : '—';
+    dom.printSlSnap.textContent = slSnap !== null && slSnap !== undefined ? `${slSnap}ms (${sl.returnOffset ? sl.returnOffset.toFixed(3) : 'OK'})` : '—';
   }
   if (dom.printSlVerdict) {
-    dom.printSlVerdict.textContent = formatStickVerdict(sl.verdict);
+    dom.printSlVerdict.textContent = formatVerdict(sl.verdict);
     dom.printSlVerdict.className = getBadgeClass(sl.verdict);
   }
 
-  // Right Stick Customer Metrics
+  // Right Stick Commercial Metrics
   if (dom.printSrDrift) {
     dom.printSrDrift.textContent = sr.drift !== null && sr.drift !== undefined
-      ? (sr.drift <= 0.060 ? `✓ Estable (${sr.drift.toFixed(3)})` : (sr.drift <= 0.105 ? `! Leve (${sr.drift.toFixed(3)})` : `✕ Deriva (${sr.drift.toFixed(3)})`))
+      ? (sr.drift <= 0.060 ? `✓ ${sr.drift.toFixed(3)}` : (sr.drift <= 0.105 ? `! ${sr.drift.toFixed(3)}` : `✕ ${sr.drift.toFixed(3)}`))
       : '—';
   }
   if (dom.printSrJitter) {
     dom.printSrJitter.textContent = sr.jitter !== null && sr.jitter !== undefined
-      ? (sr.jitter <= 0.026 ? '✓ Estable' : '! Inestable')
+      ? (sr.jitter <= 0.026 ? `✓ ${sr.jitter.toFixed(3)}` : `! ${sr.jitter.toFixed(3)}`)
       : '—';
   }
   if (dom.printSrCirc) {
     dom.printSrCirc.textContent = sr.coverage !== null && sr.coverage !== undefined
-      ? `${sr.coverage}/8 Zonas ✓`
-      : (srCirc !== null && srCirc !== undefined ? `${srCirc}%` : '—');
+      ? `${sr.coverage}/8 ✓`
+      : '—';
   }
   if (dom.printSrSnap) {
-    dom.printSrSnap.textContent = srSnap !== null && srSnap !== undefined ? `${srSnap}ms ✓` : '—';
+    dom.printSrSnap.textContent = srSnap !== null && srSnap !== undefined ? `${srSnap}ms (${sr.returnOffset ? sr.returnOffset.toFixed(3) : 'OK'})` : '—';
   }
   if (dom.printSrVerdict) {
-    dom.printSrVerdict.textContent = formatStickVerdict(sr.verdict);
+    dom.printSrVerdict.textContent = formatVerdict(sr.verdict);
     dom.printSrVerdict.className = getBadgeClass(sr.verdict);
   }
 
+  // Trigger metrics
   const tL = record ? record.triggers.l2Verdict : state.triggers.l2.verdict;
   const tR = record ? record.triggers.r2Verdict : state.triggers.r2.verdict;
   if (dom.printL2Verdict) {
-    dom.printL2Verdict.textContent = formatStickVerdict(tL);
+    dom.printL2Verdict.textContent = formatVerdict(tL);
     dom.printL2Verdict.className = getBadgeClass(tL);
   }
   if (dom.printR2Verdict) {
-    dom.printR2Verdict.textContent = formatStickVerdict(tR);
+    dom.printR2Verdict.textContent = formatVerdict(tR);
     dom.printR2Verdict.className = getBadgeClass(tR);
   }
 
+  // Button matrix metrics
   const btnTotal = record ? record.buttons.total : Object.keys(state.buttonStates).length || 16;
   const btnPassed= record ? record.buttons.passed : Object.values(state.buttonStates).filter(b => b.clicks >= 3).length;
   const btnStuck = record ? record.buttons.stuck : Object.values(state.buttonStates).filter(b => b.isStuck).length;
 
   if (dom.printBtnCount)   dom.printBtnCount.textContent = `${btnPassed} / ${btnTotal}`;
-  if (dom.printBtnStuck)   dom.printBtnStuck.textContent = `${btnStuck} (${btnStuck === 0 ? 'Ninguno' : 'Defecto'})`;
+  if (dom.printBtnStuck)   dom.printBtnStuck.textContent = `${btnStuck} (${btnStuck === 0 ? t('noneWord') : 'Defecto'})`;
   if (dom.printBtnVerdict) {
     const bVerdict = btnStuck > 0 ? 'FAIL' : (btnPassed >= btnTotal ? 'PASS' : 'REVIEW');
-    dom.printBtnVerdict.textContent = formatStickVerdict(bVerdict);
+    dom.printBtnVerdict.textContent = formatVerdict(bVerdict);
     dom.printBtnVerdict.className = getBadgeClass(bVerdict);
   }
 
@@ -2805,16 +2952,16 @@ function populatePrintReport(record) {
   const overall = record ? record.overallVerdict : calculateAuthoritativeOverallVerdict();
   if (dom.printFinalStamp) {
     if (overall === 'PASS') {
-      dom.printFinalStamp.textContent = '✓ APTO (CORRECTO)';
+      dom.printFinalStamp.textContent = `✓ ${t('verdictPass')}`;
       dom.printFinalStamp.className = 'verdict-stamp stamp-pass';
     } else if (overall === 'REVIEW') {
-      dom.printFinalStamp.textContent = '⚠ A REVISIÓN (OBSERVACIONES)';
+      dom.printFinalStamp.textContent = `⚠ ${t('verdictReview')}`;
       dom.printFinalStamp.className = 'verdict-stamp stamp-review';
     } else if (overall === 'FAIL') {
-      dom.printFinalStamp.textContent = '✕ NO APTO (DEFECTUOSO)';
+      dom.printFinalStamp.textContent = `✕ ${t('verdictFail')}`;
       dom.printFinalStamp.className = 'verdict-stamp stamp-fail';
     } else {
-      dom.printFinalStamp.textContent = 'PENDIENTE (INCOMPLETO)';
+      dom.printFinalStamp.textContent = t('verdictPending');
       dom.printFinalStamp.className = 'verdict-stamp stamp-pending';
     }
   }
@@ -2830,11 +2977,26 @@ function updateVerdictBadgesUI() {
 // 18. INITIALIZATION & EVENT LISTENERS
 // ─────────────────────────────────────────────────────────────
 function initEventListeners() {
+  // Floating Language Switcher: trigger click/tap toggle for mobile & click outside
+  if (dom.langTrigger) {
+    dom.langTrigger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (dom.floatingLang) dom.floatingLang.classList.toggle('open');
+    });
+  }
+  document.addEventListener('click', (e) => {
+    if (dom.floatingLang && !dom.floatingLang.contains(e.target)) {
+      dom.floatingLang.classList.remove('open');
+    }
+  });
+
   // Floating Language Switcher menu items
   document.querySelectorAll('#lang-menu button[data-lang]').forEach(btn => {
     btn.addEventListener('click', (e) => {
       const target = e.currentTarget || e.target;
-      setLanguage(target.dataset.lang);
+      const lang = target.dataset.lang || target.closest('button').dataset.lang;
+      if (lang) setLanguage(lang);
+      if (dom.floatingLang) dom.floatingLang.classList.remove('open');
     });
   });
 
