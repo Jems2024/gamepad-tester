@@ -551,11 +551,11 @@ const TRANSLATIONS = {
 };
 
 const LANG_FLAGS = {
-  es: '🇪🇸',
-  en: '🇬🇧',
-  it: '🇮🇹',
-  fr: '🇫🇷',
-  de: '🇩🇪'
+  es: 'assets/flags/es.svg',
+  en: 'assets/flags/en.svg',
+  it: 'assets/flags/it.svg',
+  fr: 'assets/flags/fr.svg',
+  de: 'assets/flags/de.svg'
 };
 
 let currentLang = 'es';
@@ -572,13 +572,13 @@ function setLanguage(lang) {
     localStorage.setItem('gamepad_tester_lang', lang);
   } catch (e) {}
 
-  // Update floating trigger button
-  const flag = LANG_FLAGS[lang] || '🇪🇸';
+  // Update floating trigger button to show only the circular flag
+  const flagSrc = LANG_FLAGS[lang] || 'assets/flags/es.svg';
   if (dom.langTrigger) {
     dom.langTrigger.innerHTML = `
-      <span class="flag-icon">${flag}</span>
-      <span class="lang-code">${lang.toUpperCase()}</span>
+      <img src="${flagSrc}" alt="${lang.toUpperCase()}" class="flag-icon-img">
     `;
+    dom.langTrigger.title = `Idioma / Language (${lang.toUpperCase()})`;
   }
 
   // Update menu active button state
