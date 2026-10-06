@@ -162,6 +162,22 @@
               <canvas id="stick-l-canvas" class="stick-canvas-large" width="400" height="400"></canvas>
             </div>
             
+            <!-- 3 Simple Diagnostic Phases -->
+            <div class="stick-phases-row">
+              <div class="stick-phase-item" id="phase-l-rest">
+                <span class="phase-name">Reposo</span>
+                <span class="phase-val" id="phase-l-rest-val">○</span>
+              </div>
+              <div class="stick-phase-item" id="phase-l-move">
+                <span class="phase-name">Movimiento</span>
+                <span class="phase-val" id="phase-l-move-val">0/8</span>
+              </div>
+              <div class="stick-phase-item" id="phase-l-snap">
+                <span class="phase-name">Retorno</span>
+                <span class="phase-val" id="phase-l-snap-val">○</span>
+              </div>
+            </div>
+
             <!-- Real-time Essential Telemetry -->
             <div class="stick-metrics-grid">
               <div class="metric-cell">
@@ -177,8 +193,8 @@
                 <span class="metric-val" id="stick-l-dist">0.0000</span>
               </div>
               <div class="metric-cell">
-                <span class="metric-label" data-i18n="metricCircularity">Circ:</span>
-                <span class="metric-val" id="stick-l-circ-val">—</span>
+                <span class="metric-label">8 Zonas:</span>
+                <span class="metric-val" id="stick-l-circ-val">0/8</span>
               </div>
             </div>
           </div>
@@ -192,6 +208,22 @@
             </div>
             <div class="stick-canvas-wrapper">
               <canvas id="stick-r-canvas" class="stick-canvas-large" width="400" height="400"></canvas>
+            </div>
+
+            <!-- 3 Simple Diagnostic Phases -->
+            <div class="stick-phases-row">
+              <div class="stick-phase-item" id="phase-r-rest">
+                <span class="phase-name">Reposo</span>
+                <span class="phase-val" id="phase-r-rest-val">○</span>
+              </div>
+              <div class="stick-phase-item" id="phase-r-move">
+                <span class="phase-name">Movimiento</span>
+                <span class="phase-val" id="phase-r-move-val">0/8</span>
+              </div>
+              <div class="stick-phase-item" id="phase-r-snap">
+                <span class="phase-name">Retorno</span>
+                <span class="phase-val" id="phase-r-snap-val">○</span>
+              </div>
             </div>
 
             <!-- Real-time Essential Telemetry -->
@@ -209,8 +241,8 @@
                 <span class="metric-val" id="stick-r-dist">0.0000</span>
               </div>
               <div class="metric-cell">
-                <span class="metric-label" data-i18n="metricCircularity">Circ:</span>
-                <span class="metric-val" id="stick-r-circ-val">—</span>
+                <span class="metric-label">8 Zonas:</span>
+                <span class="metric-val" id="stick-r-circ-val">0/8</span>
               </div>
             </div>
           </div>

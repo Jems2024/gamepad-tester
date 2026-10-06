@@ -713,6 +713,21 @@ const dom = {
   stickRSnapVal:       document.getElementById('stick-r-snap-val'),
   driftResult:         document.getElementById('drift-result'),
 
+  // 3-Phase Checklist Elements
+  phaseLRestItem:      document.getElementById('phase-l-rest'),
+  phaseLRestVal:       document.getElementById('phase-l-rest-val'),
+  phaseLMoveItem:      document.getElementById('phase-l-move'),
+  phaseLMoveVal:       document.getElementById('phase-l-move-val'),
+  phaseLSnapItem:      document.getElementById('phase-l-snap'),
+  phaseLSnapVal:       document.getElementById('phase-l-snap-val'),
+
+  phaseRRestItem:      document.getElementById('phase-r-rest'),
+  phaseRRestVal:       document.getElementById('phase-r-rest-val'),
+  phaseRMoveItem:      document.getElementById('phase-r-move'),
+  phaseRMoveVal:       document.getElementById('phase-r-move-val'),
+  phaseRSnapItem:      document.getElementById('phase-r-snap'),
+  phaseRSnapVal:       document.getElementById('phase-r-snap-val'),
+
   // Triggers
   triggersSummaryTag:  document.getElementById('triggers-summary-tag'),
   triggerL2Status:     document.getElementById('trigger-l2-status'),
@@ -812,30 +827,61 @@ let state = {
   stickHistoryR:        [],
   stickMetrics: {
     l: { 
+      phase: 'IDLE', // 'IDLE', 'REST', 'MOVE', 'RETURN', 'DONE'
+      completed: false,
+      verdict: 'PENDING',
+      restTimerStart: 0,
+      restSamples: [],
+      restVerdict: null,
       drift: null, 
       jitter: null, 
-      coverage: null, 
+      zones: new Array(8).fill(0),
+      moveGlitches: 0,
+      moveDropouts: 0,
+      moveVerdict: null,
+      coverage: 0, 
       circularity: null, 
       range: null, 
+      prevMovePos: null,
+      returnStartTime: 0,
+      returnStabilizeStart: 0,
+      returnSamples: [],
       returnTime: null, 
-      verdict: 'PENDING',
+      returnOffset: null,
+      returnVerdict: null,
       tests: { center: null, range: null, noise: null, smoothness: null, coverage: null, circularity: null, returnToCenter: null },
       reviewReasons: [],
       failReasons: [],
     },
     r: { 
+      phase: 'IDLE',
+      completed: false,
+      verdict: 'PENDING',
+      restTimerStart: 0,
+      restSamples: [],
+      restVerdict: null,
       drift: null, 
       jitter: null, 
-      coverage: null, 
+      zones: new Array(8).fill(0),
+      moveGlitches: 0,
+      moveDropouts: 0,
+      moveVerdict: null,
+      coverage: 0, 
       circularity: null, 
       range: null, 
+      prevMovePos: null,
+      returnStartTime: 0,
+      returnStabilizeStart: 0,
+      returnSamples: [],
       returnTime: null, 
-      verdict: 'PENDING',
+      returnOffset: null,
+      returnVerdict: null,
       tests: { center: null, range: null, noise: null, smoothness: null, coverage: null, circularity: null, returnToCenter: null },
       reviewReasons: [],
       failReasons: [],
     },
   },
+  forcedStep:           null,
   // Circular coverage radial bins (36 sectors = 10 deg each)
   circleBinsL:          new Array(36).fill(0),
   circleBinsR:          new Array(36).fill(0),
@@ -1025,50 +1071,10 @@ function setActiveGamepad(idx) {
 function resetAllValidationStates() {
   state.stickHistoryL = [];
   state.stickHistoryR = [];
-  state.circleBinsL = new Array(36).fill(0);
-  state.circleBinsR = new Array(36).fill(0);
-  state.stickMetrics = {
-    l: { 
-      drift: null, 
-      jitter: null, 
-      coverage: null, 
-      circularity: null, 
-      range: null, 
-      returnTime: null, 
-      verdict: 'PENDING',
-      tests: { center: null, range: null, noise: null, smoothness: null, coverage: null, circularity: null, returnToCenter: null },
-      reviewReasons: [],
-      failReasons: [],
-    },
-    r: { 
-      drift: null, 
-      jitter: null, 
-      coverage: null, 
-      circularity: null, 
-      range: null, 
-      returnTime: null, 
-      verdict: 'PENDING',
-      tests: { center: null, range: null, noise: null, smoothness: null, coverage: null, circularity: null, returnToCenter: null },
-      reviewReasons: [],
-      failReasons: [],
-    },
-  };
-  state.snapL = {
-    state: 'IDLE',
-    startTime: 0,
-    peakDist: 0,
-    lastDist: 0,
-    stabilizeStartTime: 0,
-    done: false
-  };
-  state.snapR = {
-    state: 'IDLE',
-    startTime: 0,
-    peakDist: 0,
-    lastDist: 0,
-    stabilizeStartTime: 0,
-    done: false
-  };
+  state.forcedStep = null;
+  resetStickDiagnostics('l');
+  resetStickDiagnostics('r');
+
   state.triggers = {
     l2: { min: 1.0, max: 0.0, restOk: null, maxOk: null, smoothOk: true, samples: 0, verdict: 'PENDING' },
     r2: { min: 1.0, max: 0.0, restOk: null, maxOk: null, smoothOk: true, samples: 0, verdict: 'PENDING' },
@@ -1077,8 +1083,8 @@ function resetAllValidationStates() {
   state.drift.capturing = false;
   state.suite.running = false;
 
-  if (dom.stickLCircVal) dom.stickLCircVal.textContent = '—';
-  if (dom.stickRCircVal) dom.stickRCircVal.textContent = '—';
+  if (dom.stickLCircVal) dom.stickLCircVal.textContent = '0/8';
+  if (dom.stickRCircVal) dom.stickRCircVal.textContent = '0/8';
   if (dom.stickLDriftVal) dom.stickLDriftVal.textContent = '—';
   if (dom.stickRDriftVal) dom.stickRDriftVal.textContent = '—';
   if (dom.stickLJitterVal) dom.stickLJitterVal.textContent = '—';
@@ -1207,43 +1213,16 @@ function processStickData(axes, now) {
   if (dom.stickLStatusDot) dom.stickLStatusDot.className = 'stick-status-dot' + (lDist > 0.08 ? ' active' : '');
   if (dom.stickRStatusDot) dom.stickRStatusDot.className = 'stick-status-dot' + (rDist > 0.08 ? ' active' : '');
 
-  // Record path trace (max 400 points)
+  // Record path trace (max 350 points)
   state.stickHistoryL.push({ x: lx, y: ly });
-  if (state.stickHistoryL.length > 400) state.stickHistoryL.shift();
+  if (state.stickHistoryL.length > 350) state.stickHistoryL.shift();
 
   state.stickHistoryR.push({ x: rx, y: ry });
-  if (state.stickHistoryR.length > 400) state.stickHistoryR.shift();
+  if (state.stickHistoryR.length > 350) state.stickHistoryR.shift();
 
-  // 1. Angular Coverage & Circularity Sampling (36 sectors = 10 deg each)
-  // Only sample sector outer radius when stick is pushed towards outer perimeter (> 0.65)
-  if (lDist > 0.65) {
-    const binIdx = Math.floor(lAngle / 10) % 36;
-    state.circleBinsL[binIdx] = Math.max(state.circleBinsL[binIdx], lDist);
-    updateStickCoverageAndCircularity('l');
-  }
-  if (rDist > 0.65) {
-    const binIdx = Math.floor(rAngle / 10) % 36;
-    state.circleBinsR[binIdx] = Math.max(state.circleBinsR[binIdx], rDist);
-    updateStickCoverageAndCircularity('r');
-  }
-
-  // 2. Movement Smoothness Tracking (Detect signal jumps during movement)
-  checkMovementSmoothness('l', lx, ly, lDist);
-  checkMovementSmoothness('r', rx, ry, rDist);
-
-  // 3. Return-to-Center / Snapback State Machine (Independent for L and R)
-  processSnapbackStateMachine('l', lDist, now);
-  processSnapbackStateMachine('r', rDist, now);
-
-  // 4. Dedicated 3s Drift Capture sampling (Only during rest test)
-  if (state.drift.capturing) {
-    state.drift.samplesL.push({ x: lx, y: ly, dist: lDist });
-    state.drift.samplesR.push({ x: rx, y: ry, dist: rDist });
-    const elapsed = (now - state.drift.startTime) / 1000;
-    if (elapsed >= 3.0) {
-      finalizeDriftCapture();
-    }
-  }
+  // Process 3-Phase Sequential State Machine for Sticks
+  updateStickPhaseStateMachine('l', lx, ly, lDist, lAngle, now);
+  updateStickPhaseStateMachine('r', rx, ry, rDist, rAngle, now);
 
   // Draw Canvases
   drawLargeStick(dom.stickLCanvas, lx, ly, true, state.stickHistoryL);
@@ -1251,263 +1230,450 @@ function processStickData(axes, now) {
 }
 
 // ─────────────────────────────────────────────────────────────
-// MOVEMENT SMOOTHNESS TRACKING
+// 3-PHASE SEQUENTIAL STICK DIAGNOSTIC STATE MACHINE
+// Phase 1: REPOSO (Rest Drift & Jitter)
+// Phase 2: MOVIMIENTO (8 Directional Zones & Movement Drift)
+// Phase 3: RETORNO (Return-to-Center & Stabilization)
 // ─────────────────────────────────────────────────────────────
-let lastSmoothPos = {
-  l: { x: 0, y: 0, time: 0 },
-  r: { x: 0, y: 0, time: 0 },
-};
+function getCurrentActiveStep() {
+  if (state.forcedStep) return state.forcedStep;
+  const totalBtns = Object.keys(state.buttonStates).length || 16;
+  const passedBtns = Object.values(state.buttonStates).filter(b => b.clicks >= 3).length;
+  const stuckBtns = Object.values(state.buttonStates).filter(b => b.isStuck).length;
+  const buttonsDone = (totalBtns > 0 && passedBtns >= totalBtns && stuckBtns === 0);
 
-function checkMovementSmoothness(stick, x, y, dist) {
-  const m = state.stickMetrics[stick];
-  // Only evaluate during active movement
-  if (dist < 0.15) return;
-  
-  const prev = lastSmoothPos[stick];
-  if (prev.time > 0) {
-    const dx = x - prev.x;
-    const dy = y - prev.y;
-    const step = Math.sqrt(dx * dx + dy * dy);
-    // If an impossible sudden jump occurs without release
-    if (step > BENCHMARKS.STICK.SMOOTHNESS_MAX_DELTA && dist > 0.4) {
-      m.tests.smoothness = 'REVIEW';
-      if (!m.reviewReasons.some(r => r.test === 'smoothness')) {
-        m.reviewReasons.push({ test: 'smoothness', value: step.toFixed(3), threshold: BENCHMARKS.STICK.SMOOTHNESS_MAX_DELTA });
-      }
-    } else if (m.tests.smoothness === null && step > 0.05) {
-      m.tests.smoothness = 'PASS';
-    }
-  }
-  prev.x = x;
-  prev.y = y;
-  prev.time = performance.now();
+  const tL = state.triggers.l2;
+  const tR = state.triggers.r2;
+  const triggersDone = (tL.verdict === 'PASS' && tR.verdict === 'PASS') || (tL.max >= 0.94 && tR.max >= 0.94);
+
+  const sl = state.stickMetrics.l;
+  const sr = state.stickMetrics.r;
+  const stickLDone = (sl.completed === true);
+  const stickRDone = (sr.completed === true);
+
+  if (!buttonsDone) return 1;
+  if (!triggersDone) return 2;
+  if (!stickLDone) return 3;
+  if (!stickRDone) return 4;
+  return 5;
 }
 
-// ─────────────────────────────────────────────────────────────
-// RETURN-TO-CENTER / SNAPBACK STATE MACHINE
-// IDLE -> EXTREME_REACHED -> WAITING_FOR_RELEASE -> RETURNING -> STABILIZING -> COMPLETE
-// ─────────────────────────────────────────────────────────────
-function processSnapbackStateMachine(stick, dist, now) {
-  const snap = stick === 'l' ? state.snapL : state.snapR;
+function startStickPhase(stick, newPhase) {
   const m = state.stickMetrics[stick];
-  const snapEl = stick === 'l' ? dom.stickLSnapVal : dom.stickRSnapVal;
+  const isLeft = (stick === 'l');
+  m.phase = newPhase;
 
-  switch (snap.state) {
-    case 'IDLE':
-      // 1. Detect that the stick reached a meaningful outer radius (>= 0.80)
-      if (dist >= 0.80) {
-        snap.state = 'EXTREME_REACHED';
-        snap.peakDist = dist;
-        snap.lastDist = dist;
+  const restItem = isLeft ? dom.phaseLRestItem : dom.phaseRRestItem;
+  const restVal  = isLeft ? dom.phaseLRestVal  : dom.phaseRRestVal;
+  const moveItem = isLeft ? dom.phaseLMoveItem : dom.phaseRMoveItem;
+  const moveVal  = isLeft ? dom.phaseLMoveVal  : dom.phaseRMoveVal;
+  const snapItem = isLeft ? dom.phaseLSnapItem : dom.phaseRSnapItem;
+  const snapVal  = isLeft ? dom.phaseLSnapVal  : dom.phaseRSnapVal;
+  const badgeEl  = isLeft ? dom.stickLVerdict  : dom.stickRVerdict;
+
+  if (badgeEl && !m.completed) {
+    badgeEl.className = 'stick-verdict-badge badge-testing';
+    badgeEl.textContent = t('verdictTesting') || 'EN PRUEBA';
+  }
+
+  if (newPhase === 'REST') {
+    m.restTimerStart = 0;
+    m.restSamples = [];
+    if (restItem) restItem.className = 'stick-phase-item phase-active';
+    if (restVal)  restVal.textContent = '⏱ 2.0s';
+    if (dom.guidedInstructionText) {
+      dom.guidedInstructionText.textContent = isLeft 
+        ? "Stick Izquierdo — Reposo: No toques el stick (2s)..." 
+        : "Stick Derecho — Reposo: No toques el stick (2s)...";
+    }
+  } else if (newPhase === 'MOVE') {
+    m.prevMovePos = null;
+    if (moveItem) moveItem.className = 'stick-phase-item phase-active';
+    if (moveVal)  moveVal.textContent = `${m.coverage || 0}/8`;
+    if (dom.guidedInstructionText) {
+      dom.guidedInstructionText.textContent = isLeft
+        ? "Stick Izquierdo — Movimiento: Mueve el stick lentamente en un círculo (8 zonas)"
+        : "Stick Derecho — Movimiento: Mueve el stick lentamente en un círculo (8 zonas)";
+    }
+  } else if (newPhase === 'RETURN') {
+    m.returnStartTime = performance.now();
+    m.returnStabilizeStart = 0;
+    m.returnSamples = [];
+    if (snapItem) snapItem.className = 'stick-phase-item phase-active';
+    if (snapVal)  snapVal.textContent = '○';
+    if (dom.guidedInstructionText) {
+      dom.guidedInstructionText.textContent = isLeft
+        ? "Stick Izquierdo — Retorno: Suelta el stick"
+        : "Stick Derecho — Retorno: Suelta el stick";
+    }
+  }
+}
+
+function finishStickDiagnostic(stick) {
+  const m = state.stickMetrics[stick];
+  const isLeft = (stick === 'l');
+  m.phase = 'DONE';
+  m.completed = true;
+
+  // Update Snap UI
+  const snapItem = isLeft ? dom.phaseLSnapItem : dom.phaseRSnapItem;
+  const snapVal  = isLeft ? dom.phaseLSnapVal  : dom.phaseRSnapVal;
+  if (snapItem) snapItem.className = `stick-phase-item phase-${(m.returnVerdict || 'pass').toLowerCase()}`;
+  if (snapVal)  snapVal.textContent = (m.returnVerdict === 'PASS') ? '✓' : (m.returnVerdict === 'REVIEW' ? '!' : '✕');
+
+  // Authoritative Stick Verdict = worst of the 3 phases
+  const phases = [m.restVerdict, m.moveVerdict, m.returnVerdict].filter(Boolean);
+  if (phases.includes('FAIL')) {
+    m.verdict = 'FAIL';
+  } else if (phases.includes('REVIEW')) {
+    m.verdict = 'REVIEW';
+  } else {
+    m.verdict = 'PASS';
+  }
+
+  // Update Stick Badge
+  const badgeEl = isLeft ? dom.stickLVerdict : dom.stickRVerdict;
+  if (badgeEl) {
+    if (m.verdict === 'PASS') {
+      badgeEl.className = 'stick-verdict-badge badge-pass';
+      badgeEl.textContent = 'APTO';
+    } else if (m.verdict === 'REVIEW') {
+      badgeEl.className = 'stick-verdict-badge badge-review';
+      badgeEl.textContent = 'REVISAR';
+    } else {
+      badgeEl.className = 'stick-verdict-badge badge-fail';
+      badgeEl.textContent = 'FALLO';
+    }
+  }
+
+  // If Left stick completed: Automatically start Right stick!
+  if (isLeft) {
+    const mr = state.stickMetrics.r;
+    if (!mr.completed && mr.phase === 'IDLE') {
+      startStickPhase('r', 'REST');
+    }
+  }
+
+  updateWorkflowProgress();
+  updateOverallVerdict();
+}
+
+function updateStickPhaseStateMachine(stick, x, y, dist, angle, now) {
+  const m = state.stickMetrics[stick];
+  const isLeft = (stick === 'l');
+
+  const restItem = isLeft ? dom.phaseLRestItem : dom.phaseRRestItem;
+  const restVal  = isLeft ? dom.phaseLRestVal  : dom.phaseRRestVal;
+  const moveItem = isLeft ? dom.phaseLMoveItem : dom.phaseRMoveItem;
+  const moveVal  = isLeft ? dom.phaseLMoveVal  : dom.phaseRMoveVal;
+  const snapItem = isLeft ? dom.phaseLSnapItem : dom.phaseRSnapItem;
+  const snapVal  = isLeft ? dom.phaseLSnapVal  : dom.phaseRSnapVal;
+
+  const currentStep = getCurrentActiveStep();
+  const isTargetStep = isLeft ? (currentStep === 3) : (currentStep === 4);
+
+  // If in IDLE and it's our turn to test, start Phase 1 (REST)
+  if (m.phase === 'IDLE' && isTargetStep && state.activeGpIndex !== null) {
+    startStickPhase(stick, 'REST');
+  }
+
+  // If IDLE or DONE, nothing to advance inside active state machine
+  if (m.phase === 'IDLE' || m.phase === 'DONE') {
+    return;
+  }
+
+  // ── PHASE 1: REPOSO (REST) ──────────────────────────────────
+  if (m.phase === 'REST') {
+    // If operator is pushing the stick (dist > 0.30), wait for release before counting 2s
+    if (dist > 0.30) {
+      m.restTimerStart = now;
+      m.restSamples = [];
+      if (restVal) restVal.textContent = '⏱ 2.0s';
+      return;
+    }
+
+    if (!m.restTimerStart) {
+      m.restTimerStart = now;
+      m.restSamples = [];
+    }
+
+    m.restSamples.push({ x, y, dist });
+    const elapsed = (now - m.restTimerStart) / 1000;
+    const remaining = Math.max(0, 2.0 - elapsed);
+    if (restVal) restVal.textContent = `⏱ ${remaining.toFixed(1)}s`;
+
+    if (elapsed >= 2.0) {
+      // Evaluate Rest Drift & Jitter
+      const s = m.restSamples;
+      const maxDist = s.length > 0 ? Math.max(...s.map(pt => pt.dist)) : dist;
+      const avgDist = s.length > 0 ? (s.reduce((a, b) => a + b.dist, 0) / s.length) : dist;
+      const variance = s.length > 0 ? (s.reduce((a, b) => a + Math.pow(b.dist - avgDist, 2), 0) / s.length) : 0;
+      const jitter = Math.sqrt(variance);
+
+      m.drift = parseFloat(maxDist.toFixed(4));
+      m.jitter = parseFloat(jitter.toFixed(4));
+
+      if (isLeft) {
+        if (dom.stickLDriftVal) dom.stickLDriftVal.textContent = maxDist.toFixed(3);
+        if (dom.stickLJitterVal) dom.stickLJitterVal.textContent = jitter.toFixed(3);
+      } else {
+        if (dom.stickRDriftVal) dom.stickRDriftVal.textContent = maxDist.toFixed(3);
+        if (dom.stickRJitterVal) dom.stickRJitterVal.textContent = jitter.toFixed(3);
       }
-      break;
 
-    case 'EXTREME_REACHED':
-      // While stick remains near the edge, update peak; do NOT start return timing!
-      if (dist > snap.peakDist) {
-        snap.peakDist = dist;
+      // Green: <= 0.045 & jitter <= 0.018 | Orange: <= 0.095 | Red: > 0.095
+      if (maxDist <= BENCHMARKS.STICK.DRIFT_EXCELLENT && jitter <= BENCHMARKS.STICK.JITTER_MAX) {
+        m.restVerdict = 'PASS';
+      } else if (maxDist <= BENCHMARKS.STICK.DRIFT_ACCEPTABLE) {
+        m.restVerdict = 'REVIEW';
+      } else {
+        m.restVerdict = 'FAIL';
       }
-      // 2. Detect actual release: radius decreases significantly toward center
-      if (dist < snap.lastDist - 0.15 || dist < 0.65) {
-        snap.state = 'RETURNING';
-        snap.startTime = now;
+
+      m.tests.center = m.restVerdict;
+      m.tests.noise  = (jitter <= BENCHMARKS.STICK.JITTER_MAX) ? 'PASS' : 'REVIEW';
+
+      // Update Phase 1 UI
+      if (restItem) {
+        restItem.className = `stick-phase-item phase-${m.restVerdict.toLowerCase()}`;
       }
-      snap.lastDist = dist;
-      break;
-
-    case 'RETURNING':
-      // 3. Stick is returning. Check if it reaches center threshold (<= 0.08)
-      if (dist <= BENCHMARKS.STICK.SNAPBACK_CENTER_REST_MAX) {
-        const durationMs = Math.round(now - snap.startTime);
-        snap.state = 'STABILIZING';
-        snap.stabilizeStartTime = now;
-        snap.tempDurationMs = durationMs;
-      } else if (now - snap.startTime > 800) {
-        // Return timed out / stick didn't return to center
-        snap.state = 'IDLE';
+      if (restVal) {
+        restVal.textContent = (m.restVerdict === 'PASS') ? '✓' : (m.restVerdict === 'REVIEW' ? '!' : '✕');
       }
-      break;
 
-    case 'STABILIZING':
-      // 4. Require stable center for at least 180ms
-      if (dist > BENCHMARKS.STICK.SNAPBACK_CENTER_REST_MAX + 0.04) {
-        // Stick bounced out or was touched again
-        snap.state = 'IDLE';
-      } else if (now - snap.stabilizeStartTime >= 180) {
-        // Successfully stabilized!
-        snap.state = 'COMPLETE';
-        snap.done = true;
-        const returnTime = snap.tempDurationMs;
-        m.returnTime = returnTime;
+      // Automatically transition to Phase 2: MOVIMIENTO
+      startStickPhase(stick, 'MOVE');
+    }
+    return;
+  }
 
-        if (snapEl) snapEl.textContent = `${returnTime}ms`;
+  // ── PHASE 2: MOVIMIENTO (8 DIRECTIONAL ZONES & MOVEMENT DRIFT) ──
+  if (m.phase === 'MOVE') {
+    // 1. Detect which of the 8 zones the stick reaches when pushed past 0.60
+    if (dist >= 0.60) {
+      const zoneIdx = Math.floor(((angle + 22.5) % 360) / 45);
+      m.zones[zoneIdx] = Math.max(m.zones[zoneIdx] || 0, dist);
+    }
 
-        // Evaluate return to center test
-        if (returnTime <= BENCHMARKS.STICK.SNAPBACK_PASS_MS) {
-          m.tests.returnToCenter = 'PASS';
-        } else if (returnTime <= BENCHMARKS.STICK.SNAPBACK_REVIEW_MS) {
-          m.tests.returnToCenter = 'REVIEW';
-          m.reviewReasons.push({ test: 'returnToCenter', value: returnTime, threshold: BENCHMARKS.STICK.SNAPBACK_PASS_MS });
-        } else {
-          m.tests.returnToCenter = 'FAIL';
-          m.failReasons.push({ test: 'returnToCenter', value: returnTime, threshold: BENCHMARKS.STICK.SNAPBACK_REVIEW_MS });
+    const visitedCount = m.zones.filter(d => d >= 0.60).length;
+    m.coverage = visitedCount;
+
+    if (moveVal) {
+      moveVal.textContent = `${visitedCount}/8`;
+    }
+    if (isLeft && dom.stickLCircVal) {
+      dom.stickLCircVal.textContent = `${visitedCount}/8`;
+    } else if (!isLeft && dom.stickRCircVal) {
+      dom.stickRCircVal.textContent = `${visitedCount}/8`;
+    }
+
+    // 2. Continuous movement irregularity analysis (Movement Drift)
+    if (dist >= 0.25) {
+      if (m.prevMovePos && m.prevMovePos.time > 0) {
+        const dx = x - m.prevMovePos.x;
+        const dy = y - m.prevMovePos.y;
+        const step = Math.sqrt(dx * dx + dy * dy);
+        const dt = now - m.prevMovePos.time;
+
+        // Potentiometer wiper dropout (collapsing abruptly to center from edge and jumping back)
+        if (m.prevMovePos.dist >= 0.60 && dist < 0.20) {
+          m.moveDropouts++;
+        }
+        // Unusually huge coordinate jump in single frame (< 50ms) without human progression
+        if (step > 0.70 && dt < 50) {
+          m.moveGlitches++;
+        }
+      }
+      m.prevMovePos = { x, y, dist, time: now };
+    }
+
+    // Phase 2 completion: when 7/8 or 8/8 zones are reached
+    if (visitedCount >= 7) {
+      const visitedRanges = m.zones.filter(d => d >= 0.60);
+      const avgRange = visitedRanges.reduce((a, b) => a + b, 0) / visitedRanges.length;
+      const maxRange = Math.max(...m.zones);
+      const weakDirections = m.zones.filter(d => d > 0 && d < 0.65).length;
+
+      m.range = parseFloat(maxRange.toFixed(3));
+      m.circularity = Math.round((visitedCount / 8) * 100);
+
+      // Evaluate Movement Quality:
+      // Don't fail for fast movement: require genuine dropout/glitches or weak directions
+      if (m.moveDropouts >= 3 || m.moveGlitches >= 4) {
+        m.moveVerdict = 'FAIL';
+      } else if (m.moveDropouts >= 1 || m.moveGlitches >= 1 || visitedCount === 7 || weakDirections > 0 || avgRange < 0.75) {
+        m.moveVerdict = 'REVIEW';
+      } else {
+        m.moveVerdict = 'PASS';
+      }
+
+      m.tests.coverage = (visitedCount >= 8) ? 'PASS' : 'REVIEW';
+      m.tests.range = (avgRange >= 0.78 && weakDirections === 0) ? 'PASS' : 'REVIEW';
+      m.tests.smoothness = (m.moveGlitches === 0 && m.moveDropouts === 0) ? 'PASS' : 'REVIEW';
+      m.tests.circularity = m.moveVerdict;
+
+      // Update Phase 2 UI
+      if (moveItem) {
+        moveItem.className = `stick-phase-item phase-${m.moveVerdict.toLowerCase()}`;
+      }
+      if (moveVal) {
+        const symbol = (m.moveVerdict === 'PASS') ? '✓' : (m.moveVerdict === 'REVIEW' ? '!' : '✕');
+        moveVal.textContent = `${visitedCount}/8 ${symbol}`;
+      }
+
+      // Automatically transition to Phase 3: RETORNO
+      startStickPhase(stick, 'RETURN');
+    }
+    return;
+  }
+
+  // ── PHASE 3: RETORNO (RETURN TO CENTER & STABILIZATION) ──────
+  if (m.phase === 'RETURN') {
+    // Wait until stick enters center region (dist <= 0.15)
+    if (dist <= 0.15) {
+      if (!m.returnStabilizeStart) {
+        m.returnStabilizeStart = now;
+        m.returnSamples = [];
+        if (snapVal) snapVal.textContent = '⏱';
+      }
+      m.returnSamples.push(dist);
+
+      const stabilizeElapsed = now - m.returnStabilizeStart;
+      // Wait 300ms for stabilization (250-400ms window)
+      if (stabilizeElapsed >= 300) {
+        const returnOffset = m.returnSamples.length > 0 ? (m.returnSamples.reduce((a, b) => a + b, 0) / m.returnSamples.length) : dist;
+        const returnDuration = Math.round(now - m.returnStartTime);
+
+        m.returnTime = returnDuration;
+        m.returnOffset = parseFloat(returnOffset.toFixed(4));
+
+        if (isLeft && dom.stickLSnapVal) {
+          dom.stickLSnapVal.textContent = `${returnDuration}ms`;
+        } else if (!isLeft && dom.stickRSnapVal) {
+          dom.stickRSnapVal.textContent = `${returnDuration}ms`;
         }
 
-        evaluateStickOverall(stick);
-      }
-      break;
+        // Return evaluation:
+        // Returns cleanly <= 0.055: PASS | Slight offset <= 0.110: REVIEW | Failed return > 0.110: FAIL
+        if (returnOffset <= 0.055) {
+          m.returnVerdict = 'PASS';
+        } else if (returnOffset <= 0.110) {
+          m.returnVerdict = 'REVIEW';
+        } else {
+          m.returnVerdict = 'FAIL';
+        }
+        m.tests.returnToCenter = m.returnVerdict;
 
-    case 'COMPLETE':
-      // If user reaches extreme again, allow a new measurement
-      if (dist >= 0.85) {
-        snap.state = 'EXTREME_REACHED';
-        snap.peakDist = dist;
-        snap.lastDist = dist;
-      }
-      break;
-  }
-}
-
-// ─────────────────────────────────────────────────────────────
-// ANGULAR COVERAGE, RANGE, AND TRUE CIRCULARITY / UNIFORMITY
-// ─────────────────────────────────────────────────────────────
-function updateStickCoverageAndCircularity(stick) {
-  const bins = stick === 'l' ? state.circleBinsL : state.circleBinsR;
-  const m = state.stickMetrics[stick];
-  const circEl = stick === 'l' ? dom.stickLCircVal : dom.stickRCircVal;
-
-  const totalSectors = 36;
-  const visitedSectors = bins.filter(r => r > 0).length;
-  const coveragePct = Math.round((visitedSectors / totalSectors) * 100);
-  m.coverage = coveragePct;
-
-  // Show live progress during movement
-  if (circEl) circEl.textContent = `${coveragePct}%`;
-
-  // Track max range reached across all directions
-  const maxRange = Math.max(...bins);
-  m.range = maxRange > 0 ? parseFloat(maxRange.toFixed(3)) : 0;
-
-  // Check 8 main compass directions for directional range:
-  // 0: N (90°), 4: NE (45°), 9: E (0°), 13: SE (315°), 18: S (270°), 22: SW (225°), 27: W (180°), 31: NW (135°)
-  const compassIndices = [0, 4, 9, 13, 18, 22, 27, 31];
-  let weakSectorsCount = 0;
-  for (const idx of compassIndices) {
-    if (bins[idx] > 0 && bins[idx] < BENCHMARKS.STICK.RANGE_MIN_SECTOR_REVIEW) {
-      weakSectorsCount++;
-    }
-  }
-
-  // Range test evaluation
-  if (maxRange >= BENCHMARKS.STICK.RANGE_MIN_SECTOR_PASS && weakSectorsCount === 0) {
-    m.tests.range = 'PASS';
-  } else if (weakSectorsCount > 0) {
-    m.tests.range = 'REVIEW';
-    if (!m.reviewReasons.some(r => r.test === 'range')) {
-      m.reviewReasons.push({ test: 'range', weakSectors: weakSectorsCount });
-    }
-  }
-
-  // Evaluate Coverage Test
-  if (coveragePct >= BENCHMARKS.STICK.COVERAGE_MIN_PASS) {
-    m.tests.coverage = 'PASS';
-  } else if (coveragePct >= BENCHMARKS.STICK.COVERAGE_MIN_REVIEW) {
-    m.tests.coverage = 'REVIEW';
-  }
-
-  // Calculate True Circularity / Uniformity once coverage is sufficient (>= 75%)
-  if (visitedSectors >= 27) {
-    const visitedRadii = bins.filter(r => r > 0);
-    const avgRadius = visitedRadii.reduce((a, b) => a + b, 0) / visitedRadii.length;
-    const minRadius = Math.min(...visitedRadii);
-    const maxRadius = Math.max(...visitedRadii);
-    const radialDeviation = maxRadius - minRadius;
-
-    // True circularity is the uniformity error percentage (100% minus deviation penalty)
-    const circularityScore = Math.max(0, Math.min(100, Math.round((1 - (radialDeviation / 2)) * 100)));
-    m.circularity = circularityScore;
-
-    if (circEl) circEl.textContent = `${circularityScore}%`;
-
-    // Uniformity evaluation
-    if (avgRadius >= BENCHMARKS.STICK.CIRCULARITY_AVG_MIN_PASS && radialDeviation <= BENCHMARKS.STICK.CIRCULARITY_UNIFORM_MAX_ERR) {
-      m.tests.circularity = 'PASS';
-    } else if (avgRadius >= BENCHMARKS.STICK.CIRCULARITY_AVG_MIN_REVIEW) {
-      m.tests.circularity = 'REVIEW';
-      if (!m.reviewReasons.some(r => r.test === 'circularity')) {
-        m.reviewReasons.push({ test: 'circularity', avgRadius: avgRadius.toFixed(2), radialDev: radialDeviation.toFixed(2) });
+        finishStickDiagnostic(stick);
       }
     } else {
-      m.tests.circularity = 'FAIL';
-      if (!m.failReasons.some(r => r.test === 'circularity')) {
-        m.failReasons.push({ test: 'circularity', avgRadius: avgRadius.toFixed(2) });
+      // If stick is held/stuck outside for > 2500ms
+      const elapsedSinceRelease = now - m.returnStartTime;
+      if (elapsedSinceRelease > 2500) {
+        m.returnTime = 2500;
+        m.returnOffset = dist;
+        m.returnVerdict = 'FAIL';
+        m.tests.returnToCenter = 'FAIL';
+        if (isLeft && dom.stickLSnapVal) dom.stickLSnapVal.textContent = '>2500ms';
+        else if (!isLeft && dom.stickRSnapVal) dom.stickRSnapVal.textContent = '>2500ms';
+
+        finishStickDiagnostic(stick);
       }
     }
   }
-
-  evaluateStickOverall(stick);
 }
 
-// ─────────────────────────────────────────────────────────────
-// RIGOROUS STICK EVALUATION STATE MACHINE (ONE SOURCE OF TRUTH)
-// ─────────────────────────────────────────────────────────────
+function resetStickDiagnostics(stick) {
+  const m = state.stickMetrics[stick];
+  m.phase = 'IDLE';
+  m.completed = false;
+  m.verdict = 'PENDING';
+  m.restTimerStart = 0;
+  m.restSamples = [];
+  m.restVerdict = null;
+  m.drift = null;
+  m.jitter = null;
+  m.zones = new Array(8).fill(0);
+  m.moveGlitches = 0;
+  m.moveDropouts = 0;
+  m.moveVerdict = null;
+  m.coverage = 0;
+  m.circularity = null;
+  m.range = null;
+  m.prevMovePos = null;
+  m.returnStartTime = 0;
+  m.returnStabilizeStart = 0;
+  m.returnSamples = [];
+  m.returnTime = null;
+  m.returnOffset = null;
+  m.returnVerdict = null;
+  m.tests = { center: null, range: null, noise: null, smoothness: null, coverage: null, circularity: null, returnToCenter: null };
+  m.reviewReasons = [];
+  m.failReasons = [];
+
+  const isLeft = (stick === 'l');
+  const restItem = isLeft ? dom.phaseLRestItem : dom.phaseRRestItem;
+  const restVal  = isLeft ? dom.phaseLRestVal  : dom.phaseRRestVal;
+  const moveItem = isLeft ? dom.phaseLMoveItem : dom.phaseRMoveItem;
+  const moveVal  = isLeft ? dom.phaseLMoveVal  : dom.phaseRMoveVal;
+  const snapItem = isLeft ? dom.phaseLSnapItem : dom.phaseRSnapItem;
+  const snapVal  = isLeft ? dom.phaseLSnapVal  : dom.phaseRSnapVal;
+  const badgeEl  = isLeft ? dom.stickLVerdict  : dom.stickRVerdict;
+
+  if (restItem) restItem.className = 'stick-phase-item';
+  if (restVal)  restVal.textContent = '○';
+  if (moveItem) moveItem.className = 'stick-phase-item';
+  if (moveVal)  moveVal.textContent = '0/8';
+  if (snapItem) snapItem.className = 'stick-phase-item';
+  if (snapVal)  snapVal.textContent = '○';
+  if (badgeEl) {
+    badgeEl.className = 'stick-verdict-badge badge-pending';
+    badgeEl.textContent = t('verdictPending');
+  }
+}
+
 function evaluateStickOverall(stick) {
   const m = state.stickMetrics[stick];
   const badgeEl = stick === 'l' ? dom.stickLVerdict : dom.stickRVerdict;
 
-  if (!m.tests) {
-    m.tests = { center: null, range: null, noise: null, smoothness: null, coverage: null, circularity: null, returnToCenter: null };
-  }
-
-  // Required tests for a stick to receive a final verdict:
-  // 1. center (Drift rest test)
-  // 2. coverage (Angular coverage)
-  // 3. circularity (True circularity / uniformity)
-  // Optional / supplemental: range, noise, smoothness, returnToCenter
-
-  const allTestKeys = ['center', 'coverage', 'circularity', 'returnToCenter'];
-  const testVals = allTestKeys.map(k => m.tests[k]).filter(v => v !== null);
-
-  let verdict = 'PENDING';
-  let css = 'badge-pending';
-  let text = t('verdictPending');
-
-  // Any confirmed FAIL immediately marks stick as FAIL
-  if (Object.values(m.tests).includes('FAIL')) {
-    verdict = 'FAIL';
-    css = 'badge-fail';
-    text = t('verdictFail');
-  } 
-  // If tests are currently in progress or some are complete, but not all required tests have run
-  else if (m.tests.center === null || m.tests.coverage === null || m.tests.circularity === null) {
-    if (testVals.length > 0 || (m.coverage && m.coverage > 10)) {
-      verdict = 'TESTING';
-      css = 'badge-testing';
-      text = t('verdictTesting') || 'EN PRUEBA';
+  if (!m.completed) {
+    if (m.phase !== 'IDLE') {
+      m.verdict = 'TESTING';
+      if (badgeEl) {
+        badgeEl.className = 'stick-verdict-badge badge-testing';
+        badgeEl.textContent = t('verdictTesting') || 'EN PRUEBA';
+      }
     } else {
-      verdict = 'PENDING';
-      css = 'badge-pending';
-      text = t('verdictPending');
+      m.verdict = 'PENDING';
+      if (badgeEl) {
+        badgeEl.className = 'stick-verdict-badge badge-pending';
+        badgeEl.textContent = t('verdictPending');
+      }
     }
-  }
-  // All required diagnostic phases are complete!
-  else {
-    const hasReview = Object.values(m.tests).some(v => v === 'REVIEW');
-    if (hasReview) {
-      verdict = 'REVIEW';
-      css = 'badge-review';
-      text = t('verdictReview');
-    } else {
-      verdict = 'PASS';
-      css = 'badge-pass';
-      text = t('verdictPass');
-    }
+    return;
   }
 
-  m.verdict = verdict;
+  // If completed, stick has authoritative verdict (worst of the 3 phases)
+  const phases = [m.restVerdict, m.moveVerdict, m.returnVerdict].filter(Boolean);
+  if (phases.includes('FAIL')) {
+    m.verdict = 'FAIL';
+  } else if (phases.includes('REVIEW')) {
+    m.verdict = 'REVIEW';
+  } else {
+    m.verdict = 'PASS';
+  }
+
   if (badgeEl) {
-    badgeEl.className = `stick-verdict-badge ${css}`;
-    badgeEl.textContent = text;
+    if (m.verdict === 'PASS') {
+      badgeEl.className = 'stick-verdict-badge badge-pass';
+      badgeEl.textContent = 'APTO';
+    } else if (m.verdict === 'REVIEW') {
+      badgeEl.className = 'stick-verdict-badge badge-review';
+      badgeEl.textContent = 'REVISAR';
+    } else {
+      badgeEl.className = 'stick-verdict-badge badge-fail';
+      badgeEl.textContent = 'FALLO';
+    }
   }
 
   updateWorkflowProgress();
@@ -1784,178 +1950,19 @@ function updateButtonsSummaryBadge() {
 // 11. ADVANCED DRIFT BENCHMARK & FULL DIAGNOSTIC SUITE
 // ─────────────────────────────────────────────────────────────
 function startDriftCapture() {
-  if (state.drift.capturing) return;
-
-  state.drift.capturing = true;
-  state.drift.startTime = performance.now();
-  state.drift.samplesL = [];
-  state.drift.samplesR = [];
-
-  if (dom.driftResult) {
-    dom.driftResult.innerHTML = `
-      <div style="display:flex;align-items:center;gap:8px;justify-content:center;color:#a5b4fc;font-weight:700;">
-        <span class="icon">⏱</span>
-        <span>${t('suiteStepRest')}</span>
-      </div>
-    `;
-  }
-  if (dom.guidedInstructionText) {
-    dom.guidedInstructionText.textContent = t('suiteStepRest');
-  }
-}
-
-function finalizeDriftCapture() {
-  state.drift.capturing = false;
-
-  const sL = state.drift.samplesL;
-  const sR = state.drift.samplesR;
-
-  if (sL.length === 0 || sR.length === 0) return;
-
-  // Left stick resting metrics
-  const meanXL = sL.reduce((a, b) => a + b.x, 0) / sL.length;
-  const meanYL = sL.reduce((a, b) => a + b.y, 0) / sL.length;
-  const meanRadiusL = sL.reduce((a, b) => a + b.dist, 0) / sL.length;
-  const maxRadiusL = Math.max(...sL.map(s => s.dist));
-  const varianceL = sL.reduce((a, b) => a + Math.pow(b.dist - meanRadiusL, 2), 0) / sL.length;
-  const jitterL = Math.sqrt(varianceL);
-
-  // Right stick resting metrics
-  const meanXR = sR.reduce((a, b) => a + b.x, 0) / sR.length;
-  const meanYR = sR.reduce((a, b) => a + b.y, 0) / sR.length;
-  const meanRadiusR = sR.reduce((a, b) => a + b.dist, 0) / sR.length;
-  const maxRadiusR = Math.max(...sR.map(s => s.dist));
-  const varianceR = sR.reduce((a, b) => a + Math.pow(b.dist - meanRadiusR, 2), 0) / sR.length;
-  const jitterR = Math.sqrt(varianceR);
-
-  // Save metrics persistently
-  state.stickMetrics.l.drift  = maxRadiusL;
-  state.stickMetrics.l.jitter = jitterL;
-  if (dom.stickLDriftVal) dom.stickLDriftVal.textContent  = maxRadiusL.toFixed(3);
-  if (dom.stickLJitterVal) dom.stickLJitterVal.textContent = jitterL.toFixed(3);
-
-  // Evaluate L Center test
-  if (maxRadiusL <= BENCHMARKS.STICK.DRIFT_EXCELLENT) {
-    state.stickMetrics.l.tests.center = 'PASS';
-  } else if (maxRadiusL <= BENCHMARKS.STICK.DRIFT_ACCEPTABLE) {
-    state.stickMetrics.l.tests.center = 'REVIEW';
-    state.stickMetrics.l.reviewReasons.push({ test: 'center', value: maxRadiusL.toFixed(4), threshold: BENCHMARKS.STICK.DRIFT_EXCELLENT });
-  } else {
-    state.stickMetrics.l.tests.center = 'FAIL';
-    state.stickMetrics.l.failReasons.push({ test: 'center', value: maxRadiusL.toFixed(4), threshold: BENCHMARKS.STICK.DRIFT_ACCEPTABLE });
-  }
-
-  // Evaluate L Noise/Jitter test
-  if (jitterL <= BENCHMARKS.STICK.JITTER_MAX) {
-    state.stickMetrics.l.tests.noise = 'PASS';
-  } else {
-    state.stickMetrics.l.tests.noise = 'REVIEW';
-    state.stickMetrics.l.reviewReasons.push({ test: 'noise', value: jitterL.toFixed(4), threshold: BENCHMARKS.STICK.JITTER_MAX });
-  }
-
-  // Save R metrics persistently
-  state.stickMetrics.r.drift  = maxRadiusR;
-  state.stickMetrics.r.jitter = jitterR;
-  if (dom.stickRDriftVal) dom.stickRDriftVal.textContent  = maxRadiusR.toFixed(3);
-  if (dom.stickRJitterVal) dom.stickRJitterVal.textContent = jitterR.toFixed(3);
-
-  // Evaluate R Center test
-  if (maxRadiusR <= BENCHMARKS.STICK.DRIFT_EXCELLENT) {
-    state.stickMetrics.r.tests.center = 'PASS';
-  } else if (maxRadiusR <= BENCHMARKS.STICK.DRIFT_ACCEPTABLE) {
-    state.stickMetrics.r.tests.center = 'REVIEW';
-    state.stickMetrics.r.reviewReasons.push({ test: 'center', value: maxRadiusR.toFixed(4), threshold: BENCHMARKS.STICK.DRIFT_EXCELLENT });
-  } else {
-    state.stickMetrics.r.tests.center = 'FAIL';
-    state.stickMetrics.r.failReasons.push({ test: 'center', value: maxRadiusR.toFixed(4), threshold: BENCHMARKS.STICK.DRIFT_ACCEPTABLE });
-  }
-
-  // Evaluate R Noise/Jitter test
-  if (jitterR <= BENCHMARKS.STICK.JITTER_MAX) {
-    state.stickMetrics.r.tests.noise = 'PASS';
-  } else {
-    state.stickMetrics.r.tests.noise = 'REVIEW';
-    state.stickMetrics.r.reviewReasons.push({ test: 'noise', value: jitterR.toFixed(4), threshold: BENCHMARKS.STICK.JITTER_MAX });
-  }
-
-  evaluateStickOverall('l');
-  evaluateStickOverall('r');
-
-  const centerPassL = state.stickMetrics.l.tests.center;
-  const centerPassR = state.stickMetrics.r.tests.center;
-  const isGood = centerPassL === 'PASS' && centerPassR === 'PASS';
-  const hasFail = centerPassL === 'FAIL' || centerPassR === 'FAIL';
-
-  if (dom.driftResult) {
-    const badgeClass = hasFail ? 'badge-fail' : (isGood ? 'badge-pass' : 'badge-review');
-    const badgeText = hasFail ? t('verdictFail') : (isGood ? t('verdictPass') : t('verdictReview'));
-    dom.driftResult.innerHTML = `
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 8px;">
-        <div>
-          <strong>Drift:</strong> L: ${maxRadiusL.toFixed(3)} | R: ${maxRadiusR.toFixed(3)}
-        </div>
-        <span class="stick-verdict-badge ${badgeClass}">
-          ${badgeText}
-        </span>
-      </div>
-    `;
-  }
+  resetStickDiagnostics('l');
+  startStickPhase('l', 'REST');
 }
 
 function startFullSuite() {
-  state.suite.running = true;
-  state.suite.step = 1;
-  state.suite.startTime = performance.now();
-
-  startDriftCapture();
-
-  // Step 2: Circularity
-  setTimeout(() => {
-    state.suite.step = 2;
-    if (dom.driftResult) {
-      dom.driftResult.innerHTML = `
-        <div style="color:var(--accent);font-weight:700;text-align:center;">
-          ${t('suiteStepCirc')}
-        </div>
-      `;
-    }
-    if (dom.guidedInstructionText) {
-      dom.guidedInstructionText.textContent = t('suiteStepCirc');
-    }
-  }, 3200);
-
-  // Step 3: Snapback
-  setTimeout(() => {
-    state.suite.step = 3;
-    if (dom.driftResult) {
-      dom.driftResult.innerHTML = `
-        <div style="color:#00e5ff;font-weight:700;text-align:center;">
-          ${t('suiteStepSnap')}
-        </div>
-      `;
-    }
-    if (dom.guidedInstructionText) {
-      dom.guidedInstructionText.textContent = t('suiteStepSnap');
-    }
-  }, 7500);
-
-  // Suite completion
-  setTimeout(() => {
-    state.suite.running = false;
-    if (dom.driftResult) {
-      dom.driftResult.innerHTML = `
-        <div style="color:var(--green);font-weight:700;text-align:center;">
-          ${t('suiteDone')}
-        </div>
-      `;
-    }
-    updateWorkflowProgress();
-    updateOverallVerdict();
-  }, 12000);
+  resetStickDiagnostics('l');
+  resetStickDiagnostics('r');
+  state.forcedStep = 3;
+  startStickPhase('l', 'REST');
 }
 
 // ─────────────────────────────────────────────────────────────
-// 12. CANVAS HIGH-DPI CARTESIAN STICK RENDERING
+// 12. CANVAS HIGH-DPI CARTESIAN STICK RENDERING WITH 8 ZONES
 // ─────────────────────────────────────────────────────────────
 function drawLargeStick(canvas, rawX, rawY, isLeft, history = []) {
   if (!canvas) return;
@@ -1964,7 +1971,7 @@ function drawLargeStick(canvas, rawX, rawY, isLeft, history = []) {
   const h = canvas.height;
   const cx = w / 2;
   const cy = h / 2;
-  const r = (w / 2) - 10;
+  const r = (w / 2) * 0.72; // = 144 on 400x400 canvas, leaves outer margin for 8 compass targets and diagonals
 
   ctx.clearRect(0, 0, w, h);
 
@@ -2004,6 +2011,51 @@ function drawLargeStick(canvas, rawX, rawY, isLeft, history = []) {
   ctx.lineWidth = 1;
   ctx.stroke();
 
+  // 8 Directional Zones Indicators around the perimeter
+  const stickKey = isLeft ? 'l' : 'r';
+  const stickData = state.stickMetrics[stickKey] || {};
+  const zones = stickData.zones || [];
+  const dirLabels = ['E', 'SE', 'S', 'SW', 'W', 'NW', 'N', 'NE'];
+
+  for (let i = 0; i < 8; i++) {
+    const angleRad = (i * 45) * Math.PI / 180;
+    const targetDist = r * 1.16; // slightly outside the 1.0 ring
+    const zx = cx + Math.cos(angleRad) * targetDist;
+    const zy = cy + Math.sin(angleRad) * targetDist;
+    const isReached = (zones[i] >= 0.60);
+
+    ctx.beginPath();
+    ctx.arc(zx, zy, 11, 0, Math.PI * 2);
+    if (isReached) {
+      ctx.fillStyle = 'rgba(34, 197, 94, 0.25)';
+      ctx.fill();
+      ctx.strokeStyle = '#22c55e';
+      ctx.lineWidth = 2;
+      ctx.shadowColor = '#22c55e';
+      ctx.shadowBlur = 8;
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 9px monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('✓', zx, zy);
+    } else {
+      ctx.fillStyle = 'rgba(26, 26, 38, 0.85)';
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.16)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+      ctx.font = 'bold 8px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(dirLabels[i], zx, zy);
+    }
+  }
+
   // Trace Trajectory history
   if (history && history.length > 1) {
     ctx.beginPath();
@@ -2013,7 +2065,7 @@ function drawLargeStick(canvas, rawX, rawY, isLeft, history = []) {
       if (i === 0) ctx.moveTo(px, py);
       else ctx.lineTo(px, py);
     }
-    ctx.strokeStyle = 'rgba(99, 102, 241, 0.25)';
+    ctx.strokeStyle = 'rgba(99, 102, 241, 0.3)';
     ctx.lineWidth = 1.5;
     ctx.stroke();
   }
@@ -2031,7 +2083,7 @@ function drawLargeStick(canvas, rawX, rawY, isLeft, history = []) {
 
   // Current Position Puck
   ctx.beginPath();
-  ctx.arc(posX, posY, 10, 0, Math.PI * 2);
+  ctx.arc(posX, posY, 9, 0, Math.PI * 2);
   ctx.fillStyle = '#00e5ff';
   ctx.shadowColor = '#00e5ff';
   ctx.shadowBlur = 10;
@@ -2039,7 +2091,7 @@ function drawLargeStick(canvas, rawX, rawY, isLeft, history = []) {
   ctx.shadowBlur = 0;
 
   ctx.beginPath();
-  ctx.arc(posX, posY, 4, 0, Math.PI * 2);
+  ctx.arc(posX, posY, 3.5, 0, Math.PI * 2);
   ctx.fillStyle = '#ffffff';
   ctx.fill();
 }
@@ -2282,14 +2334,15 @@ function updateWorkflowProgress() {
 
   const sl = state.stickMetrics.l;
   const sr = state.stickMetrics.r;
-  const stickLDone = (sl.verdict === 'PASS');
-  const stickRDone = (sr.verdict === 'PASS');
+  const stickLDone = (sl.completed === true);
+  const stickRDone = (sr.completed === true);
 
   const certDone = buttonsDone && triggersDone && stickLDone && stickRDone;
 
   // Determine current active step
   let activeStep = 1;
-  if (!buttonsDone) activeStep = 1;
+  if (state.forcedStep) activeStep = state.forcedStep;
+  else if (!buttonsDone) activeStep = 1;
   else if (!triggersDone) activeStep = 2;
   else if (!stickLDone) activeStep = 3;
   else if (!stickRDone) activeStep = 4;
@@ -2305,15 +2358,19 @@ function updateWorkflowProgress() {
     dom.stepTrig.className = triggersDone ? 'step-chip passed' : (activeStep === 2 ? 'step-chip active' : 'step-chip');
     if (dom.checkTrig) dom.checkTrig.textContent = triggersDone ? '✓' : '○';
   }
-  // Step 3: Stick L
+  // Step 3: Stick L (Separate completion from verdict so user is never trapped)
   if (dom.stepStickL) {
     dom.stepStickL.className = stickLDone ? 'step-chip passed' : (activeStep === 3 ? 'step-chip active' : 'step-chip');
-    if (dom.checkStickL) dom.checkStickL.textContent = stickLDone ? '✓' : '○';
+    if (dom.checkStickL) {
+      dom.checkStickL.textContent = stickLDone ? (sl.verdict === 'PASS' ? '✓' : (sl.verdict === 'REVIEW' ? '!' : '✕')) : '○';
+    }
   }
   // Step 4: Stick R
   if (dom.stepStickR) {
     dom.stepStickR.className = stickRDone ? 'step-chip passed' : (activeStep === 4 ? 'step-chip active' : 'step-chip');
-    if (dom.checkStickR) dom.checkStickR.textContent = stickRDone ? '✓' : '○';
+    if (dom.checkStickR) {
+      dom.checkStickR.textContent = stickRDone ? (sr.verdict === 'PASS' ? '✓' : (sr.verdict === 'REVIEW' ? '!' : '✕')) : '○';
+    }
   }
   // Step 5: Cert
   if (dom.stepCert) {
@@ -2321,16 +2378,22 @@ function updateWorkflowProgress() {
     if (dom.checkCert) dom.checkCert.textContent = certDone ? '✓' : '○';
   }
 
-  // Dynamic instruction banner (only update if not running diagnostic suite)
-  if (dom.guidedInstructionText && !state.suite.running) {
+  // Dynamic instruction banner
+  if (dom.guidedInstructionText) {
     if (activeStep === 1) {
       dom.guidedInstructionText.textContent = `${t('instructionStep1')} (${passedBtns}/${totalBtns})`;
     } else if (activeStep === 2) {
       dom.guidedInstructionText.textContent = t('instructionStep2');
     } else if (activeStep === 3) {
-      dom.guidedInstructionText.textContent = t('instructionStep3');
+      if (sl.phase === 'REST') dom.guidedInstructionText.textContent = "Stick Izquierdo — Reposo: No toques el stick (2s)...";
+      else if (sl.phase === 'MOVE') dom.guidedInstructionText.textContent = `Stick Izquierdo — Movimiento: Mueve el stick lentamente en un círculo (${sl.coverage || 0}/8)`;
+      else if (sl.phase === 'RETURN') dom.guidedInstructionText.textContent = "Stick Izquierdo — Retorno: Suelta el stick";
+      else dom.guidedInstructionText.textContent = t('instructionStep3');
     } else if (activeStep === 4) {
-      dom.guidedInstructionText.textContent = t('instructionStep4');
+      if (sr.phase === 'REST') dom.guidedInstructionText.textContent = "Stick Derecho — Reposo: No toques el stick (2s)...";
+      else if (sr.phase === 'MOVE') dom.guidedInstructionText.textContent = `Stick Derecho — Movimiento: Mueve el stick lentamente en un círculo (${sr.coverage || 0}/8)`;
+      else if (sr.phase === 'RETURN') dom.guidedInstructionText.textContent = "Stick Derecho — Retorno: Suelta el stick";
+      else dom.guidedInstructionText.textContent = t('instructionStep4');
     } else {
       dom.guidedInstructionText.textContent = t('instructionStep5');
     }
@@ -2606,29 +2669,82 @@ function populatePrintReport(record) {
   const sl = record ? record.stickL : state.stickMetrics.l;
   const sr = record ? record.stickR : state.stickMetrics.r;
 
-  // Real measured values only - NO fake defaults!
-  // Support both new schema (circularity/coverage/returnTime) and historical keys if present
   const slCirc = sl.circularity !== undefined ? sl.circularity : (sl.circ !== undefined ? sl.circ : null);
   const slSnap = sl.returnTime !== undefined ? sl.returnTime : (sl.snap !== undefined ? sl.snap : null);
   const srCirc = sr.circularity !== undefined ? sr.circularity : (sr.circ !== undefined ? sr.circ : null);
   const srSnap = sr.returnTime !== undefined ? sr.returnTime : (sr.snap !== undefined ? sr.snap : null);
 
-  if (dom.printSlDrift)   dom.printSlDrift.textContent   = sl.drift !== null && sl.drift !== undefined ? sl.drift.toFixed(3) : '—';
-  if (dom.printSlJitter)  dom.printSlJitter.textContent  = sl.jitter !== null && sl.jitter !== undefined ? sl.jitter.toFixed(3) : '—';
-  if (dom.printSlCirc)    dom.printSlCirc.textContent    = slCirc !== null && slCirc !== undefined ? `${slCirc}%` : '—';
-  if (dom.printSlSnap)    dom.printSlSnap.textContent    = slSnap !== null && slSnap !== undefined ? `${slSnap}ms` : '—';
-  if (dom.printSlVerdict) dom.printSlVerdict.textContent = sl.verdict || 'PENDING';
+  const formatStickVerdict = (v) => {
+    if (v === 'PASS') return '✓ Correcto';
+    if (v === 'REVIEW') return '⚠ Requiere revisión';
+    if (v === 'FAIL') return '✕ Defectuoso';
+    return '—';
+  };
+  const getBadgeClass = (v) => {
+    if (v === 'PASS') return 'print-badge badge-pass';
+    if (v === 'REVIEW') return 'print-badge badge-review';
+    if (v === 'FAIL') return 'print-badge badge-fail';
+    return 'print-badge';
+  };
 
-  if (dom.printSrDrift)   dom.printSrDrift.textContent   = sr.drift !== null && sr.drift !== undefined ? sr.drift.toFixed(3) : '—';
-  if (dom.printSrJitter)  dom.printSrJitter.textContent  = sr.jitter !== null && sr.jitter !== undefined ? sr.jitter.toFixed(3) : '—';
-  if (dom.printSrCirc)    dom.printSrCirc.textContent    = srCirc !== null && srCirc !== undefined ? `${srCirc}%` : '—';
-  if (dom.printSrSnap)    dom.printSrSnap.textContent    = srSnap !== null && srSnap !== undefined ? `${srSnap}ms` : '—';
-  if (dom.printSrVerdict) dom.printSrVerdict.textContent = sr.verdict || 'PENDING';
+  // Left Stick Customer Metrics
+  if (dom.printSlDrift) {
+    dom.printSlDrift.textContent = sl.drift !== null && sl.drift !== undefined
+      ? (sl.drift <= 0.05 ? `✓ Estable (${sl.drift.toFixed(3)})` : (sl.drift <= 0.10 ? `! Leve (${sl.drift.toFixed(3)})` : `✕ Deriva (${sl.drift.toFixed(3)})`))
+      : '—';
+  }
+  if (dom.printSlJitter) {
+    dom.printSlJitter.textContent = sl.jitter !== null && sl.jitter !== undefined
+      ? (sl.jitter <= 0.018 ? '✓ Estable' : '! Inestable')
+      : '—';
+  }
+  if (dom.printSlCirc) {
+    dom.printSlCirc.textContent = sl.coverage !== null && sl.coverage !== undefined
+      ? `${sl.coverage}/8 Zonas ✓`
+      : (slCirc !== null && slCirc !== undefined ? `${slCirc}%` : '—');
+  }
+  if (dom.printSlSnap) {
+    dom.printSlSnap.textContent = slSnap !== null && slSnap !== undefined ? `${slSnap}ms ✓` : '—';
+  }
+  if (dom.printSlVerdict) {
+    dom.printSlVerdict.textContent = formatStickVerdict(sl.verdict);
+    dom.printSlVerdict.className = getBadgeClass(sl.verdict);
+  }
+
+  // Right Stick Customer Metrics
+  if (dom.printSrDrift) {
+    dom.printSrDrift.textContent = sr.drift !== null && sr.drift !== undefined
+      ? (sr.drift <= 0.05 ? `✓ Estable (${sr.drift.toFixed(3)})` : (sr.drift <= 0.10 ? `! Leve (${sr.drift.toFixed(3)})` : `✕ Deriva (${sr.drift.toFixed(3)})`))
+      : '—';
+  }
+  if (dom.printSrJitter) {
+    dom.printSrJitter.textContent = sr.jitter !== null && sr.jitter !== undefined
+      ? (sr.jitter <= 0.018 ? '✓ Estable' : '! Inestable')
+      : '—';
+  }
+  if (dom.printSrCirc) {
+    dom.printSrCirc.textContent = sr.coverage !== null && sr.coverage !== undefined
+      ? `${sr.coverage}/8 Zonas ✓`
+      : (srCirc !== null && srCirc !== undefined ? `${srCirc}%` : '—');
+  }
+  if (dom.printSrSnap) {
+    dom.printSrSnap.textContent = srSnap !== null && srSnap !== undefined ? `${srSnap}ms ✓` : '—';
+  }
+  if (dom.printSrVerdict) {
+    dom.printSrVerdict.textContent = formatStickVerdict(sr.verdict);
+    dom.printSrVerdict.className = getBadgeClass(sr.verdict);
+  }
 
   const tL = record ? record.triggers.l2Verdict : state.triggers.l2.verdict;
   const tR = record ? record.triggers.r2Verdict : state.triggers.r2.verdict;
-  if (dom.printL2Verdict) dom.printL2Verdict.textContent = tL || 'PENDING';
-  if (dom.printR2Verdict) dom.printR2Verdict.textContent = tR || 'PENDING';
+  if (dom.printL2Verdict) {
+    dom.printL2Verdict.textContent = formatStickVerdict(tL);
+    dom.printL2Verdict.className = getBadgeClass(tL);
+  }
+  if (dom.printR2Verdict) {
+    dom.printR2Verdict.textContent = formatStickVerdict(tR);
+    dom.printR2Verdict.className = getBadgeClass(tR);
+  }
 
   const btnTotal = record ? record.buttons.total : Object.keys(state.buttonStates).length || 16;
   const btnPassed= record ? record.buttons.passed : Object.values(state.buttonStates).filter(b => b.clicks >= 3).length;
@@ -2636,19 +2752,23 @@ function populatePrintReport(record) {
 
   if (dom.printBtnCount)   dom.printBtnCount.textContent = `${btnPassed} / ${btnTotal}`;
   if (dom.printBtnStuck)   dom.printBtnStuck.textContent = `${btnStuck} (${btnStuck === 0 ? 'Ninguno' : 'Defecto'})`;
-  if (dom.printBtnVerdict) dom.printBtnVerdict.textContent = btnStuck > 0 ? 'FAIL' : (btnPassed >= btnTotal ? 'PASS' : 'REVIEW');
+  if (dom.printBtnVerdict) {
+    const bVerdict = btnStuck > 0 ? 'FAIL' : (btnPassed >= btnTotal ? 'PASS' : 'REVIEW');
+    dom.printBtnVerdict.textContent = formatStickVerdict(bVerdict);
+    dom.printBtnVerdict.className = getBadgeClass(bVerdict);
+  }
 
-  // Exact Authoritative Verdict mapping - NEVER map REVIEW to PASS!
+  // Exact Authoritative Overall Verdict
   const overall = record ? record.overallVerdict : calculateAuthoritativeOverallVerdict();
   if (dom.printFinalStamp) {
     if (overall === 'PASS') {
-      dom.printFinalStamp.textContent = 'APTO (PASS)';
+      dom.printFinalStamp.textContent = '✓ APTO (CORRECTO)';
       dom.printFinalStamp.className = 'verdict-stamp stamp-pass';
     } else if (overall === 'REVIEW') {
-      dom.printFinalStamp.textContent = 'A REVISIÓN (REVIEW)';
+      dom.printFinalStamp.textContent = '⚠ A REVISIÓN (OBSERVACIONES)';
       dom.printFinalStamp.className = 'verdict-stamp stamp-review';
     } else if (overall === 'FAIL') {
-      dom.printFinalStamp.textContent = 'NO APTO (FAIL)';
+      dom.printFinalStamp.textContent = '✕ NO APTO (DEFECTUOSO)';
       dom.printFinalStamp.className = 'verdict-stamp stamp-fail';
     } else {
       dom.printFinalStamp.textContent = 'PENDIENTE (INCOMPLETO)';
@@ -2726,18 +2846,54 @@ function initEventListeners() {
   if (dom.driftBtn)      dom.driftBtn.addEventListener('click', startDriftCapture);
   if (dom.stickClearTraceBtn) {
     dom.stickClearTraceBtn.addEventListener('click', () => {
+      resetStickDiagnostics('l');
+      resetStickDiagnostics('r');
       state.stickHistoryL = [];
       state.stickHistoryR = [];
-      state.circleBinsL = new Array(36).fill(0);
-      state.circleBinsR = new Array(36).fill(0);
-      state.snapL = { state: 'IDLE', startTime: 0, peakDist: 0, lastDist: 0, stabilizeStartTime: 0, done: false };
-      state.snapR = { state: 'IDLE', startTime: 0, peakDist: 0, lastDist: 0, stabilizeStartTime: 0, done: false };
-      if (dom.stickLCircVal) dom.stickLCircVal.textContent = '—';
-      if (dom.stickRCircVal) dom.stickRCircVal.textContent = '—';
+      if (dom.stickLCircVal) dom.stickLCircVal.textContent = '0/8';
+      if (dom.stickRCircVal) dom.stickRCircVal.textContent = '0/8';
       if (dom.stickLSnapVal) dom.stickLSnapVal.textContent = '—';
       if (dom.stickRSnapVal) dom.stickRSnapVal.textContent = '—';
       if (dom.stickLCanvas) drawLargeStick(dom.stickLCanvas, 0, 0, true, []);
       if (dom.stickRCanvas) drawLargeStick(dom.stickRCanvas, 0, 0, false, []);
+      updateWorkflowProgress();
+      updateOverallVerdict();
+    });
+  }
+
+  // Clickable Workflow Step Chips for immediate navigation
+  if (dom.stepBtn) {
+    dom.stepBtn.addEventListener('click', () => {
+      state.forcedStep = 1;
+      updateWorkflowProgress();
+    });
+  }
+  if (dom.stepTrig) {
+    dom.stepTrig.addEventListener('click', () => {
+      state.forcedStep = 2;
+      updateWorkflowProgress();
+    });
+  }
+  if (dom.stepStickL) {
+    dom.stepStickL.addEventListener('click', () => {
+      state.forcedStep = 3;
+      resetStickDiagnostics('l');
+      startStickPhase('l', 'REST');
+      updateWorkflowProgress();
+    });
+  }
+  if (dom.stepStickR) {
+    dom.stepStickR.addEventListener('click', () => {
+      state.forcedStep = 4;
+      resetStickDiagnostics('r');
+      startStickPhase('r', 'REST');
+      updateWorkflowProgress();
+    });
+  }
+  if (dom.stepCert) {
+    dom.stepCert.addEventListener('click', () => {
+      state.forcedStep = 5;
+      updateWorkflowProgress();
     });
   }
 
