@@ -424,37 +424,28 @@ function initLanguage() {
 // ─────────────────────────────────────────────────────────────
 const BENCHMARKS = {
   STICK: {
-    // 1. Center / Drift thresholds (radial distance from 0,0)
-    DRIFT_EXCELLENT:  0.045, // <= 4.5% radial offset = PASS
-    DRIFT_ACCEPTABLE: 0.095, // <= 9.5% radial offset = REVIEW, > 9.5% = FAIL
+    // USED / SECOND-HAND CONTROLLER TOLERANCES
+    // 1. Center / Resting Drift (sustained radial distance)
+    DRIFT_PASS:        0.060, // <= 0.05–0.06 sustained = PASS
+    DRIFT_REVIEW:      0.105, // 0.061–0.105 = REVIEW
+    DRIFT_FAIL:        0.105, // > 0.105 sustained = FAIL
     
-    // 2. Resting noise / jitter (standard deviation during rest test)
-    JITTER_MAX:       0.018, // <= 0.018 noise std dev = PASS, > 0.018 = REVIEW
+    // 2. Resting noise / jitter (minor normal wear acceptable)
+    JITTER_PASS:       0.026, // <= 0.026 noise std dev = PASS, > 0.026 = REVIEW
     
-    // 3. Angular Coverage (36 sectors = 10 deg each)
-    COVERAGE_MIN_PASS:   90.0, // >= 90% angular coverage = PASS
-    COVERAGE_MIN_REVIEW: 70.0, // >= 70% angular coverage = REVIEW, < 70% = FAIL
+    // 3. Directional Range (8 main compass sectors)
+    RANGE_PASS:        0.75,  // Important directions generally reach ~0.75+ = PASS
+    RANGE_REVIEW:      0.60,  // Repeatedly 0.60–0.75 = REVIEW
+    RANGE_FAIL:        0.60,  // Stays below ~0.60 or barely responds = FAIL
     
-    // 4. True Circularity / Uniformity (Radial deviation & average outer radius)
-    CIRCULARITY_AVG_MIN_PASS:   0.85, // Avg outer radius must reach at least 0.85
-    CIRCULARITY_AVG_MIN_REVIEW: 0.72,
-    CIRCULARITY_UNIFORM_MAX_ERR: 0.22, // Max deviation between sectors (uniformity)
-    
-    // 5. Directional Range (8 main compass sectors: N, NE, E, SE, S, SW, W, NW)
-    RANGE_MIN_SECTOR_PASS:   0.80, // Every sector should reach at least 0.80
-    RANGE_MIN_SECTOR_REVIEW: 0.65, // Below 0.65 is weak sector FAIL
-    
-    // 6. Return to Center / Snapback (duration & stabilization)
-    SNAPBACK_PASS_MS:   180, // <= 180ms normal return = PASS
-    SNAPBACK_REVIEW_MS: 320, // 181-320ms slightly slow return = REVIEW, > 320ms = FAIL
-    SNAPBACK_CENTER_REST_MAX: 0.08, // Must stabilize within 0.08 radius
-    
-    // 7. Movement Smoothness (abnormal jumps during deliberate tracking)
-    SMOOTHNESS_MAX_DELTA: 0.45, // Unusually huge delta between consecutive frames
+    // 4. Return to Center (stabilized resting offset)
+    RETURN_PASS:       0.080, // Returns within radius 0.07–0.08 = PASS
+    RETURN_REVIEW:     0.120, // 0.081–0.120 sustained = REVIEW
+    RETURN_FAIL:       0.120, // Significantly displaced > 0.120 = FAIL
   },
   TRIGGER: {
-    REST_MAX: 0.03,         // Must be near 0 at rest
-    MAX_MIN:  0.94,         // Must reach near 1.0 at full press
+    REST_MAX: 0.04,         // Forgiving for used controller triggers
+    MAX_MIN:  0.92,         // Reaches ~92%+ at full press
   },
   ACTIVITY_THRESHOLD_AXIS: 0.25,
   ACTIVITY_THRESHOLD_BTN:  0.35,
@@ -1288,6 +1279,7 @@ function startStickPhase(stick, newPhase) {
     }
   } else if (newPhase === 'MOVE') {
     m.prevMovePos = null;
+    m.moveStartTime = performance.now();
     if (moveItem) moveItem.className = 'stick-phase-item phase-active';
     if (moveVal)  moveVal.textContent = `${m.coverage || 0}/8`;
     if (dom.guidedInstructionText) {
@@ -1382,7 +1374,12 @@ function updateStickPhaseStateMachine(stick, x, y, dist, angle, now) {
     return;
   }
 
-  // ── PHASE 1: REPOSO (REST) ──────────────────────────────────
+  // ── PHASE 1: REPOSO (REST DRIFT & NOISE) ───────────────────────
+  // Evaluated using USED / SECOND-HAND tolerances:
+  // PASS: sustained deviation approximately <= 0.05–0.06
+  // REVIEW: approximately 0.06–0.10
+  // FAIL: persistent deviation approximately > 0.10–0.12
+  // Minor noise is acceptable. Do not fail from one isolated frame.
   if (m.phase === 'REST') {
     // If operator is pushing the stick (dist > 0.30), wait for release before counting 2s
     if (dist > 0.30) {
@@ -1403,35 +1400,40 @@ function updateStickPhaseStateMachine(stick, x, y, dist, angle, now) {
     if (restVal) restVal.textContent = `⏱ ${remaining.toFixed(1)}s`;
 
     if (elapsed >= 2.0) {
-      // Evaluate Rest Drift & Jitter
+      // Sustained resting drift measurement using 90th percentile of samples
       const s = m.restSamples;
-      const maxDist = s.length > 0 ? Math.max(...s.map(pt => pt.dist)) : dist;
+      const sortedDists = s.map(pt => pt.dist).sort((a, b) => a - b);
+      const p90Idx = Math.floor(sortedDists.length * 0.90);
+      const sustainedDist = sortedDists.length > 0 ? sortedDists[p90Idx] : dist;
       const avgDist = s.length > 0 ? (s.reduce((a, b) => a + b.dist, 0) / s.length) : dist;
       const variance = s.length > 0 ? (s.reduce((a, b) => a + Math.pow(b.dist - avgDist, 2), 0) / s.length) : 0;
       const jitter = Math.sqrt(variance);
 
-      m.drift = parseFloat(maxDist.toFixed(4));
+      m.drift = parseFloat(sustainedDist.toFixed(4));
       m.jitter = parseFloat(jitter.toFixed(4));
 
       if (isLeft) {
-        if (dom.stickLDriftVal) dom.stickLDriftVal.textContent = maxDist.toFixed(3);
+        if (dom.stickLDriftVal) dom.stickLDriftVal.textContent = sustainedDist.toFixed(3);
         if (dom.stickLJitterVal) dom.stickLJitterVal.textContent = jitter.toFixed(3);
       } else {
-        if (dom.stickRDriftVal) dom.stickRDriftVal.textContent = maxDist.toFixed(3);
+        if (dom.stickRDriftVal) dom.stickRDriftVal.textContent = sustainedDist.toFixed(3);
         if (dom.stickRJitterVal) dom.stickRJitterVal.textContent = jitter.toFixed(3);
       }
 
-      // Green: <= 0.045 & jitter <= 0.018 | Orange: <= 0.095 | Red: > 0.095
-      if (maxDist <= BENCHMARKS.STICK.DRIFT_EXCELLENT && jitter <= BENCHMARKS.STICK.JITTER_MAX) {
+      // Second-hand tolerances:
+      // PASS: <= 0.060 sustained & jitter <= 0.026
+      // REVIEW: <= 0.105 sustained
+      // FAIL: > 0.105 sustained
+      if (sustainedDist <= BENCHMARKS.STICK.DRIFT_PASS && jitter <= BENCHMARKS.STICK.JITTER_PASS) {
         m.restVerdict = 'PASS';
-      } else if (maxDist <= BENCHMARKS.STICK.DRIFT_ACCEPTABLE) {
+      } else if (sustainedDist <= BENCHMARKS.STICK.DRIFT_REVIEW) {
         m.restVerdict = 'REVIEW';
       } else {
         m.restVerdict = 'FAIL';
       }
 
       m.tests.center = m.restVerdict;
-      m.tests.noise  = (jitter <= BENCHMARKS.STICK.JITTER_MAX) ? 'PASS' : 'REVIEW';
+      m.tests.noise  = (jitter <= BENCHMARKS.STICK.JITTER_PASS) ? 'PASS' : 'REVIEW';
 
       // Update Phase 1 UI
       if (restItem) {
@@ -1447,15 +1449,23 @@ function updateStickPhaseStateMachine(stick, x, y, dist, angle, now) {
     return;
   }
 
-  // ── PHASE 2: MOVIMIENTO (8 DIRECTIONAL ZONES & MOVEMENT DRIFT) ──
+  // ── PHASE 2: MOVIMIENTO (8 DIRECTIONAL ZONES & MOVEMENT STABILITY) ──
+  // Evaluated using USED / SECOND-HAND tolerances:
+  // 8/8: PASS candidate
+  // 7/8: allow PASS if movement, range and return are otherwise healthy
+  // 6/8: normally REVIEW
+  // 5/8 or less: FAIL or strong REVIEW depending on actual response
+  // Minor noise is acceptable. Do not fail on one fast movement or single frame.
   if (m.phase === 'MOVE') {
-    // 1. Detect which of the 8 zones the stick reaches when pushed past 0.60
-    if (dist >= 0.60) {
+    if (!m.moveStartTime) m.moveStartTime = now;
+
+    // 1. Detect which of the 8 zones the stick reaches when pushed past 0.58
+    if (dist >= 0.58) {
       const zoneIdx = Math.floor(((angle + 22.5) % 360) / 45);
       m.zones[zoneIdx] = Math.max(m.zones[zoneIdx] || 0, dist);
     }
 
-    const visitedCount = m.zones.filter(d => d >= 0.60).length;
+    const visitedCount = m.zones.filter(d => d >= 0.58).length;
     m.coverage = visitedCount;
 
     if (moveVal) {
@@ -1468,6 +1478,7 @@ function updateStickPhaseStateMachine(stick, x, y, dist, angle, now) {
     }
 
     // 2. Continuous movement irregularity analysis (Movement Drift)
+    // Only detect repeated, genuine potentiometer dropouts or impossible teleport jumps
     if (dist >= 0.25) {
       if (m.prevMovePos && m.prevMovePos.time > 0) {
         const dx = x - m.prevMovePos.x;
@@ -1476,41 +1487,68 @@ function updateStickPhaseStateMachine(stick, x, y, dist, angle, now) {
         const dt = now - m.prevMovePos.time;
 
         // Potentiometer wiper dropout (collapsing abruptly to center from edge and jumping back)
-        if (m.prevMovePos.dist >= 0.60 && dist < 0.20) {
+        if (m.prevMovePos.dist >= 0.65 && dist < 0.18) {
           m.moveDropouts++;
         }
-        // Unusually huge coordinate jump in single frame (< 50ms) without human progression
-        if (step > 0.70 && dt < 50) {
+        // Unusually huge coordinate jump in single frame (< 40ms) without human progression
+        if (step > 0.75 && dt < 40) {
           m.moveGlitches++;
         }
       }
       m.prevMovePos = { x, y, dist, time: now };
     }
 
-    // Phase 2 completion: when 7/8 or 8/8 zones are reached
-    if (visitedCount >= 7) {
-      const visitedRanges = m.zones.filter(d => d >= 0.60);
-      const avgRange = visitedRanges.reduce((a, b) => a + b, 0) / visitedRanges.length;
+    // Phase 2 completion:
+    // - 7/8 or 8/8 reached: immediate transition
+    // - Or if moving for at least 4s and released (dist <= 0.30) with at least 5 directions: advance
+    // - Or timeout after 7.5s and released: advance (never trap the technician!)
+    const moveElapsed = now - m.moveStartTime;
+    const canAdvancePartial = (visitedCount >= 5 && moveElapsed >= 4000 && dist <= 0.30);
+    const timeoutAdvance = (moveElapsed >= 7500 && dist <= 0.30);
+
+    if (visitedCount >= 7 || canAdvancePartial || timeoutAdvance) {
+      const visitedRanges = m.zones.filter(d => d >= 0.58);
+      const avgRange = visitedRanges.length > 0 ? (visitedRanges.reduce((a, b) => a + b, 0) / visitedRanges.length) : 0;
       const maxRange = Math.max(...m.zones);
-      const weakDirections = m.zones.filter(d => d > 0 && d < 0.65).length;
+      const deadDirections = m.zones.filter(d => d < 0.50).length;
 
       m.range = parseFloat(maxRange.toFixed(3));
       m.circularity = Math.round((visitedCount / 8) * 100);
 
-      // Evaluate Movement Quality:
-      // Don't fail for fast movement: require genuine dropout/glitches or weak directions
-      if (m.moveDropouts >= 3 || m.moveGlitches >= 4) {
-        m.moveVerdict = 'FAIL';
-      } else if (m.moveDropouts >= 1 || m.moveGlitches >= 1 || visitedCount === 7 || weakDirections > 0 || avgRange < 0.75) {
-        m.moveVerdict = 'REVIEW';
+      // Evaluate Movement Quality according to USED / SECOND-HAND CONTROLLER TOLERANCES:
+      // 8/8: PASS candidate
+      // 7/8: allow PASS if movement, range and return are otherwise healthy
+      // 6/8: normally REVIEW
+      // 5/8 or less: FAIL or strong REVIEW depending on actual response
+      let moveVerdict = 'PASS';
+
+      if (visitedCount <= 4 || m.moveDropouts >= 4 || m.moveGlitches >= 5 || deadDirections >= 4) {
+        moveVerdict = 'FAIL';
+      } else if (visitedCount <= 5) {
+        moveVerdict = (avgRange < 0.65 || deadDirections >= 3) ? 'FAIL' : 'REVIEW';
+      } else if (visitedCount === 6) {
+        moveVerdict = 'REVIEW';
+      } else if (visitedCount === 7) {
+        // 7/8: allow PASS if movement and range are otherwise healthy
+        if (m.moveDropouts >= 2 || m.moveGlitches >= 2 || avgRange < 0.70) {
+          moveVerdict = 'REVIEW';
+        } else {
+          moveVerdict = 'PASS';
+        }
       } else {
-        m.moveVerdict = 'PASS';
+        // 8/8: PASS candidate
+        if (m.moveDropouts >= 2 || m.moveGlitches >= 2 || avgRange < 0.70) {
+          moveVerdict = 'REVIEW';
+        } else {
+          moveVerdict = 'PASS';
+        }
       }
 
-      m.tests.coverage = (visitedCount >= 8) ? 'PASS' : 'REVIEW';
-      m.tests.range = (avgRange >= 0.78 && weakDirections === 0) ? 'PASS' : 'REVIEW';
-      m.tests.smoothness = (m.moveGlitches === 0 && m.moveDropouts === 0) ? 'PASS' : 'REVIEW';
-      m.tests.circularity = m.moveVerdict;
+      m.moveVerdict = moveVerdict;
+      m.tests.coverage = (visitedCount >= 7) ? 'PASS' : (visitedCount === 6 ? 'REVIEW' : 'FAIL');
+      m.tests.range = (avgRange >= 0.72) ? 'PASS' : (avgRange >= 0.60 ? 'REVIEW' : 'FAIL');
+      m.tests.smoothness = (m.moveGlitches < 2 && m.moveDropouts < 2) ? 'PASS' : (moveVerdict === 'FAIL' ? 'FAIL' : 'REVIEW');
+      m.tests.circularity = moveVerdict; // Informational only
 
       // Update Phase 2 UI
       if (moveItem) {
@@ -1528,9 +1566,13 @@ function updateStickPhaseStateMachine(stick, x, y, dist, angle, now) {
   }
 
   // ── PHASE 3: RETORNO (RETURN TO CENTER & STABILIZATION) ──────
+  // Evaluated using USED / SECOND-HAND tolerances:
+  // PASS: returns approximately within radius 0.07–0.08 and remains stable
+  // REVIEW: approximately 0.08–0.12 sustained
+  // FAIL: remains significantly displaced beyond approximately 0.12
   if (m.phase === 'RETURN') {
-    // Wait until stick enters center region (dist <= 0.15)
-    if (dist <= 0.15) {
+    // Wait until stick enters center region (dist <= 0.16)
+    if (dist <= 0.16) {
       if (!m.returnStabilizeStart) {
         m.returnStabilizeStart = now;
         m.returnSamples = [];
@@ -1554,10 +1596,10 @@ function updateStickPhaseStateMachine(stick, x, y, dist, angle, now) {
         }
 
         // Return evaluation:
-        // Returns cleanly <= 0.055: PASS | Slight offset <= 0.110: REVIEW | Failed return > 0.110: FAIL
-        if (returnOffset <= 0.055) {
+        // Returns cleanly <= 0.080: PASS | Slight offset <= 0.120: REVIEW | Failed return > 0.120: FAIL
+        if (returnOffset <= BENCHMARKS.STICK.RETURN_PASS) {
           m.returnVerdict = 'PASS';
-        } else if (returnOffset <= 0.110) {
+        } else if (returnOffset <= BENCHMARKS.STICK.RETURN_REVIEW) {
           m.returnVerdict = 'REVIEW';
         } else {
           m.returnVerdict = 'FAIL';
@@ -1597,6 +1639,7 @@ function resetStickDiagnostics(stick) {
   m.moveGlitches = 0;
   m.moveDropouts = 0;
   m.moveVerdict = null;
+  m.moveStartTime = 0;
   m.coverage = 0;
   m.circularity = null;
   m.range = null;
@@ -2690,12 +2733,12 @@ function populatePrintReport(record) {
   // Left Stick Customer Metrics
   if (dom.printSlDrift) {
     dom.printSlDrift.textContent = sl.drift !== null && sl.drift !== undefined
-      ? (sl.drift <= 0.05 ? `✓ Estable (${sl.drift.toFixed(3)})` : (sl.drift <= 0.10 ? `! Leve (${sl.drift.toFixed(3)})` : `✕ Deriva (${sl.drift.toFixed(3)})`))
+      ? (sl.drift <= 0.060 ? `✓ Estable (${sl.drift.toFixed(3)})` : (sl.drift <= 0.105 ? `! Leve (${sl.drift.toFixed(3)})` : `✕ Deriva (${sl.drift.toFixed(3)})`))
       : '—';
   }
   if (dom.printSlJitter) {
     dom.printSlJitter.textContent = sl.jitter !== null && sl.jitter !== undefined
-      ? (sl.jitter <= 0.018 ? '✓ Estable' : '! Inestable')
+      ? (sl.jitter <= 0.026 ? '✓ Estable' : '! Inestable')
       : '—';
   }
   if (dom.printSlCirc) {
@@ -2714,12 +2757,12 @@ function populatePrintReport(record) {
   // Right Stick Customer Metrics
   if (dom.printSrDrift) {
     dom.printSrDrift.textContent = sr.drift !== null && sr.drift !== undefined
-      ? (sr.drift <= 0.05 ? `✓ Estable (${sr.drift.toFixed(3)})` : (sr.drift <= 0.10 ? `! Leve (${sr.drift.toFixed(3)})` : `✕ Deriva (${sr.drift.toFixed(3)})`))
+      ? (sr.drift <= 0.060 ? `✓ Estable (${sr.drift.toFixed(3)})` : (sr.drift <= 0.105 ? `! Leve (${sr.drift.toFixed(3)})` : `✕ Deriva (${sr.drift.toFixed(3)})`))
       : '—';
   }
   if (dom.printSrJitter) {
     dom.printSrJitter.textContent = sr.jitter !== null && sr.jitter !== undefined
-      ? (sr.jitter <= 0.018 ? '✓ Estable' : '! Inestable')
+      ? (sr.jitter <= 0.026 ? '✓ Estable' : '! Inestable')
       : '—';
   }
   if (dom.printSrCirc) {
