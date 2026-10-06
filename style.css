@@ -618,10 +618,11 @@ header h1 {
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
-.badge-pass { background: rgba(16, 185, 129, 0.2); color: var(--green); border: 1px solid var(--green); }
+.badge-pass { background: rgba(34, 197, 94, 0.2); color: #22c55e; border: 1px solid #22c55e; }
 .badge-review { background: rgba(245, 158, 11, 0.2); color: var(--yellow); border: 1px solid var(--yellow); }
 .badge-fail { background: rgba(239, 68, 68, 0.25); color: var(--red); border: 1px solid var(--red); }
-.badge-neutral { background: var(--surface3); color: var(--text-muted); border: 1px solid var(--border); }
+.badge-testing { background: rgba(0, 229, 255, 0.18); color: var(--cyan); border: 1px solid var(--cyan); }
+.badge-neutral, .badge-pending { background: var(--surface3); color: var(--text-muted); border: 1px solid var(--border); }
 
 /* ── 7. COMPACT ANALOG TRIGGERS (L2 / R2) ──────────────────── */
 .card-triggers .triggers-body { padding: 5px 8px; }

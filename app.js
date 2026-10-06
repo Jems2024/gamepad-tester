@@ -74,6 +74,7 @@ const TRANSLATIONS = {
     verdictReview: "REVISIÓN",
     verdictFail: "DEFECTUOSO",
     verdictPending: "PENDIENTE",
+    verdictTesting: "EN PRUEBA",
     suiteStepRest: "PASO 1/3: No toques los sticks. Midiendo reposo y jitter (3s)...",
     suiteStepCirc: "PASO 2/3: Gira ambos sticks lentamente en círculos completos de 360°...",
     suiteStepSnap: "PASO 3/3: Mueve el stick al extremo y suéltalo de golpe...",
@@ -141,6 +142,7 @@ const TRANSLATIONS = {
     verdictReview: "REVIEW",
     verdictFail: "DEFECTIVE",
     verdictPending: "PENDING",
+    verdictTesting: "TESTING",
     suiteStepRest: "STEP 1/3: Do not touch sticks. Measuring rest drift and jitter (3s)...",
     suiteStepCirc: "STEP 2/3: Slowly rotate both sticks in full 360° edge circles...",
     suiteStepSnap: "STEP 3/3: Push stick to extreme edge and release abruptly...",
@@ -422,12 +424,33 @@ function initLanguage() {
 // ─────────────────────────────────────────────────────────────
 const BENCHMARKS = {
   STICK: {
-    DRIFT_EXCELLENT: 0.045, // < 4.5% drift = PASS
-    DRIFT_ACCEPTABLE:0.095, // < 9.5% drift = REVIEW
-    JITTER_MAX:      0.018, // Noise std dev threshold
-    CIRC_EXCELLENT:  91.0,  // Circularity coverage %
-    CIRC_ACCEPTABLE: 78.0,
-    SNAPBACK_MAX_MS: 90,    // Snapback return duration in ms
+    // 1. Center / Drift thresholds (radial distance from 0,0)
+    DRIFT_EXCELLENT:  0.045, // <= 4.5% radial offset = PASS
+    DRIFT_ACCEPTABLE: 0.095, // <= 9.5% radial offset = REVIEW, > 9.5% = FAIL
+    
+    // 2. Resting noise / jitter (standard deviation during rest test)
+    JITTER_MAX:       0.018, // <= 0.018 noise std dev = PASS, > 0.018 = REVIEW
+    
+    // 3. Angular Coverage (36 sectors = 10 deg each)
+    COVERAGE_MIN_PASS:   90.0, // >= 90% angular coverage = PASS
+    COVERAGE_MIN_REVIEW: 70.0, // >= 70% angular coverage = REVIEW, < 70% = FAIL
+    
+    // 4. True Circularity / Uniformity (Radial deviation & average outer radius)
+    CIRCULARITY_AVG_MIN_PASS:   0.85, // Avg outer radius must reach at least 0.85
+    CIRCULARITY_AVG_MIN_REVIEW: 0.72,
+    CIRCULARITY_UNIFORM_MAX_ERR: 0.22, // Max deviation between sectors (uniformity)
+    
+    // 5. Directional Range (8 main compass sectors: N, NE, E, SE, S, SW, W, NW)
+    RANGE_MIN_SECTOR_PASS:   0.80, // Every sector should reach at least 0.80
+    RANGE_MIN_SECTOR_REVIEW: 0.65, // Below 0.65 is weak sector FAIL
+    
+    // 6. Return to Center / Snapback (duration & stabilization)
+    SNAPBACK_PASS_MS:   180, // <= 180ms normal return = PASS
+    SNAPBACK_REVIEW_MS: 320, // 181-320ms slightly slow return = REVIEW, > 320ms = FAIL
+    SNAPBACK_CENTER_REST_MAX: 0.08, // Must stabilize within 0.08 radius
+    
+    // 7. Movement Smoothness (abnormal jumps during deliberate tracking)
+    SMOOTHNESS_MAX_DELTA: 0.45, // Unusually huge delta between consecutive frames
   },
   TRIGGER: {
     REST_MAX: 0.03,         // Must be near 0 at rest
@@ -791,26 +814,49 @@ let state = {
     l: { 
       drift: null, 
       jitter: null, 
+      coverage: null, 
       circularity: null, 
-      snapback: null, 
+      range: null, 
+      returnTime: null, 
       verdict: 'PENDING',
-      tests: { center: null, range: null, smoothness: null, circularity: null, returnToCenter: null }
+      tests: { center: null, range: null, noise: null, smoothness: null, coverage: null, circularity: null, returnToCenter: null },
+      reviewReasons: [],
+      failReasons: [],
     },
     r: { 
       drift: null, 
       jitter: null, 
+      coverage: null, 
       circularity: null, 
-      snapback: null, 
+      range: null, 
+      returnTime: null, 
       verdict: 'PENDING',
-      tests: { center: null, range: null, smoothness: null, circularity: null, returnToCenter: null }
+      tests: { center: null, range: null, noise: null, smoothness: null, coverage: null, circularity: null, returnToCenter: null },
+      reviewReasons: [],
+      failReasons: [],
     },
   },
-  // Circular coverage radial bins (16 bins = 22.5 deg each)
-  circleBinsL:          new Array(16).fill(0),
-  circleBinsR:          new Array(16).fill(0),
-  // Snapback monitoring
-  snapL:                { tracking: false, startTime: 0, peakDist: 0 },
-  snapR:                { tracking: false, startTime: 0, peakDist: 0 },
+  // Circular coverage radial bins (36 sectors = 10 deg each)
+  circleBinsL:          new Array(36).fill(0),
+  circleBinsR:          new Array(36).fill(0),
+  
+  // Return-to-center state machines (IDLE -> EXTREME_REACHED -> RETURNING -> STABILIZING -> COMPLETE)
+  snapL: {
+    state: 'IDLE',
+    startTime: 0,
+    peakDist: 0,
+    lastDist: 0,
+    stabilizeStartTime: 0,
+    done: false
+  },
+  snapR: {
+    state: 'IDLE',
+    startTime: 0,
+    peakDist: 0,
+    lastDist: 0,
+    stabilizeStartTime: 0,
+    done: false
+  },
 
   // Suite state
   suite: {
@@ -979,25 +1025,49 @@ function setActiveGamepad(idx) {
 function resetAllValidationStates() {
   state.stickHistoryL = [];
   state.stickHistoryR = [];
-  state.circleBinsL.fill(0);
-  state.circleBinsR.fill(0);
+  state.circleBinsL = new Array(36).fill(0);
+  state.circleBinsR = new Array(36).fill(0);
   state.stickMetrics = {
     l: { 
       drift: null, 
       jitter: null, 
+      coverage: null, 
       circularity: null, 
-      snapback: null, 
+      range: null, 
+      returnTime: null, 
       verdict: 'PENDING',
-      tests: { center: null, range: null, smoothness: null, circularity: null, returnToCenter: null }
+      tests: { center: null, range: null, noise: null, smoothness: null, coverage: null, circularity: null, returnToCenter: null },
+      reviewReasons: [],
+      failReasons: [],
     },
     r: { 
       drift: null, 
       jitter: null, 
+      coverage: null, 
       circularity: null, 
-      snapback: null, 
+      range: null, 
+      returnTime: null, 
       verdict: 'PENDING',
-      tests: { center: null, range: null, smoothness: null, circularity: null, returnToCenter: null }
+      tests: { center: null, range: null, noise: null, smoothness: null, coverage: null, circularity: null, returnToCenter: null },
+      reviewReasons: [],
+      failReasons: [],
     },
+  };
+  state.snapL = {
+    state: 'IDLE',
+    startTime: 0,
+    peakDist: 0,
+    lastDist: 0,
+    stabilizeStartTime: 0,
+    done: false
+  };
+  state.snapR = {
+    state: 'IDLE',
+    startTime: 0,
+    peakDist: 0,
+    lastDist: 0,
+    stabilizeStartTime: 0,
+    done: false
   };
   state.triggers = {
     l2: { min: 1.0, max: 0.0, restOk: null, maxOk: null, smoothOk: true, samples: 0, verdict: 'PENDING' },
@@ -1006,6 +1076,16 @@ function resetAllValidationStates() {
   state.buttonStates = {};
   state.drift.capturing = false;
   state.suite.running = false;
+
+  if (dom.stickLCircVal) dom.stickLCircVal.textContent = '—';
+  if (dom.stickRCircVal) dom.stickRCircVal.textContent = '—';
+  if (dom.stickLDriftVal) dom.stickLDriftVal.textContent = '—';
+  if (dom.stickRDriftVal) dom.stickRDriftVal.textContent = '—';
+  if (dom.stickLJitterVal) dom.stickLJitterVal.textContent = '—';
+  if (dom.stickRJitterVal) dom.stickRJitterVal.textContent = '—';
+  if (dom.stickLSnapVal) dom.stickLSnapVal.textContent = '—';
+  if (dom.stickRSnapVal) dom.stickRSnapVal.textContent = '—';
+  if (dom.driftResult) dom.driftResult.innerHTML = '';
 
   updateVerdictBadgesUI();
   updateButtonsSummaryBadge();
@@ -1114,7 +1194,7 @@ function processStickData(axes, now) {
   const rDist = Math.sqrt(rx * rx + ry * ry);
   const rAngle = (Math.atan2(ry, rx) * 180 / Math.PI + 360) % 360;
 
-  // Real-time telemetry output
+  // Real-time telemetry output (Live updates every frame)
   if (dom.stickLX) dom.stickLX.textContent    = (lx >= 0 ? '+' : '') + lx.toFixed(4);
   if (dom.stickLY) dom.stickLY.textContent    = (ly >= 0 ? '+' : '') + ly.toFixed(4);
   if (dom.stickLDist) dom.stickLDist.textContent = lDist.toFixed(4);
@@ -1134,45 +1214,28 @@ function processStickData(axes, now) {
   state.stickHistoryR.push({ x: rx, y: ry });
   if (state.stickHistoryR.length > 400) state.stickHistoryR.shift();
 
-  // Circularity binning (radial coverage at edge > 0.70)
-  if (lDist > 0.70) {
-    const binIdx = Math.floor(lAngle / 22.5) % 16;
+  // 1. Angular Coverage & Circularity Sampling (36 sectors = 10 deg each)
+  // Only sample sector outer radius when stick is pushed towards outer perimeter (> 0.65)
+  if (lDist > 0.65) {
+    const binIdx = Math.floor(lAngle / 10) % 36;
     state.circleBinsL[binIdx] = Math.max(state.circleBinsL[binIdx], lDist);
-    calculateCircularity('l');
+    updateStickCoverageAndCircularity('l');
   }
-  if (rDist > 0.70) {
-    const binIdx = Math.floor(rAngle / 22.5) % 16;
+  if (rDist > 0.65) {
+    const binIdx = Math.floor(rAngle / 10) % 36;
     state.circleBinsR[binIdx] = Math.max(state.circleBinsR[binIdx], rDist);
-    calculateCircularity('r');
+    updateStickCoverageAndCircularity('r');
   }
 
-  // Snapback Return Tracking (Left Stick)
-  if (lDist > 0.75 && !state.snapL.tracking) {
-    state.snapL.tracking = true;
-    state.snapL.peakDist = lDist;
-    state.snapL.startTime = now;
-  } else if (state.snapL.tracking && lDist < 0.12) {
-    const durationMs = Math.round(now - state.snapL.startTime);
-    state.snapL.tracking = false;
-    state.stickMetrics.l.snapback = durationMs;
-    if (dom.stickLSnapVal) dom.stickLSnapVal.textContent = `${durationMs}ms`;
-    evaluateStickOverall('l');
-  }
+  // 2. Movement Smoothness Tracking (Detect signal jumps during movement)
+  checkMovementSmoothness('l', lx, ly, lDist);
+  checkMovementSmoothness('r', rx, ry, rDist);
 
-  // Snapback Return Tracking (Right Stick)
-  if (rDist > 0.75 && !state.snapR.tracking) {
-    state.snapR.tracking = true;
-    state.snapR.peakDist = rDist;
-    state.snapR.startTime = now;
-  } else if (state.snapR.tracking && rDist < 0.12) {
-    const durationMs = Math.round(now - state.snapR.startTime);
-    state.snapR.tracking = false;
-    state.stickMetrics.r.snapback = durationMs;
-    if (dom.stickRSnapVal) dom.stickRSnapVal.textContent = `${durationMs}ms`;
-    evaluateStickOverall('r');
-  }
+  // 3. Return-to-Center / Snapback State Machine (Independent for L and R)
+  processSnapbackStateMachine('l', lDist, now);
+  processSnapbackStateMachine('r', rDist, now);
 
-  // 3s Drift Capture sampling
+  // 4. Dedicated 3s Drift Capture sampling (Only during rest test)
   if (state.drift.capturing) {
     state.drift.samplesL.push({ x: lx, y: ly, dist: lDist });
     state.drift.samplesR.push({ x: rx, y: ry, dist: rDist });
@@ -1187,70 +1250,254 @@ function processStickData(axes, now) {
   drawLargeStick(dom.stickRCanvas, rx, ry, false, state.stickHistoryR);
 }
 
-function calculateCircularity(stick) {
-  const bins = stick === 'l' ? state.circleBinsL : state.circleBinsR;
-  const nonZero = bins.filter(v => v > 0);
-  const covered = nonZero.length;
-  const coveragePercent = Math.round((covered / 16) * 100);
+// ─────────────────────────────────────────────────────────────
+// MOVEMENT SMOOTHNESS TRACKING
+// ─────────────────────────────────────────────────────────────
+let lastSmoothPos = {
+  l: { x: 0, y: 0, time: 0 },
+  r: { x: 0, y: 0, time: 0 },
+};
 
-  if (stick === 'l') {
-    state.stickMetrics.l.circularity = coveragePercent;
-    if (dom.stickLCircVal) dom.stickLCircVal.textContent = `${coveragePercent}%`;
-  } else {
-    state.stickMetrics.r.circularity = coveragePercent;
-    if (dom.stickRCircVal) dom.stickRCircVal.textContent = `${coveragePercent}%`;
+function checkMovementSmoothness(stick, x, y, dist) {
+  const m = state.stickMetrics[stick];
+  // Only evaluate during active movement
+  if (dist < 0.15) return;
+  
+  const prev = lastSmoothPos[stick];
+  if (prev.time > 0) {
+    const dx = x - prev.x;
+    const dy = y - prev.y;
+    const step = Math.sqrt(dx * dx + dy * dy);
+    // If an impossible sudden jump occurs without release
+    if (step > BENCHMARKS.STICK.SMOOTHNESS_MAX_DELTA && dist > 0.4) {
+      m.tests.smoothness = 'REVIEW';
+      if (!m.reviewReasons.some(r => r.test === 'smoothness')) {
+        m.reviewReasons.push({ test: 'smoothness', value: step.toFixed(3), threshold: BENCHMARKS.STICK.SMOOTHNESS_MAX_DELTA });
+      }
+    } else if (m.tests.smoothness === null && step > 0.05) {
+      m.tests.smoothness = 'PASS';
+    }
   }
+  prev.x = x;
+  prev.y = y;
+  prev.time = performance.now();
+}
+
+// ─────────────────────────────────────────────────────────────
+// RETURN-TO-CENTER / SNAPBACK STATE MACHINE
+// IDLE -> EXTREME_REACHED -> WAITING_FOR_RELEASE -> RETURNING -> STABILIZING -> COMPLETE
+// ─────────────────────────────────────────────────────────────
+function processSnapbackStateMachine(stick, dist, now) {
+  const snap = stick === 'l' ? state.snapL : state.snapR;
+  const m = state.stickMetrics[stick];
+  const snapEl = stick === 'l' ? dom.stickLSnapVal : dom.stickRSnapVal;
+
+  switch (snap.state) {
+    case 'IDLE':
+      // 1. Detect that the stick reached a meaningful outer radius (>= 0.80)
+      if (dist >= 0.80) {
+        snap.state = 'EXTREME_REACHED';
+        snap.peakDist = dist;
+        snap.lastDist = dist;
+      }
+      break;
+
+    case 'EXTREME_REACHED':
+      // While stick remains near the edge, update peak; do NOT start return timing!
+      if (dist > snap.peakDist) {
+        snap.peakDist = dist;
+      }
+      // 2. Detect actual release: radius decreases significantly toward center
+      if (dist < snap.lastDist - 0.15 || dist < 0.65) {
+        snap.state = 'RETURNING';
+        snap.startTime = now;
+      }
+      snap.lastDist = dist;
+      break;
+
+    case 'RETURNING':
+      // 3. Stick is returning. Check if it reaches center threshold (<= 0.08)
+      if (dist <= BENCHMARKS.STICK.SNAPBACK_CENTER_REST_MAX) {
+        const durationMs = Math.round(now - snap.startTime);
+        snap.state = 'STABILIZING';
+        snap.stabilizeStartTime = now;
+        snap.tempDurationMs = durationMs;
+      } else if (now - snap.startTime > 800) {
+        // Return timed out / stick didn't return to center
+        snap.state = 'IDLE';
+      }
+      break;
+
+    case 'STABILIZING':
+      // 4. Require stable center for at least 180ms
+      if (dist > BENCHMARKS.STICK.SNAPBACK_CENTER_REST_MAX + 0.04) {
+        // Stick bounced out or was touched again
+        snap.state = 'IDLE';
+      } else if (now - snap.stabilizeStartTime >= 180) {
+        // Successfully stabilized!
+        snap.state = 'COMPLETE';
+        snap.done = true;
+        const returnTime = snap.tempDurationMs;
+        m.returnTime = returnTime;
+
+        if (snapEl) snapEl.textContent = `${returnTime}ms`;
+
+        // Evaluate return to center test
+        if (returnTime <= BENCHMARKS.STICK.SNAPBACK_PASS_MS) {
+          m.tests.returnToCenter = 'PASS';
+        } else if (returnTime <= BENCHMARKS.STICK.SNAPBACK_REVIEW_MS) {
+          m.tests.returnToCenter = 'REVIEW';
+          m.reviewReasons.push({ test: 'returnToCenter', value: returnTime, threshold: BENCHMARKS.STICK.SNAPBACK_PASS_MS });
+        } else {
+          m.tests.returnToCenter = 'FAIL';
+          m.failReasons.push({ test: 'returnToCenter', value: returnTime, threshold: BENCHMARKS.STICK.SNAPBACK_REVIEW_MS });
+        }
+
+        evaluateStickOverall(stick);
+      }
+      break;
+
+    case 'COMPLETE':
+      // If user reaches extreme again, allow a new measurement
+      if (dist >= 0.85) {
+        snap.state = 'EXTREME_REACHED';
+        snap.peakDist = dist;
+        snap.lastDist = dist;
+      }
+      break;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// ANGULAR COVERAGE, RANGE, AND TRUE CIRCULARITY / UNIFORMITY
+// ─────────────────────────────────────────────────────────────
+function updateStickCoverageAndCircularity(stick) {
+  const bins = stick === 'l' ? state.circleBinsL : state.circleBinsR;
+  const m = state.stickMetrics[stick];
+  const circEl = stick === 'l' ? dom.stickLCircVal : dom.stickRCircVal;
+
+  const totalSectors = 36;
+  const visitedSectors = bins.filter(r => r > 0).length;
+  const coveragePct = Math.round((visitedSectors / totalSectors) * 100);
+  m.coverage = coveragePct;
+
+  // Show live progress during movement
+  if (circEl) circEl.textContent = `${coveragePct}%`;
+
+  // Track max range reached across all directions
+  const maxRange = Math.max(...bins);
+  m.range = maxRange > 0 ? parseFloat(maxRange.toFixed(3)) : 0;
+
+  // Check 8 main compass directions for directional range:
+  // 0: N (90°), 4: NE (45°), 9: E (0°), 13: SE (315°), 18: S (270°), 22: SW (225°), 27: W (180°), 31: NW (135°)
+  const compassIndices = [0, 4, 9, 13, 18, 22, 27, 31];
+  let weakSectorsCount = 0;
+  for (const idx of compassIndices) {
+    if (bins[idx] > 0 && bins[idx] < BENCHMARKS.STICK.RANGE_MIN_SECTOR_REVIEW) {
+      weakSectorsCount++;
+    }
+  }
+
+  // Range test evaluation
+  if (maxRange >= BENCHMARKS.STICK.RANGE_MIN_SECTOR_PASS && weakSectorsCount === 0) {
+    m.tests.range = 'PASS';
+  } else if (weakSectorsCount > 0) {
+    m.tests.range = 'REVIEW';
+    if (!m.reviewReasons.some(r => r.test === 'range')) {
+      m.reviewReasons.push({ test: 'range', weakSectors: weakSectorsCount });
+    }
+  }
+
+  // Evaluate Coverage Test
+  if (coveragePct >= BENCHMARKS.STICK.COVERAGE_MIN_PASS) {
+    m.tests.coverage = 'PASS';
+  } else if (coveragePct >= BENCHMARKS.STICK.COVERAGE_MIN_REVIEW) {
+    m.tests.coverage = 'REVIEW';
+  }
+
+  // Calculate True Circularity / Uniformity once coverage is sufficient (>= 75%)
+  if (visitedSectors >= 27) {
+    const visitedRadii = bins.filter(r => r > 0);
+    const avgRadius = visitedRadii.reduce((a, b) => a + b, 0) / visitedRadii.length;
+    const minRadius = Math.min(...visitedRadii);
+    const maxRadius = Math.max(...visitedRadii);
+    const radialDeviation = maxRadius - minRadius;
+
+    // True circularity is the uniformity error percentage (100% minus deviation penalty)
+    const circularityScore = Math.max(0, Math.min(100, Math.round((1 - (radialDeviation / 2)) * 100)));
+    m.circularity = circularityScore;
+
+    if (circEl) circEl.textContent = `${circularityScore}%`;
+
+    // Uniformity evaluation
+    if (avgRadius >= BENCHMARKS.STICK.CIRCULARITY_AVG_MIN_PASS && radialDeviation <= BENCHMARKS.STICK.CIRCULARITY_UNIFORM_MAX_ERR) {
+      m.tests.circularity = 'PASS';
+    } else if (avgRadius >= BENCHMARKS.STICK.CIRCULARITY_AVG_MIN_REVIEW) {
+      m.tests.circularity = 'REVIEW';
+      if (!m.reviewReasons.some(r => r.test === 'circularity')) {
+        m.reviewReasons.push({ test: 'circularity', avgRadius: avgRadius.toFixed(2), radialDev: radialDeviation.toFixed(2) });
+      }
+    } else {
+      m.tests.circularity = 'FAIL';
+      if (!m.failReasons.some(r => r.test === 'circularity')) {
+        m.failReasons.push({ test: 'circularity', avgRadius: avgRadius.toFixed(2) });
+      }
+    }
+  }
+
   evaluateStickOverall(stick);
 }
 
+// ─────────────────────────────────────────────────────────────
+// RIGOROUS STICK EVALUATION STATE MACHINE (ONE SOURCE OF TRUTH)
+// ─────────────────────────────────────────────────────────────
 function evaluateStickOverall(stick) {
   const m = state.stickMetrics[stick];
   const badgeEl = stick === 'l' ? dom.stickLVerdict : dom.stickRVerdict;
 
   if (!m.tests) {
-    m.tests = { center: null, range: null, smoothness: null, circularity: null, returnToCenter: null };
+    m.tests = { center: null, range: null, noise: null, smoothness: null, coverage: null, circularity: null, returnToCenter: null };
   }
 
-  // 1. Center / Drift test
-  if (m.drift !== null) {
-    if (m.drift > BENCHMARKS.STICK.DRIFT_ACCEPTABLE) m.tests.center = 'FAIL';
-    else if (m.drift > BENCHMARKS.STICK.DRIFT_EXCELLENT) m.tests.center = 'REVIEW';
-    else m.tests.center = 'PASS';
-  }
+  // Required tests for a stick to receive a final verdict:
+  // 1. center (Drift rest test)
+  // 2. coverage (Angular coverage)
+  // 3. circularity (True circularity / uniformity)
+  // Optional / supplemental: range, noise, smoothness, returnToCenter
 
-  // 2. Smoothness / Jitter test
-  if (m.jitter !== null) {
-    m.tests.smoothness = (m.jitter > BENCHMARKS.STICK.JITTER_MAX) ? 'REVIEW' : 'PASS';
-  }
-
-  // 3. Circularity test
-  if (m.circularity !== null) {
-    if (m.circularity < BENCHMARKS.STICK.CIRC_ACCEPTABLE) m.tests.circularity = 'FAIL';
-    else if (m.circularity < BENCHMARKS.STICK.CIRC_EXCELLENT) m.tests.circularity = 'REVIEW';
-    else m.tests.circularity = 'PASS';
-  }
-
-  // 4. Return to Center / Snapback test
-  if (m.snapback !== null) {
-    m.tests.returnToCenter = (m.snapback > BENCHMARKS.STICK.SNAPBACK_MAX_MS) ? 'REVIEW' : 'PASS';
-  }
-
-  const testVals = Object.values(m.tests).filter(v => v !== null);
+  const allTestKeys = ['center', 'coverage', 'circularity', 'returnToCenter'];
+  const testVals = allTestKeys.map(k => m.tests[k]).filter(v => v !== null);
 
   let verdict = 'PENDING';
-  let css = 'badge-neutral';
+  let css = 'badge-pending';
   let text = t('verdictPending');
 
-  if (testVals.length > 0) {
-    if (testVals.includes('FAIL')) {
-      verdict = 'FAIL';
-      css = 'badge-fail';
-      text = t('verdictFail');
-    } else if (testVals.includes('REVIEW')) {
+  // Any confirmed FAIL immediately marks stick as FAIL
+  if (Object.values(m.tests).includes('FAIL')) {
+    verdict = 'FAIL';
+    css = 'badge-fail';
+    text = t('verdictFail');
+  } 
+  // If tests are currently in progress or some are complete, but not all required tests have run
+  else if (m.tests.center === null || m.tests.coverage === null || m.tests.circularity === null) {
+    if (testVals.length > 0 || (m.coverage && m.coverage > 10)) {
+      verdict = 'TESTING';
+      css = 'badge-testing';
+      text = t('verdictTesting') || 'EN PRUEBA';
+    } else {
+      verdict = 'PENDING';
+      css = 'badge-pending';
+      text = t('verdictPending');
+    }
+  }
+  // All required diagnostic phases are complete!
+  else {
+    const hasReview = Object.values(m.tests).some(v => v === 'REVIEW');
+    if (hasReview) {
       verdict = 'REVIEW';
       css = 'badge-review';
       text = t('verdictReview');
-    } else if (testVals.includes('PASS')) {
+    } else {
       verdict = 'PASS';
       css = 'badge-pass';
       text = t('verdictPass');
@@ -1565,43 +1812,90 @@ function finalizeDriftCapture() {
 
   if (sL.length === 0 || sR.length === 0) return;
 
-  // Left stick metrics
-  const avgDistL = sL.reduce((a, b) => a + b.dist, 0) / sL.length;
-  const maxDevL = Math.max(...sL.map(s => s.dist));
-  const varianceL = sL.reduce((a, b) => a + Math.pow(b.dist - avgDistL, 2), 0) / sL.length;
+  // Left stick resting metrics
+  const meanXL = sL.reduce((a, b) => a + b.x, 0) / sL.length;
+  const meanYL = sL.reduce((a, b) => a + b.y, 0) / sL.length;
+  const meanRadiusL = sL.reduce((a, b) => a + b.dist, 0) / sL.length;
+  const maxRadiusL = Math.max(...sL.map(s => s.dist));
+  const varianceL = sL.reduce((a, b) => a + Math.pow(b.dist - meanRadiusL, 2), 0) / sL.length;
   const jitterL = Math.sqrt(varianceL);
 
-  // Right stick metrics
-  const avgDistR = sR.reduce((a, b) => a + b.dist, 0) / sR.length;
-  const maxDevR = Math.max(...sR.map(s => s.dist));
-  const varianceR = sR.reduce((a, b) => a + Math.pow(b.dist - avgDistR, 2), 0) / sR.length;
+  // Right stick resting metrics
+  const meanXR = sR.reduce((a, b) => a + b.x, 0) / sR.length;
+  const meanYR = sR.reduce((a, b) => a + b.y, 0) / sR.length;
+  const meanRadiusR = sR.reduce((a, b) => a + b.dist, 0) / sR.length;
+  const maxRadiusR = Math.max(...sR.map(s => s.dist));
+  const varianceR = sR.reduce((a, b) => a + Math.pow(b.dist - meanRadiusR, 2), 0) / sR.length;
   const jitterR = Math.sqrt(varianceR);
 
-  state.stickMetrics.l.drift  = maxDevL;
+  // Save metrics persistently
+  state.stickMetrics.l.drift  = maxRadiusL;
   state.stickMetrics.l.jitter = jitterL;
-  if (dom.stickLDriftVal) dom.stickLDriftVal.textContent  = maxDevL.toFixed(3);
+  if (dom.stickLDriftVal) dom.stickLDriftVal.textContent  = maxRadiusL.toFixed(3);
   if (dom.stickLJitterVal) dom.stickLJitterVal.textContent = jitterL.toFixed(3);
 
-  state.stickMetrics.r.drift  = maxDevR;
+  // Evaluate L Center test
+  if (maxRadiusL <= BENCHMARKS.STICK.DRIFT_EXCELLENT) {
+    state.stickMetrics.l.tests.center = 'PASS';
+  } else if (maxRadiusL <= BENCHMARKS.STICK.DRIFT_ACCEPTABLE) {
+    state.stickMetrics.l.tests.center = 'REVIEW';
+    state.stickMetrics.l.reviewReasons.push({ test: 'center', value: maxRadiusL.toFixed(4), threshold: BENCHMARKS.STICK.DRIFT_EXCELLENT });
+  } else {
+    state.stickMetrics.l.tests.center = 'FAIL';
+    state.stickMetrics.l.failReasons.push({ test: 'center', value: maxRadiusL.toFixed(4), threshold: BENCHMARKS.STICK.DRIFT_ACCEPTABLE });
+  }
+
+  // Evaluate L Noise/Jitter test
+  if (jitterL <= BENCHMARKS.STICK.JITTER_MAX) {
+    state.stickMetrics.l.tests.noise = 'PASS';
+  } else {
+    state.stickMetrics.l.tests.noise = 'REVIEW';
+    state.stickMetrics.l.reviewReasons.push({ test: 'noise', value: jitterL.toFixed(4), threshold: BENCHMARKS.STICK.JITTER_MAX });
+  }
+
+  // Save R metrics persistently
+  state.stickMetrics.r.drift  = maxRadiusR;
   state.stickMetrics.r.jitter = jitterR;
-  if (dom.stickRDriftVal) dom.stickRDriftVal.textContent  = maxDevR.toFixed(3);
+  if (dom.stickRDriftVal) dom.stickRDriftVal.textContent  = maxRadiusR.toFixed(3);
   if (dom.stickRJitterVal) dom.stickRJitterVal.textContent = jitterR.toFixed(3);
+
+  // Evaluate R Center test
+  if (maxRadiusR <= BENCHMARKS.STICK.DRIFT_EXCELLENT) {
+    state.stickMetrics.r.tests.center = 'PASS';
+  } else if (maxRadiusR <= BENCHMARKS.STICK.DRIFT_ACCEPTABLE) {
+    state.stickMetrics.r.tests.center = 'REVIEW';
+    state.stickMetrics.r.reviewReasons.push({ test: 'center', value: maxRadiusR.toFixed(4), threshold: BENCHMARKS.STICK.DRIFT_EXCELLENT });
+  } else {
+    state.stickMetrics.r.tests.center = 'FAIL';
+    state.stickMetrics.r.failReasons.push({ test: 'center', value: maxRadiusR.toFixed(4), threshold: BENCHMARKS.STICK.DRIFT_ACCEPTABLE });
+  }
+
+  // Evaluate R Noise/Jitter test
+  if (jitterR <= BENCHMARKS.STICK.JITTER_MAX) {
+    state.stickMetrics.r.tests.noise = 'PASS';
+  } else {
+    state.stickMetrics.r.tests.noise = 'REVIEW';
+    state.stickMetrics.r.reviewReasons.push({ test: 'noise', value: jitterR.toFixed(4), threshold: BENCHMARKS.STICK.JITTER_MAX });
+  }
 
   evaluateStickOverall('l');
   evaluateStickOverall('r');
 
-  const overallL = state.stickMetrics.l.verdict;
-  const overallR = state.stickMetrics.r.verdict;
-  const isGood = overallL === 'PASS' && overallR === 'PASS';
+  const centerPassL = state.stickMetrics.l.tests.center;
+  const centerPassR = state.stickMetrics.r.tests.center;
+  const isGood = centerPassL === 'PASS' && centerPassR === 'PASS';
+  const hasFail = centerPassL === 'FAIL' || centerPassR === 'FAIL';
 
   if (dom.driftResult) {
+    const badgeClass = hasFail ? 'badge-fail' : (isGood ? 'badge-pass' : 'badge-review');
+    const badgeText = hasFail ? t('verdictFail') : (isGood ? t('verdictPass') : t('verdictReview'));
     dom.driftResult.innerHTML = `
       <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 8px;">
         <div>
-          <strong>Drift:</strong> L: ${maxDevL.toFixed(3)} | R: ${maxDevR.toFixed(3)}
+          <strong>Drift:</strong> L: ${maxRadiusL.toFixed(3)} | R: ${maxRadiusR.toFixed(3)}
         </div>
-        <span class="stick-verdict-badge ${isGood ? 'badge-pass' : 'badge-review'}">
-          ${isGood ? t('verdictPass') : t('verdictReview')}
+        <span class="stick-verdict-badge ${badgeClass}">
+          ${badgeText}
         </span>
       </div>
     `;
@@ -1988,8 +2282,8 @@ function updateWorkflowProgress() {
 
   const sl = state.stickMetrics.l;
   const sr = state.stickMetrics.r;
-  const stickLDone = (sl.verdict === 'PASS' || (sl.circularity !== null && sl.circularity >= 80));
-  const stickRDone = (sr.verdict === 'PASS' || (sr.circularity !== null && sr.circularity >= 80));
+  const stickLDone = (sl.verdict === 'PASS');
+  const stickRDone = (sr.verdict === 'PASS');
 
   const certDone = buttonsDone && triggersDone && stickLDone && stickRDone;
 
@@ -2043,7 +2337,10 @@ function updateWorkflowProgress() {
   }
 }
 
-function updateOverallVerdict() {
+// ─────────────────────────────────────────────────────────────
+// 15. AUTHORITATIVE QUALITY CERTIFICATION & WORKFLOW
+// ─────────────────────────────────────────────────────────────
+function calculateAuthoritativeOverallVerdict() {
   const sl = state.stickMetrics.l;
   const sr = state.stickMetrics.r;
   const tL = state.triggers.l2;
@@ -2059,33 +2356,54 @@ function updateOverallVerdict() {
   } else if (totalBtns > 0 && passedBtns >= totalBtns) {
     btnVerdict = 'PASS';
   } else if (passedBtns > 0) {
-    btnVerdict = 'REVIEW';
+    btnVerdict = 'TESTING';
   }
 
-  let overall = 'PENDING';
+  // Check Failures first
+  if (sl.verdict === 'FAIL' || sr.verdict === 'FAIL' || tL.verdict === 'FAIL' || tR.verdict === 'FAIL' || btnVerdict === 'FAIL') {
+    return 'FAIL';
+  }
+
+  // Check Review
+  if (sl.verdict === 'REVIEW' || sr.verdict === 'REVIEW' || tL.verdict === 'REVIEW' || tR.verdict === 'REVIEW') {
+    return 'REVIEW';
+  }
+
+  // Check all PASS
+  const triggersPassed = (tL.verdict === 'PASS' || tL.samples < 2) && (tR.verdict === 'PASS' || tR.samples < 2);
+  if (btnVerdict === 'PASS' && triggersPassed && sl.verdict === 'PASS' && sr.verdict === 'PASS') {
+    return 'PASS';
+  }
+
+  // If any testing is happening
+  if (passedBtns > 0 || sl.verdict === 'TESTING' || sr.verdict === 'TESTING' || btnVerdict === 'TESTING') {
+    return 'TESTING';
+  }
+
+  return 'PENDING';
+}
+
+function updateOverallVerdict() {
+  const overall = calculateAuthoritativeOverallVerdict();
+  state.overallVerdict = overall;
+
   let stampText = t('verdictPending');
   let stampClass = 'stamp-pending';
 
-  // Check failures
-  if (sl.verdict === 'FAIL' || sr.verdict === 'FAIL' || tL.verdict === 'FAIL' || tR.verdict === 'FAIL' || btnVerdict === 'FAIL') {
-    overall = 'FAIL';
+  if (overall === 'FAIL') {
     stampText = `✕ ${t('verdictFail')}`;
     stampClass = 'stamp-fail';
-  } else if (sl.verdict === 'REVIEW' || sr.verdict === 'REVIEW' || tL.verdict === 'REVIEW' || tR.verdict === 'REVIEW') {
-    overall = 'REVIEW';
+  } else if (overall === 'REVIEW') {
     stampText = `! ${t('verdictReview')}`;
     stampClass = 'stamp-review';
-  } else if (btnVerdict === 'PASS' && (tL.verdict === 'PASS' || tL.samples < 2) && (tR.verdict === 'PASS' || tR.samples < 2) && sl.verdict === 'PASS' && sr.verdict === 'PASS') {
-    overall = 'PASS';
+  } else if (overall === 'PASS') {
     stampText = `✓ ${t('verdictPass')}`;
     stampClass = 'stamp-pass';
-  } else if (passedBtns > 0 || sl.verdict !== 'PENDING' || sr.verdict !== 'PENDING') {
-    overall = 'REVIEW';
-    stampText = t('verdictReview');
-    stampClass = 'stamp-review';
+  } else if (overall === 'TESTING') {
+    stampText = `⏳ ${t('verdictTesting') || 'EN PRUEBA'}`;
+    stampClass = 'stamp-pending';
   }
 
-  state.overallVerdict = overall;
   if (dom.overallVerdictStamp) {
     dom.overallVerdictStamp.className = `verdict-stamp ${stampClass}`;
     dom.overallVerdictStamp.textContent = stampText;
@@ -2145,18 +2463,13 @@ function saveCurrentSessionDiagnostic() {
   const tL = state.triggers.l2;
   const tR = state.triggers.r2;
 
-  let totalBtns = Object.keys(state.buttonStates).length || 16;
-  let passedBtns = Object.values(state.buttonStates).filter(b => b.clicks >= 1).length;
-  let stuckBtns = Object.values(state.buttonStates).filter(b => b.isStuck).length;
-  let btnVerdict = stuckBtns > 0 ? 'FAIL' : (passedBtns >= totalBtns * 0.9 ? 'PASS' : 'REVIEW');
+  const totalBtns = Object.keys(state.buttonStates).length || 16;
+  const passedBtns = Object.values(state.buttonStates).filter(b => b.clicks >= 3).length;
+  const stuckBtns = Object.values(state.buttonStates).filter(b => b.isStuck).length;
+  const btnVerdict = stuckBtns > 0 ? 'FAIL' : (passedBtns >= totalBtns ? 'PASS' : 'REVIEW');
 
-  // Overall verdict
-  let overall = 'PASS';
-  if (sl.verdict === 'FAIL' || sr.verdict === 'FAIL' || tL.verdict === 'FAIL' || tR.verdict === 'FAIL' || btnVerdict === 'FAIL') {
-    overall = 'FAIL';
-  } else if (sl.verdict === 'REVIEW' || sr.verdict === 'REVIEW' || tL.verdict === 'REVIEW' || tR.verdict === 'REVIEW' || btnVerdict === 'REVIEW') {
-    overall = 'REVIEW';
-  }
+  // Authoritative Overall Verdict
+  const overall = calculateAuthoritativeOverallVerdict();
 
   const record = {
     id: 'DIAG-' + Date.now(),
@@ -2165,8 +2478,24 @@ function saveCurrentSessionDiagnostic() {
     timestamp: Date.now(),
     device: devName,
     profile: state.model,
-    stickL: { drift: sl.drift, jitter: sl.jitter, circ: sl.circularity, snap: sl.snapback, verdict: sl.verdict },
-    stickR: { drift: sr.drift, jitter: sr.jitter, circ: sr.circularity, snap: sr.snapback, verdict: sr.verdict },
+    stickL: { 
+      drift: sl.drift, 
+      jitter: sl.jitter, 
+      coverage: sl.coverage, 
+      circularity: sl.circularity, 
+      range: sl.range, 
+      returnTime: sl.returnTime, 
+      verdict: sl.verdict 
+    },
+    stickR: { 
+      drift: sr.drift, 
+      jitter: sr.jitter, 
+      coverage: sr.coverage, 
+      circularity: sr.circularity, 
+      range: sr.range, 
+      returnTime: sr.returnTime, 
+      verdict: sr.verdict 
+    },
     triggers: { l2Verdict: tL.verdict, r2Verdict: tR.verdict },
     buttons: { passed: passedBtns, total: totalBtns, stuck: stuckBtns, verdict: btnVerdict },
     overallVerdict: overall
@@ -2277,22 +2606,29 @@ function populatePrintReport(record) {
   const sl = record ? record.stickL : state.stickMetrics.l;
   const sr = record ? record.stickR : state.stickMetrics.r;
 
-  if (dom.printSlDrift)   dom.printSlDrift.textContent = sl.drift !== null ? sl.drift.toFixed(3) : '0.012';
-  if (dom.printSlJitter)  dom.printSlJitter.textContent= sl.jitter !== null ? sl.jitter.toFixed(3) : '0.002';
-  if (dom.printSlCirc)    dom.printSlCirc.textContent  = sl.circ !== null ? `${sl.circ}%` : '98%';
-  if (dom.printSlSnap)    dom.printSlSnap.textContent  = sl.snap !== null ? `${sl.snap}ms` : '18ms';
-  if (dom.printSlVerdict) dom.printSlVerdict.textContent = sl.verdict || 'PASS';
+  // Real measured values only - NO fake defaults!
+  // Support both new schema (circularity/coverage/returnTime) and historical keys if present
+  const slCirc = sl.circularity !== undefined ? sl.circularity : (sl.circ !== undefined ? sl.circ : null);
+  const slSnap = sl.returnTime !== undefined ? sl.returnTime : (sl.snap !== undefined ? sl.snap : null);
+  const srCirc = sr.circularity !== undefined ? sr.circularity : (sr.circ !== undefined ? sr.circ : null);
+  const srSnap = sr.returnTime !== undefined ? sr.returnTime : (sr.snap !== undefined ? sr.snap : null);
 
-  if (dom.printSrDrift)   dom.printSrDrift.textContent = sr.drift !== null ? sr.drift.toFixed(3) : '0.015';
-  if (dom.printSrJitter)  dom.printSrJitter.textContent= sr.jitter !== null ? sr.jitter.toFixed(3) : '0.002';
-  if (dom.printSrCirc)    dom.printSrCirc.textContent  = sr.circ !== null ? `${sr.circ}%` : '97%';
-  if (dom.printSrSnap)    dom.printSrSnap.textContent  = sr.snap !== null ? `${sr.snap}ms` : '20ms';
-  if (dom.printSrVerdict) dom.printSrVerdict.textContent = sr.verdict || 'PASS';
+  if (dom.printSlDrift)   dom.printSlDrift.textContent   = sl.drift !== null && sl.drift !== undefined ? sl.drift.toFixed(3) : '—';
+  if (dom.printSlJitter)  dom.printSlJitter.textContent  = sl.jitter !== null && sl.jitter !== undefined ? sl.jitter.toFixed(3) : '—';
+  if (dom.printSlCirc)    dom.printSlCirc.textContent    = slCirc !== null && slCirc !== undefined ? `${slCirc}%` : '—';
+  if (dom.printSlSnap)    dom.printSlSnap.textContent    = slSnap !== null && slSnap !== undefined ? `${slSnap}ms` : '—';
+  if (dom.printSlVerdict) dom.printSlVerdict.textContent = sl.verdict || 'PENDING';
+
+  if (dom.printSrDrift)   dom.printSrDrift.textContent   = sr.drift !== null && sr.drift !== undefined ? sr.drift.toFixed(3) : '—';
+  if (dom.printSrJitter)  dom.printSrJitter.textContent  = sr.jitter !== null && sr.jitter !== undefined ? sr.jitter.toFixed(3) : '—';
+  if (dom.printSrCirc)    dom.printSrCirc.textContent    = srCirc !== null && srCirc !== undefined ? `${srCirc}%` : '—';
+  if (dom.printSrSnap)    dom.printSrSnap.textContent    = srSnap !== null && srSnap !== undefined ? `${srSnap}ms` : '—';
+  if (dom.printSrVerdict) dom.printSrVerdict.textContent = sr.verdict || 'PENDING';
 
   const tL = record ? record.triggers.l2Verdict : state.triggers.l2.verdict;
   const tR = record ? record.triggers.r2Verdict : state.triggers.r2.verdict;
-  if (dom.printL2Verdict) dom.printL2Verdict.textContent = tL || 'PASS';
-  if (dom.printR2Verdict) dom.printR2Verdict.textContent = tR || 'PASS';
+  if (dom.printL2Verdict) dom.printL2Verdict.textContent = tL || 'PENDING';
+  if (dom.printR2Verdict) dom.printR2Verdict.textContent = tR || 'PENDING';
 
   const btnTotal = record ? record.buttons.total : Object.keys(state.buttonStates).length || 16;
   const btnPassed= record ? record.buttons.passed : Object.values(state.buttonStates).filter(b => b.clicks >= 3).length;
@@ -2300,11 +2636,24 @@ function populatePrintReport(record) {
 
   if (dom.printBtnCount)   dom.printBtnCount.textContent = `${btnPassed} / ${btnTotal}`;
   if (dom.printBtnStuck)   dom.printBtnStuck.textContent = `${btnStuck} (${btnStuck === 0 ? 'Ninguno' : 'Defecto'})`;
-  if (dom.printBtnVerdict) dom.printBtnVerdict.textContent = btnStuck === 0 ? 'PASS' : 'FAIL';
+  if (dom.printBtnVerdict) dom.printBtnVerdict.textContent = btnStuck > 0 ? 'FAIL' : (btnPassed >= btnTotal ? 'PASS' : 'REVIEW');
 
-  const overall = record ? record.overallVerdict : (btnStuck === 0 && sl.verdict !== 'FAIL' && sr.verdict !== 'FAIL' ? 'PASS' : 'REVIEW');
+  // Exact Authoritative Verdict mapping - NEVER map REVIEW to PASS!
+  const overall = record ? record.overallVerdict : calculateAuthoritativeOverallVerdict();
   if (dom.printFinalStamp) {
-    dom.printFinalStamp.textContent = overall === 'PASS' ? 'APTO (PASS)' : (overall === 'REVIEW' ? 'A REVISIÓN (REVIEW)' : 'NO APTO (FAIL)');
+    if (overall === 'PASS') {
+      dom.printFinalStamp.textContent = 'APTO (PASS)';
+      dom.printFinalStamp.className = 'verdict-stamp stamp-pass';
+    } else if (overall === 'REVIEW') {
+      dom.printFinalStamp.textContent = 'A REVISIÓN (REVIEW)';
+      dom.printFinalStamp.className = 'verdict-stamp stamp-review';
+    } else if (overall === 'FAIL') {
+      dom.printFinalStamp.textContent = 'NO APTO (FAIL)';
+      dom.printFinalStamp.className = 'verdict-stamp stamp-fail';
+    } else {
+      dom.printFinalStamp.textContent = 'PENDIENTE (INCOMPLETO)';
+      dom.printFinalStamp.className = 'verdict-stamp stamp-pending';
+    }
   }
 }
 
@@ -2379,8 +2728,14 @@ function initEventListeners() {
     dom.stickClearTraceBtn.addEventListener('click', () => {
       state.stickHistoryL = [];
       state.stickHistoryR = [];
-      state.circleBinsL.fill(0);
-      state.circleBinsR.fill(0);
+      state.circleBinsL = new Array(36).fill(0);
+      state.circleBinsR = new Array(36).fill(0);
+      state.snapL = { state: 'IDLE', startTime: 0, peakDist: 0, lastDist: 0, stabilizeStartTime: 0, done: false };
+      state.snapR = { state: 'IDLE', startTime: 0, peakDist: 0, lastDist: 0, stabilizeStartTime: 0, done: false };
+      if (dom.stickLCircVal) dom.stickLCircVal.textContent = '—';
+      if (dom.stickRCircVal) dom.stickRCircVal.textContent = '—';
+      if (dom.stickLSnapVal) dom.stickLSnapVal.textContent = '—';
+      if (dom.stickRSnapVal) dom.stickRSnapVal.textContent = '—';
       if (dom.stickLCanvas) drawLargeStick(dom.stickLCanvas, 0, 0, true, []);
       if (dom.stickRCanvas) drawLargeStick(dom.stickRCanvas, 0, 0, false, []);
     });
