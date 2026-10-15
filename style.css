@@ -589,13 +589,13 @@ header h1 {
   box-shadow: 0 4px 14px rgba(0,0,0,0.5);
 }
 
-/* 3-Phase Diagnostic Row */
+/* 2-Item Diagnostic Row: Movimiento & Resultado */
 .stick-phases-row {
   width: 100%;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 4px;
-  margin: 3px 0;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+  margin: 4px 0;
 }
 .stick-phase-item {
   display: flex;
@@ -793,16 +793,16 @@ header h1 {
   font-size: 0.72rem;
   font-weight: 700;
   min-height: 32px;
-  transition: all 0.08s ease;
+  transition: transform 0.04s ease-out, background 0.05s ease-out, border-color 0.05s ease-out, box-shadow 0.05s ease-out;
   user-select: none;
 }
 
 /* 1. Live Pressed (Not yet validated) */
 .btn-chip.pressed {
   border-color: #00e5ff !important;
-  background: rgba(0, 229, 255, 0.28) !important;
-  box-shadow: 0 0 12px rgba(0, 229, 255, 0.6) !important;
-  transform: scale(0.96);
+  background: rgba(0, 229, 255, 0.32) !important;
+  box-shadow: 0 0 14px rgba(0, 229, 255, 0.75), inset 0 0 6px rgba(0, 229, 255, 0.4) !important;
+  transform: scale(0.93);
 }
 
 /* 2. In progress clicks (1/3 or 2/3) */
@@ -835,9 +835,10 @@ header h1 {
 .btn-chip.passed.pressed,
 .btn-chip.validated.pressed {
   border-color: #4ade80 !important;
-  background: rgba(34, 197, 94, 0.5) !important;
-  box-shadow: 0 0 16px rgba(74, 222, 128, 0.8), inset 0 0 8px rgba(255, 255, 255, 0.35) !important;
-  transform: scale(0.95);
+  border-width: 2.5px !important;
+  background: rgba(34, 197, 94, 0.6) !important;
+  box-shadow: 0 0 18px rgba(74, 222, 128, 0.9), inset 0 0 8px rgba(255, 255, 255, 0.45) !important;
+  transform: scale(0.93);
   color: #ffffff !important;
 }
 .btn-chip.passed.pressed .chip-check,

@@ -82,11 +82,11 @@ const TRANSLATIONS = {
     savedSuccess: "✓ Diagnóstico guardado para el artículo:",
     instructionStep1: "Paso 1: Pulsa todos los botones en el mando (3 toques cada uno).",
     instructionStep2: "Paso 2: Presiona a fondo ambos gatillos analógicos (L2 y R2).",
-    instructionStep3: "Paso 3: Realiza la prueba del Stick Izquierdo.",
-    instructionStep4: "Paso 4: Realiza la prueba del Stick Derecho.",
+    instructionStep3: "Paso 3: Gira el Stick Izquierdo en círculo (8 direcciones).",
+    instructionStep4: "Paso 4: Gira el Stick Derecho en círculo (8 direcciones).",
     instructionStep5: "Paso 5: Revisión completada. Pulsa Guardar o Imprimir informe.",
-    promptStickRest: "Reposo: No toques el stick (2s)...",
-    promptStickMove: "Movimiento: Mueve el stick lentamente en un círculo (8 zonas)",
+    promptStickRest: "Monitoreo silencioso en reposo...",
+    promptStickMove: "Gira el stick en un círculo completo (8 direcciones)",
     printReportTitle: "INSPECCIÓN TÉCNICA DE CONTROL DE CALIDAD",
     printReportSubtitle: "Gamepad Quality Assurance & Diagnostic Certificate",
     printItemCodeLbl: "Nº de Artículo:",
@@ -188,11 +188,11 @@ const TRANSLATIONS = {
     savedSuccess: "✓ Diagnostic record saved for item:",
     instructionStep1: "Step 1: Press all physical buttons (3 presses each).",
     instructionStep2: "Step 2: Fully pull both analog triggers (L2 and R2).",
-    instructionStep3: "Step 3: Test Left Stick (Rest & Circle).",
-    instructionStep4: "Step 4: Test Right Stick (Rest & Circle).",
+    instructionStep3: "Step 3: Rotate Left Stick in a full circle (8 directions).",
+    instructionStep4: "Step 4: Rotate Right Stick in a full circle (8 directions).",
     instructionStep5: "Step 5: Inspection complete. Click Save or Print report.",
-    promptStickRest: "Rest: Do not touch the stick (2s)...",
-    promptStickMove: "Movement: Slowly move the stick in a circle (8 zones)",
+    promptStickRest: "Silent background rest monitoring...",
+    promptStickMove: "Rotate the stick in a full circle (8 directions)",
     printReportTitle: "QUALITY CONTROL TECHNICAL INSPECTION",
     printReportSubtitle: "Gamepad Quality Assurance & Diagnostic Certificate",
     printItemCodeLbl: "Item Number:",
@@ -294,11 +294,11 @@ const TRANSLATIONS = {
     savedSuccess: "✓ Diagnostica salvata per l'articolo:",
     instructionStep1: "Passo 1: Premi tutti i pulsanti (3 volte ciascuno).",
     instructionStep2: "Passo 2: Premi a fondo entrambi i grilletti (L2 e R2).",
-    instructionStep3: "Passo 3: Esegui il test dello Stick Sinistro.",
-    instructionStep4: "Passo 4: Esegui il test dello Stick Destro.",
+    instructionStep3: "Passo 3: Ruota lo Stick Sinistro in cerchio (8 direzioni).",
+    instructionStep4: "Passo 4: Ruota lo Stick Destro in cerchio (8 direzioni).",
     instructionStep5: "Passo 5: Revisione completata. Clicca Salva o Stampa rapporto.",
-    promptStickRest: "Riposo: Non toccare lo stick (2s)...",
-    promptStickMove: "Movimento: Muovi lentamente lo stick in cerchio (8 zone)",
+    promptStickRest: "Monitoraggio silenzioso a riposo...",
+    promptStickMove: "Ruota lo stick in cerchio completo (8 direzioni)",
     printReportTitle: "ISPEZIONE TECNICA DI CONTROLLO QUALITÀ",
     printReportSubtitle: "Gamepad Quality Assurance & Diagnostic Certificate",
     printItemCodeLbl: "Codice Articolo:",
@@ -400,11 +400,11 @@ const TRANSLATIONS = {
     savedSuccess: "✓ Diagnostic enregistré pour l'article:",
     instructionStep1: "Étape 1: Appuyez sur tous les boutons (3 fois chacun).",
     instructionStep2: "Étape 2: Pressez à fond les deux gâchettes (L2 et R2).",
-    instructionStep3: "Étape 3: Testez le Stick Gauche.",
-    instructionStep4: "Étape 4: Testez le Stick Droit.",
+    instructionStep3: "Étape 3: Tournez le Stick Gauche en cercle (8 directions).",
+    instructionStep4: "Étape 4: Tournez le Stick Droit en cercle (8 directions).",
     instructionStep5: "Étape 5: Inspection terminée. Cliquez sur Sauvegarder ou Imprimer.",
-    promptStickRest: "Repos: Ne touchez pas au stick (2s)...",
-    promptStickMove: "Mouvement: Tournez lentement le stick en cercle (8 zones)",
+    promptStickRest: "Surveillance silencieuse au repos...",
+    promptStickMove: "Tournez le stick en cercle complet (8 directions)",
     printReportTitle: "INSPECTION TECHNIQUE DE CONTRÔLE QUALITÉ",
     printReportSubtitle: "Gamepad Quality Assurance & Diagnostic Certificate",
     printItemCodeLbl: "Code Article:",
@@ -506,11 +506,11 @@ const TRANSLATIONS = {
     savedSuccess: "✓ Prüfbericht gespeichert für Artikel:",
     instructionStep1: "Schritt 1: Alle Tasten drücken (je 3 Mal).",
     instructionStep2: "Schritt 2: Beide analogen Trigger voll durchdrücken (L2 und R2).",
-    instructionStep3: "Schritt 3: Linken Stick testen.",
-    instructionStep4: "Schritt 4: Rechten Stick testen.",
+    instructionStep3: "Schritt 3: Linken Stick im Kreis drehen (8 Richtungen).",
+    instructionStep4: "Schritt 4: Rechten Stick im Kreis drehen (8 Richtungen).",
     instructionStep5: "Schritt 5: Prüfung abgeschlossen. Prüfbericht speichern oder drucken.",
-    promptStickRest: "Ruhe: Stick nicht berühren (2s)...",
-    promptStickMove: "Bewegung: Stick langsam im Kreis bewegen (8 Zonen)",
+    promptStickRest: "Automatische Ruhe-Überwachung...",
+    promptStickMove: "Bewege den Stick im vollen Kreis (8 Richtungen)",
     printReportTitle: "TECHNISCHE QUALITÄTSPRÜFUNG",
     printReportSubtitle: "Gamepad Quality Assurance & Diagnostic Certificate",
     printItemCodeLbl: "Artikel-Nr.:",
@@ -622,23 +622,23 @@ function initLanguage() {
 const BENCHMARKS = {
   STICK: {
     // USED / SECOND-HAND CONTROLLER TOLERANCES
-    // 1. Center / Resting Drift (sustained radial distance)
-    DRIFT_PASS:        0.060, // <= 0.05–0.06 sustained = PASS
-    DRIFT_REVIEW:      0.105, // 0.061–0.105 = REVIEW
-    DRIFT_FAIL:        0.105, // > 0.105 sustained = FAIL
+    // 1. Center / Resting Drift (sustained 90th percentile radial distance when untouched)
+    DRIFT_PASS:        0.080, // <= 0.080 sustained radial offset = PASS (small deviations like 0.01-0.05 are completely normal)
+    DRIFT_REVIEW:      0.140, // 0.081–0.140 sustained = REVIEW
+    DRIFT_FAIL:        0.140, // > 0.140 sustained significant drift = FAIL
     
-    // 2. Resting noise / jitter (minor normal wear acceptable)
-    JITTER_PASS:       0.026, // <= 0.026 noise std dev = PASS, > 0.026 = REVIEW
+    // 2. Resting noise / jitter
+    JITTER_PASS:       0.035, // <= 0.035 noise std dev = PASS, > 0.035 = REVIEW
     
-    // 3. Directional Range (8 main compass sectors)
-    RANGE_PASS:        0.75,  // Important directions generally reach ~0.75+ = PASS
-    RANGE_REVIEW:      0.60,  // Repeatedly 0.60–0.75 = REVIEW
-    RANGE_FAIL:        0.60,  // Stays below ~0.60 or barely responds = FAIL
+    // 3. Directional Range (8 main compass sectors: GREEN >= 0.72, YELLOW >= 0.50, GRAY < 0.50)
+    RANGE_PASS:        0.72,  // Reaching >= 0.72 = Healthy full usable range (GREEN)
+    RANGE_REVIEW:      0.50,  // Reaching 0.50–0.71 = Moderate usable range (YELLOW)
+    RANGE_FAIL:        0.50,  // Stays below 0.50 = Weak / unreached direction (GRAY / FAIL)
     
-    // 4. Return to Center (stabilized resting offset)
-    RETURN_PASS:       0.080, // Returns within radius 0.07–0.08 = PASS
-    RETURN_REVIEW:     0.120, // 0.081–0.120 sustained = REVIEW
-    RETURN_FAIL:       0.120, // Significantly displaced > 0.120 = FAIL
+    // 4. Return to Center (Telemetry only for details / technical sheet; does NOT affect certification)
+    RETURN_PASS:       0.085,
+    RETURN_REVIEW:     0.130,
+    RETURN_FAIL:       0.130,
   },
   TRIGGER: {
     REST_MAX: 0.04,         // Forgiving for used controller triggers
@@ -882,7 +882,6 @@ const dom = {
   // Large Stick Testing Center
   stickZoomBtn:        document.getElementById('stick-zoom-btn'),
   stickSuiteBtn:       document.getElementById('stick-suite-btn'),
-  driftBtn:            document.getElementById('drift-btn'),
   stickClearTraceBtn:  document.getElementById('stick-clear-trace-btn'),
   stickLCanvas:        document.getElementById('stick-l-canvas'),
   stickRCanvas:        document.getElementById('stick-r-canvas'),
@@ -904,18 +903,12 @@ const dom = {
   stickRDriftVal:      document.getElementById('stick-r-drift-val'),
   stickRJitterVal:     document.getElementById('stick-r-jitter-val'),
   stickRSnapVal:       document.getElementById('stick-r-snap-val'),
-  driftResult:         document.getElementById('drift-result'),
-
-  // Simplified Stick Status Elements (Reposo, Movimiento, Resultado)
-  phaseLRestItem:      document.getElementById('phase-l-rest'),
-  phaseLRestVal:       document.getElementById('phase-l-rest-val'),
+  // Streamlined Stick Status Elements (Movimiento, Resultado)
   phaseLMoveItem:      document.getElementById('phase-l-move'),
   phaseLMoveVal:       document.getElementById('phase-l-move-val'),
   phaseLResultItem:    document.getElementById('phase-l-result'),
   phaseLResultVal:     document.getElementById('phase-l-result-val'),
 
-  phaseRRestItem:      document.getElementById('phase-r-rest'),
-  phaseRRestVal:       document.getElementById('phase-r-rest-val'),
   phaseRMoveItem:      document.getElementById('phase-r-move'),
   phaseRMoveVal:       document.getElementById('phase-r-move-val'),
   phaseRResultItem:    document.getElementById('phase-r-result'),
@@ -928,11 +921,9 @@ const dom = {
   triggerL2Bar:        document.getElementById('trigger-l2-bar'),
   triggerR2Bar:        document.getElementById('trigger-r2-bar'),
   triggerL2Val:        document.getElementById('trigger-l2-val'),
-  triggerL2Rest:       document.getElementById('trigger-l2-rest'),
   triggerL2Max:        document.getElementById('trigger-l2-max'),
   triggerL2Ramp:       document.getElementById('trigger-l2-ramp'),
   triggerR2Val:        document.getElementById('trigger-r2-val'),
-  triggerR2Rest:       document.getElementById('trigger-r2-rest'),
   triggerR2Max:        document.getElementById('trigger-r2-max'),
   triggerR2Ramp:       document.getElementById('trigger-r2-ramp'),
 
@@ -1456,12 +1447,8 @@ function startStickPhase(stick, newPhase) {
   const isLeft = (stick === 'l');
   m.phase = newPhase;
 
-  const restItem = isLeft ? dom.phaseLRestItem : dom.phaseRRestItem;
-  const restVal  = isLeft ? dom.phaseLRestVal  : dom.phaseRRestVal;
   const moveItem = isLeft ? dom.phaseLMoveItem : dom.phaseRMoveItem;
   const moveVal  = isLeft ? dom.phaseLMoveVal  : dom.phaseRMoveVal;
-  const resultItem = isLeft ? dom.phaseLResultItem : dom.phaseRResultItem;
-  const resultVal  = isLeft ? dom.phaseLResultVal  : dom.phaseRResultVal;
   const badgeEl  = isLeft ? dom.stickLVerdict  : dom.stickRVerdict;
 
   if (badgeEl && !m.completed) {
@@ -1469,24 +1456,10 @@ function startStickPhase(stick, newPhase) {
     badgeEl.textContent = t('verdictTesting') || 'EN PRUEBA';
   }
 
-  if (newPhase === 'REST') {
-    m.restTimerStart = 0;
-    m.restSamples = [];
-    if (restItem) restItem.className = 'stick-phase-item phase-active';
-    if (restVal)  restVal.textContent = '⏱ 2.0s';
-    if (resultItem) resultItem.className = 'stick-phase-item';
-    if (resultVal)  resultVal.textContent = '—';
-    if (dom.guidedInstructionText) {
-      dom.guidedInstructionText.textContent = `${isLeft ? t('stickLeftLabel') : t('stickRightLabel')} — ${t('promptStickRest')}`;
-    }
-  } else if (newPhase === 'MOVE') {
-    m.prevMovePos = null;
-    m.moveStartTime = performance.now();
-    if (moveItem) moveItem.className = 'stick-phase-item phase-active';
-    if (moveVal)  moveVal.textContent = `${m.coverage || 0}/8`;
-    if (dom.guidedInstructionText) {
-      dom.guidedInstructionText.textContent = `${isLeft ? t('stickLeftLabel') : t('stickRightLabel')} — ${t('promptStickMove')}`;
-    }
+  if (moveItem) moveItem.className = 'stick-phase-item phase-active';
+  if (moveVal)  moveVal.textContent = `${m.coverage || 0}/8`;
+  if (dom.guidedInstructionText) {
+    dom.guidedInstructionText.textContent = `${isLeft ? t('stickLeftLabel') : t('stickRightLabel')} — ${t('promptStickMove')}`;
   }
 }
 
@@ -1496,8 +1469,41 @@ function finishStickDiagnostic(stick) {
   m.phase = 'DONE';
   m.completed = true;
 
-  // Authoritative Stick Verdict = ONLY based on Rest & Movement
-  // Return-to-center NEVER affects commercial PASS / REVIEW / FAIL
+  const greenCount   = m.zones.filter(d => d >= BENCHMARKS.STICK.RANGE_PASS).length;
+  const reachedCount = m.zones.filter(d => d >= BENCHMARKS.STICK.RANGE_REVIEW).length;
+  const visitedRanges = m.zones.filter(d => d >= BENCHMARKS.STICK.RANGE_REVIEW);
+  const avgRange = visitedRanges.length > 0 ? (visitedRanges.reduce((a, b) => a + b, 0) / visitedRanges.length) : 0;
+  const maxRange = Math.max(...m.zones);
+  const deadDirections = m.zones.filter(d => d < 0.40).length;
+
+  m.range = parseFloat(maxRange.toFixed(3));
+  m.circularity = Math.round((reachedCount / 8) * 100);
+
+  // Evaluate Movement Quality according to SECOND-HAND CONTROLLER QC philosophy:
+  let moveVerdict = 'PASS';
+  if (greenCount === 8 && m.moveDropouts < 3 && m.moveGlitches < 3) {
+    moveVerdict = 'PASS';
+  } else if (greenCount >= 7) {
+    if (m.moveDropouts >= 2 || m.moveGlitches >= 2) {
+      moveVerdict = 'REVIEW';
+    } else {
+      moveVerdict = 'PASS'; // 7 healthy + 1 slightly reduced is acceptable commercial PASS
+    }
+  } else if (greenCount === 6) {
+    moveVerdict = 'REVIEW';
+  } else if (reachedCount <= 4 || deadDirections >= 3 || m.moveDropouts >= 3 || m.moveGlitches >= 4) {
+    moveVerdict = 'FAIL';
+  } else {
+    moveVerdict = (avgRange >= 0.65) ? 'REVIEW' : 'FAIL';
+  }
+
+  m.moveVerdict = moveVerdict;
+  m.tests.coverage = (reachedCount >= 7) ? 'PASS' : (reachedCount === 6 ? 'REVIEW' : 'FAIL');
+  m.tests.range = (avgRange >= BENCHMARKS.STICK.RANGE_PASS) ? 'PASS' : (avgRange >= BENCHMARKS.STICK.RANGE_REVIEW ? 'REVIEW' : 'FAIL');
+  m.tests.smoothness = (m.moveGlitches < 2 && m.moveDropouts < 2) ? 'PASS' : (moveVerdict === 'FAIL' ? 'FAIL' : 'REVIEW');
+
+  // Commercial Stick Verdict = Derived from Background Resting Drift & Movement Quality
+  // Return-to-center data is technical telemetry only and NEVER affects PASS / REVIEW / FAIL
   const relevantPhases = [m.restVerdict, m.moveVerdict].filter(Boolean);
   if (relevantPhases.includes('FAIL')) {
     m.verdict = 'FAIL';
@@ -1507,9 +1513,20 @@ function finishStickDiagnostic(stick) {
     m.verdict = 'PASS';
   }
 
-  // Update Resultado item in UI
+  // Update UI Elements
+  const moveItem   = isLeft ? dom.phaseLMoveItem   : dom.phaseRMoveItem;
+  const moveVal    = isLeft ? dom.phaseLMoveVal    : dom.phaseRMoveVal;
   const resultItem = isLeft ? dom.phaseLResultItem : dom.phaseRResultItem;
   const resultVal  = isLeft ? dom.phaseLResultVal  : dom.phaseRResultVal;
+  const badgeEl    = isLeft ? dom.stickLVerdict    : dom.stickRVerdict;
+
+  if (moveItem) {
+    moveItem.className = `stick-phase-item phase-${m.moveVerdict.toLowerCase()}`;
+  }
+  if (moveVal) {
+    moveVal.textContent = (greenCount === 8) ? '8/8 ✓' : (reachedCount === 8 ? '8/8' : `${reachedCount}/8`);
+  }
+
   if (resultItem) {
     resultItem.className = `stick-phase-item phase-${m.verdict.toLowerCase()}`;
   }
@@ -1517,8 +1534,6 @@ function finishStickDiagnostic(stick) {
     resultVal.textContent = (m.verdict === 'PASS') ? t('verdictPass') : (m.verdict === 'REVIEW' ? t('verdictReview') : t('verdictFail'));
   }
 
-  // Update Stick Badge
-  const badgeEl = isLeft ? dom.stickLVerdict : dom.stickRVerdict;
   if (badgeEl) {
     if (m.verdict === 'PASS') {
       badgeEl.className = 'stick-verdict-badge badge-pass';
@@ -1532,14 +1547,6 @@ function finishStickDiagnostic(stick) {
     }
   }
 
-  // Auto-advance to Right stick if Left completed
-  if (isLeft) {
-    const mr = state.stickMetrics.r;
-    if (!mr.completed && mr.phase === 'IDLE') {
-      startStickPhase('r', 'REST');
-    }
-  }
-
   updateWorkflowProgress();
   updateOverallVerdict();
 }
@@ -1548,84 +1555,32 @@ function updateStickPhaseStateMachine(stick, x, y, dist, angle, now) {
   const m = state.stickMetrics[stick];
   const isLeft = (stick === 'l');
 
-  const restItem = isLeft ? dom.phaseLRestItem : dom.phaseRRestItem;
-  const restVal  = isLeft ? dom.phaseLRestVal  : dom.phaseRRestVal;
-  const moveItem = isLeft ? dom.phaseLMoveItem : dom.phaseRMoveItem;
-  const moveVal  = isLeft ? dom.phaseLMoveVal  : dom.phaseRMoveVal;
+  const moveItem   = isLeft ? dom.phaseLMoveItem   : dom.phaseRMoveItem;
+  const moveVal    = isLeft ? dom.phaseLMoveVal    : dom.phaseRMoveVal;
+  const badgeEl    = isLeft ? dom.stickLVerdict    : dom.stickRVerdict;
 
-  const currentStep = getCurrentActiveStep();
-  const isTargetStep = isLeft ? (currentStep === 3) : (currentStep === 4);
-
-  // Background return-to-center telemetry measurement (Internal / Hardware raw info only)
-  if (dist < 0.15 && m.returnStartTime > 0 && !m.returnTime) {
-    const elapsedReturn = Math.round(now - m.returnStartTime);
-    m.returnTime = elapsedReturn;
-    m.returnOffset = parseFloat(dist.toFixed(4));
-    m.returnVerdict = (dist <= BENCHMARKS.STICK.RETURN_PASS) ? 'PASS' : (dist <= BENCHMARKS.STICK.RETURN_REVIEW ? 'REVIEW' : 'FAIL');
-    m.tests.returnToCenter = m.returnVerdict;
-    if (isLeft && dom.stickLSnapVal) dom.stickLSnapVal.textContent = `${elapsedReturn}ms (${dist.toFixed(3)})`;
-    else if (!isLeft && dom.stickRSnapVal) dom.stickRSnapVal.textContent = `${elapsedReturn}ms (${dist.toFixed(3)})`;
-  }
-
-  // If in IDLE and it's our turn to test, start Phase 1 (REST)
-  if (m.phase === 'IDLE' && isTargetStep && state.activeGpIndex !== null) {
-    startStickPhase(stick, 'REST');
-  }
-
-  // If IDLE or DONE, nothing to advance inside active state machine
-  if (m.phase === 'IDLE' || m.phase === 'DONE') {
-    return;
-  }
-
-  // ── PHASE 1: REPOSO (REST DRIFT & NOISE) ───────────────────────
-  // Evaluated using USED / SECOND-HAND tolerances:
-  // PASS: sustained deviation approximately <= 0.05–0.06
-  // REVIEW: approximately 0.06–0.10
-  // FAIL: persistent deviation approximately > 0.10–0.12
-  if (m.phase === 'REST') {
-    // If operator is pushing the stick (dist > 0.30), wait for release before counting 2s
-    if (dist > 0.30) {
-      m.restTimerStart = now;
-      m.restSamples = [];
-      if (restVal) restVal.textContent = '⏱ 2.0s';
-      return;
+  // 1. Silent Background Resting Drift & Jitter Monitoring (untouched stick)
+  // Gathers data silently without interrupting or requiring button presses
+  if (dist <= 0.18) {
+    if (!m.silentRestSamples) m.silentRestSamples = [];
+    m.silentRestSamples.push({ x, y, dist, time: now });
+    if (m.silentRestSamples.length > 300) {
+      m.silentRestSamples.shift();
     }
 
-    if (!m.restTimerStart) {
-      m.restTimerStart = now;
-      m.restSamples = [];
-    }
-
-    m.restSamples.push({ x, y, dist });
-    const elapsed = (now - m.restTimerStart) / 1000;
-    const remaining = Math.max(0, 2.0 - elapsed);
-    if (restVal) restVal.textContent = `⏱ ${remaining.toFixed(1)}s`;
-
-    if (elapsed >= 2.0) {
-      // Sustained resting drift measurement using 90th percentile of samples
-      const s = m.restSamples;
-      const sortedDists = s.map(pt => pt.dist).sort((a, b) => a - b);
+    if (m.silentRestSamples.length >= 25) {
+      const sortedDists = m.silentRestSamples.map(pt => pt.dist).sort((a, b) => a - b);
       const p90Idx = Math.floor(sortedDists.length * 0.90);
-      const sustainedDist = sortedDists.length > 0 ? sortedDists[p90Idx] : dist;
-      const avgDist = s.length > 0 ? (s.reduce((a, b) => a + b.dist, 0) / s.length) : dist;
-      const variance = s.length > 0 ? (s.reduce((a, b) => a + Math.pow(b.dist - avgDist, 2), 0) / s.length) : 0;
+      const sustainedDist = sortedDists[p90Idx];
+      const avgDist = m.silentRestSamples.reduce((a, b) => a + b.dist, 0) / m.silentRestSamples.length;
+      const variance = m.silentRestSamples.reduce((a, b) => a + Math.pow(b.dist - avgDist, 2), 0) / m.silentRestSamples.length;
       const jitter = Math.sqrt(variance);
 
       m.drift = parseFloat(sustainedDist.toFixed(4));
       m.jitter = parseFloat(jitter.toFixed(4));
 
-      if (isLeft) {
-        if (dom.stickLDriftVal) dom.stickLDriftVal.textContent = sustainedDist.toFixed(3);
-        if (dom.stickLJitterVal) dom.stickLJitterVal.textContent = jitter.toFixed(3);
-      } else {
-        if (dom.stickRDriftVal) dom.stickRDriftVal.textContent = sustainedDist.toFixed(3);
-        if (dom.stickRJitterVal) dom.stickRJitterVal.textContent = jitter.toFixed(3);
-      }
-
-      // Second-hand tolerances:
-      // PASS: <= 0.060 sustained & jitter <= 0.026
-      // REVIEW: <= 0.105 sustained
-      // FAIL: > 0.105 sustained
+      // Commercial tolerances for used controllers:
+      // Small numerical deviations (X=0.01, Y=0.02 -> dist=0.022) are comfortably PASS
       if (sustainedDist <= BENCHMARKS.STICK.DRIFT_PASS && jitter <= BENCHMARKS.STICK.JITTER_PASS) {
         m.restVerdict = 'PASS';
       } else if (sustainedDist <= BENCHMARKS.STICK.DRIFT_REVIEW) {
@@ -1637,49 +1592,61 @@ function updateStickPhaseStateMachine(stick, x, y, dist, angle, now) {
       m.tests.center = m.restVerdict;
       m.tests.noise  = (jitter <= BENCHMARKS.STICK.JITTER_PASS) ? 'PASS' : 'REVIEW';
 
-      // Update Phase 1 UI
-      if (restItem) {
-        restItem.className = `stick-phase-item phase-${m.restVerdict.toLowerCase()}`;
+      // Update silent telemetry for Technical Details drawer and Print report
+      if (isLeft) {
+        if (dom.stickLDriftVal) dom.stickLDriftVal.textContent = sustainedDist.toFixed(3);
+        if (dom.stickLJitterVal) dom.stickLJitterVal.textContent = jitter.toFixed(3);
+      } else {
+        if (dom.stickRDriftVal) dom.stickRDriftVal.textContent = sustainedDist.toFixed(3);
+        if (dom.stickRJitterVal) dom.stickRJitterVal.textContent = jitter.toFixed(3);
       }
-      if (restVal) {
-        restVal.textContent = (m.restVerdict === 'PASS') ? '✓' : (m.restVerdict === 'REVIEW' ? '!' : '✕');
-      }
-
-      // Automatically transition to Phase 2: MOVIMIENTO
-      startStickPhase(stick, 'MOVE');
     }
-    return;
   }
 
-  // ── PHASE 2: MOVIMIENTO (8 DIRECTIONAL ZONES & MOVEMENT STABILITY) ──
-  // Evaluated using USED / SECOND-HAND tolerances:
-  // 8/8: PASS candidate
-  // 7/8: allow PASS if movement and range are otherwise healthy
-  // 6/8: normally REVIEW
-  // 5/8 or less: FAIL or strong REVIEW depending on actual response
-  if (m.phase === 'MOVE') {
+  // 2. Silent Return-to-Center telemetry measurement (Technical details only)
+  if (dist >= 0.65) {
+    m.returnArmed = true;
+    m.lastEdgeTime = now;
+  } else if (dist <= 0.20 && m.returnArmed && !m.returnTime) {
+    m.returnArmed = false;
+    const elapsedReturn = m.lastEdgeTime ? Math.round(now - m.lastEdgeTime) : 60;
+    m.returnTime = elapsedReturn;
+    m.returnOffset = parseFloat(dist.toFixed(4));
+    m.returnVerdict = (dist <= BENCHMARKS.STICK.RETURN_PASS) ? 'PASS' : (dist <= BENCHMARKS.STICK.RETURN_REVIEW ? 'REVIEW' : 'FAIL');
+    m.tests.returnToCenter = m.returnVerdict;
+
+    if (isLeft && dom.stickLSnapVal) dom.stickLSnapVal.textContent = `${elapsedReturn}ms (${dist.toFixed(3)})`;
+    else if (!isLeft && dom.stickRSnapVal) dom.stickRSnapVal.textContent = `${elapsedReturn}ms (${dist.toFixed(3)})`;
+  }
+
+  // 3. Parallel Continuous Movement & 8 Directional Zones Analysis
+  // Non-sequential: monitors available inputs in parallel with buttons/triggers
+  const dirAngles = [0, 45, 90, 135, 180, 225, 270, 315];
+
+  if (dist >= 0.45) {
+    m.hasMoved = true;
+    m.lastActiveMoveTime = now;
     if (!m.moveStartTime) m.moveStartTime = now;
-
-    // 1. Detect which of the 8 zones the stick reaches when pushed past 0.58
-    if (dist >= 0.58) {
-      const zoneIdx = Math.floor(((angle + 22.5) % 360) / 45);
-      m.zones[zoneIdx] = Math.max(m.zones[zoneIdx] || 0, dist);
+    if (m.phase === 'IDLE') {
+      m.phase = 'TESTING';
+      if (badgeEl && !m.completed) {
+        badgeEl.className = 'stick-verdict-badge badge-testing';
+        badgeEl.textContent = t('verdictTesting') || 'EN PRUEBA';
+      }
+      if (moveItem) moveItem.className = 'stick-phase-item phase-active';
     }
 
-    const visitedCount = m.zones.filter(d => d >= 0.58).length;
-    m.coverage = visitedCount;
-
-    if (moveVal) {
-      moveVal.textContent = `${visitedCount}/8`;
-    }
-    if (isLeft && dom.stickLCircVal) {
-      dom.stickLCircVal.textContent = `${visitedCount}/8`;
-    } else if (!isLeft && dom.stickRCircVal) {
-      dom.stickRCircVal.textContent = `${visitedCount}/8`;
+    // Register into overlapping directional zones with generous ±28° tolerance (56° cone, 11° overlap)
+    // Ensures all 8 directions are realistically reachable with zero invisible gaps
+    for (let i = 0; i < 8; i++) {
+      let diff = Math.abs(angle - dirAngles[i]);
+      if (diff > 180) diff = 360 - diff;
+      if (diff <= 28) {
+        m.zones[i] = Math.max(m.zones[i] || 0, dist);
+      }
     }
 
-    // 2. Continuous movement irregularity analysis (Movement Drift)
-    // Only detect repeated, genuine potentiometer dropouts or impossible teleport jumps
+    // Movement Stability & Dropout Analysis (Movement Drift)
     if (dist >= 0.25) {
       if (m.prevMovePos && m.prevMovePos.time > 0) {
         const dx = x - m.prevMovePos.x;
@@ -1698,69 +1665,57 @@ function updateStickPhaseStateMachine(stick, x, y, dist, angle, now) {
       }
       m.prevMovePos = { x, y, dist, time: now };
     }
+  }
 
-    // Phase 2 completion:
-    // - 7/8 or 8/8 reached: immediate completion
-    // - Or moving for at least 4s and released (dist <= 0.30) with at least 5 directions: advance
-    // - Or timeout after 7.5s and released: advance (never trap technician)
+  // Calculate live zone tallies:
+  // GREEN (healthy usable range): >= 0.72
+  // YELLOW (reached with reduced range): 0.50–0.71
+  const greenCount   = m.zones.filter(d => d >= BENCHMARKS.STICK.RANGE_PASS).length;
+  const reachedCount = m.zones.filter(d => d >= BENCHMARKS.STICK.RANGE_REVIEW).length;
+  m.coverage   = reachedCount;
+  m.greenCount = greenCount;
+
+  // Real-time counter display
+  if (moveVal) {
+    if (greenCount === 8) {
+      moveVal.textContent = '8/8 ✓';
+    } else if (reachedCount === 8) {
+      moveVal.textContent = '8/8';
+    } else {
+      moveVal.textContent = `${reachedCount}/8`;
+    }
+  }
+  if (isLeft && dom.stickLCircVal) {
+    dom.stickLCircVal.textContent = (greenCount === 8) ? '8/8 ✓' : `${reachedCount}/8`;
+  } else if (!isLeft && dom.stickRCircVal) {
+    dom.stickRCircVal.textContent = (greenCount === 8) ? '8/8 ✓' : `${reachedCount}/8`;
+  }
+
+  // Diagnostic completion evaluation:
+  // - Never auto-complete prematurely at 7/8 while technician is moving (allow reaching 8/8)
+  // - Complete when all 8 reached and released to center (dist <= 0.30)
+  // - OR if >= 6 directions reached and released to center (dist <= 0.25) for > 1.4s
+  // - OR fallback timeout after 8s of moving once released to center
+  if (m.hasMoved && !m.completed) {
     const moveElapsed = now - m.moveStartTime;
-    const canAdvancePartial = (visitedCount >= 5 && moveElapsed >= 4000 && dist <= 0.30);
-    const timeoutAdvance = (moveElapsed >= 7500 && dist <= 0.30);
+    const released = (dist <= 0.28);
+    const settledInCenter = (dist <= 0.22 && (now - m.lastActiveMoveTime >= 1400));
+    const allReached = (reachedCount === 8 && released);
+    const partialSettled = (reachedCount >= 6 && settledInCenter);
+    const timeoutSettled = (moveElapsed >= 8000 && released);
 
-    if (visitedCount >= 7 || canAdvancePartial || timeoutAdvance) {
-      const visitedRanges = m.zones.filter(d => d >= 0.58);
-      const avgRange = visitedRanges.length > 0 ? (visitedRanges.reduce((a, b) => a + b, 0) / visitedRanges.length) : 0;
-      const maxRange = Math.max(...m.zones);
-      const deadDirections = m.zones.filter(d => d < 0.50).length;
-
-      m.range = parseFloat(maxRange.toFixed(3));
-      m.circularity = Math.round((visitedCount / 8) * 100);
-
-      // Evaluate Movement Quality according to USED / SECOND-HAND CONTROLLER TOLERANCES
-      let moveVerdict = 'PASS';
-
-      if (visitedCount <= 4 || m.moveDropouts >= 4 || m.moveGlitches >= 5 || deadDirections >= 4) {
-        moveVerdict = 'FAIL';
-      } else if (visitedCount <= 5) {
-        moveVerdict = (avgRange < 0.65 || deadDirections >= 3) ? 'FAIL' : 'REVIEW';
-      } else if (visitedCount === 6) {
-        moveVerdict = 'REVIEW';
-      } else if (visitedCount === 7) {
-        if (m.moveDropouts >= 2 || m.moveGlitches >= 2 || avgRange < 0.70) {
-          moveVerdict = 'REVIEW';
-        } else {
-          moveVerdict = 'PASS';
-        }
-      } else {
-        if (m.moveDropouts >= 2 || m.moveGlitches >= 2 || avgRange < 0.70) {
-          moveVerdict = 'REVIEW';
-        } else {
-          moveVerdict = 'PASS';
-        }
-      }
-
-      m.moveVerdict = moveVerdict;
-      m.tests.coverage = (visitedCount >= 7) ? 'PASS' : (visitedCount === 6 ? 'REVIEW' : 'FAIL');
-      m.tests.range = (avgRange >= 0.72) ? 'PASS' : (avgRange >= 0.60 ? 'REVIEW' : 'FAIL');
-      m.tests.smoothness = (m.moveGlitches < 2 && m.moveDropouts < 2) ? 'PASS' : (moveVerdict === 'FAIL' ? 'FAIL' : 'REVIEW');
-      m.tests.circularity = moveVerdict; // Informational only
-
-      // Update Phase 2 UI
-      if (moveItem) {
-        moveItem.className = `stick-phase-item phase-${m.moveVerdict.toLowerCase()}`;
-      }
-      if (moveVal) {
-        const symbol = (m.moveVerdict === 'PASS') ? '✓' : (m.moveVerdict === 'REVIEW' ? '!' : '✕');
-        moveVal.textContent = `${visitedCount}/8 ${symbol}`;
-      }
-
-      // Mark return start time for passive background telemetry
-      m.returnStartTime = now;
-
-      // Stick diagnostic completes immediately upon completing movement test!
+    if (allReached || partialSettled || timeoutSettled) {
       finishStickDiagnostic(stick);
     }
-    return;
+  } else if (m.completed) {
+    // If technician continues moving stick after completion, keep updating verdict and UI
+    const visitedRanges = m.zones.filter(d => d >= BENCHMARKS.STICK.RANGE_REVIEW);
+    const avgRange = visitedRanges.length > 0 ? (visitedRanges.reduce((a, b) => a + b, 0) / visitedRanges.length) : 0;
+    const maxRange = Math.max(...m.zones);
+    m.range = parseFloat(maxRange.toFixed(3));
+    m.circularity = Math.round((reachedCount / 8) * 100);
+
+    evaluateStickOverall(stick);
   }
 }
 
@@ -1769,17 +1724,19 @@ function resetStickDiagnostics(stick) {
   m.phase = 'IDLE';
   m.completed = false;
   m.verdict = 'PENDING';
-  m.restTimerStart = 0;
-  m.restSamples = [];
+  m.silentRestSamples = [];
   m.restVerdict = null;
   m.drift = null;
   m.jitter = null;
   m.zones = new Array(8).fill(0);
+  m.hasMoved = false;
+  m.moveStartTime = 0;
+  m.lastActiveMoveTime = 0;
   m.moveGlitches = 0;
   m.moveDropouts = 0;
   m.moveVerdict = null;
-  m.moveStartTime = 0;
   m.coverage = 0;
+  m.greenCount = 0;
   m.circularity = null;
   m.range = null;
   m.prevMovePos = null;
@@ -1794,17 +1751,13 @@ function resetStickDiagnostics(stick) {
   m.failReasons = [];
 
   const isLeft = (stick === 'l');
-  const restItem = isLeft ? dom.phaseLRestItem : dom.phaseRRestItem;
-  const restVal  = isLeft ? dom.phaseLRestVal  : dom.phaseRRestVal;
-  const moveItem = isLeft ? dom.phaseLMoveItem : dom.phaseRMoveItem;
-  const moveVal  = isLeft ? dom.phaseLMoveVal  : dom.phaseRMoveVal;
+  const moveItem   = isLeft ? dom.phaseLMoveItem   : dom.phaseRMoveItem;
+  const moveVal    = isLeft ? dom.phaseLMoveVal    : dom.phaseRMoveVal;
   const resultItem = isLeft ? dom.phaseLResultItem : dom.phaseRResultItem;
   const resultVal  = isLeft ? dom.phaseLResultVal  : dom.phaseRResultVal;
-  const badgeEl  = isLeft ? dom.stickLVerdict  : dom.stickRVerdict;
+  const badgeEl    = isLeft ? dom.stickLVerdict    : dom.stickRVerdict;
 
-  if (restItem) restItem.className = 'stick-phase-item';
-  if (restVal)  restVal.textContent = '○';
-  if (moveItem) moveItem.className = 'stick-phase-item';
+  if (moveItem) moveItem.className = 'stick-phase-item phase-active';
   if (moveVal)  moveVal.textContent = '0/8';
   if (resultItem) resultItem.className = 'stick-phase-item';
   if (resultVal)  resultVal.textContent = '—';
@@ -2148,14 +2101,14 @@ function updateButtonsSummaryBadge() {
 // ─────────────────────────────────────────────────────────────
 function startDriftCapture() {
   resetStickDiagnostics('l');
-  startStickPhase('l', 'REST');
+  startStickPhase('l', 'TESTING');
 }
 
 function startFullSuite() {
   resetStickDiagnostics('l');
   resetStickDiagnostics('r');
   state.forcedStep = 3;
-  startStickPhase('l', 'REST');
+  startStickPhase('l', 'TESTING');
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -2168,63 +2121,91 @@ function drawLargeStick(canvas, rawX, rawY, isLeft, history = []) {
   const h = canvas.height;
   const cx = w / 2;
   const cy = h / 2;
-  const r = (w / 2) * 0.72; // = 144 on 400x400 canvas, leaves outer margin for 8 compass targets and diagonals
+
+  // Reference 1.0 circle radius: 0.63 of canvas half-width.
+  // Leaves ample margin for over-travel raw coordinates (1.05 - 1.18)
+  // and outer 8-directional compass target indicators.
+  const r = (w / 2) * 0.63;
 
   ctx.clearRect(0, 0, w, h);
 
-  // Background Dial
+  // Background Dial Container
   ctx.beginPath();
-  ctx.arc(cx, cy, r, 0, Math.PI * 2);
-  ctx.fillStyle = '#101018';
+  ctx.arc(cx, cy, r * 1.18, 0, Math.PI * 2);
+  ctx.fillStyle = '#0f1017';
   ctx.fill();
-  ctx.lineWidth = 2;
-  ctx.strokeStyle = '#2b2b3e';
+  ctx.lineWidth = 1.5;
+  ctx.strokeStyle = '#222338';
   ctx.stroke();
 
-  // Grid Concentric Circles (25%, 50%, 75%, 100%)
-  const steps = [0.25, 0.50, 0.75, 1.0];
-  steps.forEach(s => {
+  // Grid Concentric Circles (25%, 50%, 75%)
+  [0.25, 0.50, 0.75].forEach(s => {
     ctx.beginPath();
     ctx.arc(cx, cy, r * s, 0, Math.PI * 2);
-    ctx.strokeStyle = s === 1.0 ? '#3f3f58' : 'rgba(255,255,255,0.06)';
-    ctx.lineWidth = s === 1.0 ? 1.5 : 1;
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+    ctx.lineWidth = 1;
     ctx.stroke();
   });
 
-  // Center Deadzone threshold ring (5% factory threshold)
+  // Solid 1.00 Standard Reference Ring
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // Over-travel 1.15 Guide Ring (dashed, accommodates diagonal coordinates)
+  ctx.beginPath();
+  ctx.setLineDash([3, 4]);
+  ctx.arc(cx, cy, r * 1.15, 0, Math.PI * 2);
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.07)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Center Deadzone threshold ring (5% reference ring)
   ctx.beginPath();
   ctx.arc(cx, cy, r * 0.05, 0, Math.PI * 2);
-  ctx.strokeStyle = 'rgba(99, 102, 241, 0.4)';
+  ctx.strokeStyle = 'rgba(99, 102, 241, 0.35)';
   ctx.lineWidth = 1;
   ctx.stroke();
 
   // Cartesian Crosshair Axes
   ctx.beginPath();
-  ctx.moveTo(cx, cy - r);
-  ctx.lineTo(cx, cy + r);
-  ctx.moveTo(cx - r, cy);
-  ctx.lineTo(cx + r, cy);
-  ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+  ctx.moveTo(cx, cy - r * 1.12);
+  ctx.lineTo(cx, cy + r * 1.12);
+  ctx.moveTo(cx - r * 1.12, cy);
+  ctx.lineTo(cx + r * 1.12, cy);
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.10)';
   ctx.lineWidth = 1;
   ctx.stroke();
 
   // 8 Directional Zones Indicators around the perimeter
+  // 3 Distinct States:
+  // - GREEN: healthy full usable range (>= 0.72)
+  // - YELLOW: direction reached but reduced range (0.50 <= d < 0.72)
+  // - GRAY: unreached / dead direction (< 0.50)
   const stickKey = isLeft ? 'l' : 'r';
   const stickData = state.stickMetrics[stickKey] || {};
   const zones = stickData.zones || [];
   const dirLabels = ['E', 'SE', 'S', 'SW', 'W', 'NW', 'N', 'NE'];
+  const targetDist = (w / 2) * 0.83; // positioned cleanly outside the 1.15 guide ring
 
   for (let i = 0; i < 8; i++) {
     const angleRad = (i * 45) * Math.PI / 180;
-    const targetDist = r * 1.16; // slightly outside the 1.0 ring
     const zx = cx + Math.cos(angleRad) * targetDist;
     const zy = cy + Math.sin(angleRad) * targetDist;
-    const isReached = (zones[i] >= 0.60);
+
+    const val = zones[i] || 0;
+    const isGreen  = (val >= BENCHMARKS.STICK.RANGE_PASS);   // >= 0.72
+    const isYellow = (!isGreen && val >= BENCHMARKS.STICK.RANGE_REVIEW); // 0.50 <= val < 0.72
 
     ctx.beginPath();
     ctx.arc(zx, zy, 11, 0, Math.PI * 2);
-    if (isReached) {
-      ctx.fillStyle = 'rgba(34, 197, 94, 0.25)';
+
+    if (isGreen) {
+      // GREEN: healthy full useful direction
+      ctx.fillStyle = 'rgba(34, 197, 94, 0.22)';
       ctx.fill();
       ctx.strokeStyle = '#22c55e';
       ctx.lineWidth = 2;
@@ -2238,14 +2219,31 @@ function drawLargeStick(canvas, rawX, rawY, isLeft, history = []) {
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText('✓', zx, zy);
+    } else if (isYellow) {
+      // YELLOW: reached but slightly reduced range
+      ctx.fillStyle = 'rgba(234, 179, 8, 0.22)';
+      ctx.fill();
+      ctx.strokeStyle = '#eab308';
+      ctx.lineWidth = 1.8;
+      ctx.shadowColor = '#eab308';
+      ctx.shadowBlur = 6;
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+
+      ctx.fillStyle = '#fef08a';
+      ctx.font = 'bold 8.5px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(dirLabels[i], zx, zy);
     } else {
-      ctx.fillStyle = 'rgba(26, 26, 38, 0.85)';
+      // GRAY: unreached direction
+      ctx.fillStyle = 'rgba(22, 23, 34, 0.85)';
       ctx.fill();
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.16)';
       ctx.lineWidth = 1;
       ctx.stroke();
 
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.40)';
       ctx.font = 'bold 8px sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
@@ -2253,7 +2251,7 @@ function drawLargeStick(canvas, rawX, rawY, isLeft, history = []) {
     }
   }
 
-  // Trace Trajectory history
+  // Trace Trajectory history (soft cyan/indigo path)
   if (history && history.length > 1) {
     ctx.beginPath();
     for (let i = 0; i < history.length; i++) {
@@ -2262,25 +2260,25 @@ function drawLargeStick(canvas, rawX, rawY, isLeft, history = []) {
       if (i === 0) ctx.moveTo(px, py);
       else ctx.lineTo(px, py);
     }
-    ctx.strokeStyle = 'rgba(99, 102, 241, 0.3)';
+    ctx.strokeStyle = 'rgba(99, 102, 241, 0.28)';
     ctx.lineWidth = 1.5;
     ctx.stroke();
   }
 
-  // Live Position Vector line
+  // Live Position Vector line (Cyan)
   const posX = cx + rawX * r;
   const posY = cy + rawY * r;
 
   ctx.beginPath();
   ctx.moveTo(cx, cy);
   ctx.lineTo(posX, posY);
-  ctx.strokeStyle = 'rgba(0, 229, 255, 0.6)';
+  ctx.strokeStyle = 'rgba(0, 229, 255, 0.65)';
   ctx.lineWidth = 2;
   ctx.stroke();
 
-  // Current Position Puck
+  // Current Position Puck: vibrant bright cyan with glow and crisp white center
   ctx.beginPath();
-  ctx.arc(posX, posY, 9, 0, Math.PI * 2);
+  ctx.arc(posX, posY, 8.5, 0, Math.PI * 2);
   ctx.fillStyle = '#00e5ff';
   ctx.shadowColor = '#00e5ff';
   ctx.shadowBlur = 10;
@@ -2684,13 +2682,19 @@ function updateWorkflowProgress() {
     } else if (activeStep === 2) {
       dom.guidedInstructionText.textContent = t('instructionStep2');
     } else if (activeStep === 3) {
-      if (sl.phase === 'REST') dom.guidedInstructionText.textContent = `${t('stickLeftLabel')} — ${t('promptStickRest')}`;
-      else if (sl.phase === 'MOVE') dom.guidedInstructionText.textContent = `${t('stickLeftLabel')} — ${t('promptStickMove')} (${sl.coverage || 0}/8)`;
-      else dom.guidedInstructionText.textContent = t('instructionStep3');
+      if (sl.phase === 'TESTING' || sl.phase === 'MOVE') {
+        const countTxt = (sl.greenCount === 8) ? '8/8 ✓' : `${sl.coverage || 0}/8`;
+        dom.guidedInstructionText.textContent = `${t('stickLeftLabel')} — ${t('promptStickMove')} (${countTxt})`;
+      } else {
+        dom.guidedInstructionText.textContent = t('instructionStep3');
+      }
     } else if (activeStep === 4) {
-      if (sr.phase === 'REST') dom.guidedInstructionText.textContent = `${t('stickRightLabel')} — ${t('promptStickRest')}`;
-      else if (sr.phase === 'MOVE') dom.guidedInstructionText.textContent = `${t('stickRightLabel')} — ${t('promptStickMove')} (${sr.coverage || 0}/8)`;
-      else dom.guidedInstructionText.textContent = t('instructionStep4');
+      if (sr.phase === 'TESTING' || sr.phase === 'MOVE') {
+        const countTxt = (sr.greenCount === 8) ? '8/8 ✓' : `${sr.coverage || 0}/8`;
+        dom.guidedInstructionText.textContent = `${t('stickRightLabel')} — ${t('promptStickMove')} (${countTxt})`;
+      } else {
+        dom.guidedInstructionText.textContent = t('instructionStep4');
+      }
     } else {
       dom.guidedInstructionText.textContent = t('instructionStep5');
     }
@@ -2985,12 +2989,12 @@ function populatePrintReport(record) {
   // Left Stick Commercial Metrics
   if (dom.printSlDrift) {
     dom.printSlDrift.textContent = sl.drift !== null && sl.drift !== undefined
-      ? (sl.drift <= 0.060 ? `✓ ${sl.drift.toFixed(3)}` : (sl.drift <= 0.105 ? `! ${sl.drift.toFixed(3)}` : `✕ ${sl.drift.toFixed(3)}`))
+      ? (sl.drift <= BENCHMARKS.STICK.DRIFT_PASS ? `✓ ${sl.drift.toFixed(3)}` : (sl.drift <= BENCHMARKS.STICK.DRIFT_REVIEW ? `! ${sl.drift.toFixed(3)}` : `✕ ${sl.drift.toFixed(3)}`))
       : '—';
   }
   if (dom.printSlJitter) {
     dom.printSlJitter.textContent = sl.jitter !== null && sl.jitter !== undefined
-      ? (sl.jitter <= 0.026 ? `✓ ${sl.jitter.toFixed(3)}` : `! ${sl.jitter.toFixed(3)}`)
+      ? (sl.jitter <= BENCHMARKS.STICK.JITTER_PASS ? `✓ ${sl.jitter.toFixed(3)}` : `! ${sl.jitter.toFixed(3)}`)
       : '—';
   }
   if (dom.printSlCirc) {
@@ -3009,12 +3013,12 @@ function populatePrintReport(record) {
   // Right Stick Commercial Metrics
   if (dom.printSrDrift) {
     dom.printSrDrift.textContent = sr.drift !== null && sr.drift !== undefined
-      ? (sr.drift <= 0.060 ? `✓ ${sr.drift.toFixed(3)}` : (sr.drift <= 0.105 ? `! ${sr.drift.toFixed(3)}` : `✕ ${sr.drift.toFixed(3)}`))
+      ? (sr.drift <= BENCHMARKS.STICK.DRIFT_PASS ? `✓ ${sr.drift.toFixed(3)}` : (sr.drift <= BENCHMARKS.STICK.DRIFT_REVIEW ? `! ${sr.drift.toFixed(3)}` : `✕ ${sr.drift.toFixed(3)}`))
       : '—';
   }
   if (dom.printSrJitter) {
     dom.printSrJitter.textContent = sr.jitter !== null && sr.jitter !== undefined
-      ? (sr.jitter <= 0.026 ? `✓ ${sr.jitter.toFixed(3)}` : `! ${sr.jitter.toFixed(3)}`)
+      ? (sr.jitter <= BENCHMARKS.STICK.JITTER_PASS ? `✓ ${sr.jitter.toFixed(3)}` : `! ${sr.jitter.toFixed(3)}`)
       : '—';
   }
   if (dom.printSrCirc) {

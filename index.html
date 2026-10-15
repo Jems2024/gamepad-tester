@@ -145,7 +145,6 @@
         <div class="header-actions">
           <button id="stick-zoom-btn" class="mini-btn" title="Amplificar zona central" data-i18n="btnZoomCenter">🔍 Micro-Centro</button>
           <button id="stick-suite-btn" class="action-btn-primary" title="Iniciar análisis de sticks" data-i18n="btnFullSuite">⚡ Suite Sticks</button>
-          <button id="drift-btn" class="mini-btn" title="Test de reposo (3s)" data-i18n="btnDriftTest">▶ Reposo (3s)</button>
           <button id="stick-clear-trace-btn" class="mini-btn" title="Limpiar trayectoria" data-i18n="btnClearTrace">🔄 Limpiar</button>
         </div>
       </div>
@@ -164,13 +163,9 @@
               <canvas id="stick-l-canvas" class="stick-canvas-large" width="400" height="400"></canvas>
             </div>
             
-            <!-- Simplified 3-Item Diagnostic Status: Reposo, Movimiento, Resultado -->
+            <!-- Streamlined Stick Diagnostic Status: Movimiento, Resultado -->
             <div class="stick-phases-row">
-              <div class="stick-phase-item" id="phase-l-rest">
-                <span class="phase-name" data-i18n="phaseRest">Reposo</span>
-                <span class="phase-val" id="phase-l-rest-val">○</span>
-              </div>
-              <div class="stick-phase-item" id="phase-l-move">
+              <div class="stick-phase-item phase-active" id="phase-l-move">
                 <span class="phase-name" data-i18n="phaseMove">Movimiento</span>
                 <span class="phase-val" id="phase-l-move-val">0/8</span>
               </div>
@@ -212,13 +207,9 @@
               <canvas id="stick-r-canvas" class="stick-canvas-large" width="400" height="400"></canvas>
             </div>
 
-            <!-- Simplified 3-Item Diagnostic Status: Reposo, Movimiento, Resultado -->
+            <!-- Streamlined Stick Diagnostic Status: Movimiento, Resultado -->
             <div class="stick-phases-row">
-              <div class="stick-phase-item" id="phase-r-rest">
-                <span class="phase-name" data-i18n="phaseRest">Reposo</span>
-                <span class="phase-val" id="phase-r-rest-val">○</span>
-              </div>
-              <div class="stick-phase-item" id="phase-r-move">
+              <div class="stick-phase-item phase-active" id="phase-r-move">
                 <span class="phase-name" data-i18n="phaseMove">Movimiento</span>
                 <span class="phase-val" id="phase-r-move-val">0/8</span>
               </div>
@@ -347,6 +338,8 @@
           <div class="meta-item"><strong>Mapping:</strong> <span id="raw-mapping">—</span></div>
           <div class="meta-item"><strong>Total Botones:</strong> <span id="raw-total-btns">0</span></div>
           <div class="meta-item"><strong>Total Ejes:</strong> <span id="raw-total-axes">0</span></div>
+          <div class="meta-item"><strong>Deriva Stick L:</strong> <span id="stick-l-drift-val">—</span></div>
+          <div class="meta-item"><strong>Deriva Stick R:</strong> <span id="stick-r-drift-val">—</span></div>
           <div class="meta-item"><strong>Jitter Stick L:</strong> <span id="stick-l-jitter-val">—</span></div>
           <div class="meta-item"><strong>Jitter Stick R:</strong> <span id="stick-r-jitter-val">—</span></div>
           <div class="meta-item"><strong>Retorno Stick L:</strong> <span id="stick-l-snap-val">—</span></div>
