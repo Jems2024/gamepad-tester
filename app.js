@@ -40,6 +40,7 @@ const TRANSLATIONS = {
     lblOverallVerdict: "CERTIFICACIÓN TÉCNICA:",
     chipConnected: "Conectado",
     stickTestTitle: "Sticks Analógicos — Análisis Cartesiano",
+    btnCalibrateCenter: "🎯 Calibrate Stick Center",
     btnZoomCenter: "🔍 Micro-Centro",
     btnFullSuite: "⚡ Suite Sticks",
     btnDriftTest: "▶ Reposo (2s)",
@@ -146,6 +147,7 @@ const TRANSLATIONS = {
     lblOverallVerdict: "TECHNICAL CERTIFICATION:",
     chipConnected: "Connected",
     stickTestTitle: "Analog Sticks — Cartesian Analysis",
+    btnCalibrateCenter: "🎯 Calibrate Stick Center",
     btnZoomCenter: "🔍 Micro-Center",
     btnFullSuite: "⚡ Sticks Suite",
     btnDriftTest: "▶ Rest Test (2s)",
@@ -252,6 +254,7 @@ const TRANSLATIONS = {
     lblOverallVerdict: "CERTIFICAZIONE TECNICA:",
     chipConnected: "Collegato",
     stickTestTitle: "Stick Analogici — Analisi Cartesiana",
+    btnCalibrateCenter: "🎯 Calibrate Stick Center",
     btnZoomCenter: "🔍 Micro-Centro",
     btnFullSuite: "⚡ Suite Stick",
     btnDriftTest: "▶ Riposo (2s)",
@@ -358,6 +361,7 @@ const TRANSLATIONS = {
     lblOverallVerdict: "CERTIFICATION TECHNIQUE :",
     chipConnected: "Connecté",
     stickTestTitle: "Sticks Analogiques — Analyse Cartésienne",
+    btnCalibrateCenter: "🎯 Calibrate Stick Center",
     btnZoomCenter: "🔍 Micro-Centre",
     btnFullSuite: "⚡ Suite Sticks",
     btnDriftTest: "▶ Test Repos (2s)",
@@ -464,6 +468,7 @@ const TRANSLATIONS = {
     lblOverallVerdict: "TECHNISCHE ZERTIFIZIERUNG:",
     chipConnected: "Verbunden",
     stickTestTitle: "Analogsticks — Kartesische Analyse",
+    btnCalibrateCenter: "🎯 Calibrate Stick Center",
     btnZoomCenter: "🔍 Mikro-Zentrum",
     btnFullSuite: "⚡ Stick-Suite",
     btnDriftTest: "▶ Ruhe-Test (2s)",
@@ -605,6 +610,9 @@ function setLanguage(lang) {
   updateVerdictBadgesUI();
   updateWorkflowProgress();
   updateOverallVerdict();
+  if (typeof window !== 'undefined' && window.StickCenterCalibration) {
+    window.StickCenterCalibration.renderModalStaticText();
+  }
 }
 
 function initLanguage() {
@@ -1224,6 +1232,9 @@ function setActiveGamepad(idx) {
     resolveModel();
     updateWorkflowProgress();
     updateOverallVerdict();
+    if (typeof window !== 'undefined' && window.StickCenterCalibration) {
+      window.StickCenterCalibration.onFrameTick(null, state.model);
+    }
     return;
   }
 
@@ -1250,6 +1261,9 @@ function setActiveGamepad(idx) {
   buildButtonChips(btnCount);
   updateWorkflowProgress();
   updateOverallVerdict();
+  if (typeof window !== 'undefined' && window.StickCenterCalibration) {
+    window.StickCenterCalibration.onFrameTick(gp, state.model);
+  }
 }
 
 function resetAllValidationStates() {
@@ -1327,6 +1341,11 @@ function pollGamepads() {
   if (state.activeGpIndex !== null && gamepads[state.activeGpIndex]) {
     const gp = gamepads[state.activeGpIndex];
     processLiveGamepadInput(gp);
+    if (typeof window !== 'undefined' && window.StickCenterCalibration) {
+      window.StickCenterCalibration.onFrameTick(gp, state.model);
+    }
+  } else if (typeof window !== 'undefined' && window.StickCenterCalibration) {
+    window.StickCenterCalibration.onFrameTick(null, state.model);
   }
 
   state.rafId = requestAnimationFrame(pollGamepads);
@@ -2914,8 +2933,10 @@ window.printSavedRecord = function(id) {
   const records = DiagnosticStore.getAll();
   const r = records.find(rec => rec.id === id);
   if (!r) return;
+  state._printingSavedRecord = true;
   populatePrintReport(r);
   window.print();
+  setTimeout(() => { state._printingSavedRecord = false; }, 500);
 };
 
 window.deleteSavedRecord = function(id) {
@@ -3240,6 +3261,11 @@ function initEventListeners() {
       window.print();
     });
   }
+  window.addEventListener('beforeprint', () => {
+    if (!state._printingSavedRecord) {
+      populatePrintReport(null);
+    }
+  });
 
   // History Modal
   if (dom.btnOpenHistory) {

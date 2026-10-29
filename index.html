@@ -6,7 +6,8 @@
   <title>Gamepad Tester — Estación de Diagnóstico Profesional</title>
   <link rel="icon" type="image/png" href="assets/gamepad-icon-white.png">
   <link rel="apple-touch-icon" href="assets/icon-512.png">
-  <link rel="stylesheet" href="style.css?v=5.1">
+  <link rel="stylesheet" href="style.css?v=5.2">
+  <link rel="stylesheet" href="stick-calibration.css?v=5.2">
 </head>
 <body>
 
@@ -143,6 +144,7 @@
           <span data-i18n="stickTestTitle">Sticks Analógicos — Análisis Cartesiano</span>
         </div>
         <div class="header-actions">
+          <button id="stick-calibrate-center-btn" class="mini-btn" disabled aria-disabled="true" aria-label="Calibrate Stick Center" title="Calibrate Stick Center" data-i18n="btnCalibrateCenter">🎯 Calibrate Stick Center</button>
           <button id="stick-zoom-btn" class="mini-btn" title="Amplificar zona central" data-i18n="btnZoomCenter">🔍 Micro-Centro</button>
           <button id="stick-suite-btn" class="action-btn-primary" title="Iniciar análisis de sticks" data-i18n="btnFullSuite">⚡ Suite Sticks</button>
           <button id="stick-clear-trace-btn" class="mini-btn" title="Limpiar trayectoria" data-i18n="btnClearTrace">🔄 Limpiar</button>
@@ -416,6 +418,113 @@
   </div>
 </div>
 
+<!-- ── STICK CENTER CALIBRATION MODAL ────────────────────────── -->
+<div class="modal-backdrop" id="stick-calibration-modal" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="calib-modal-title">
+  <div class="modal-card calib-modal-card">
+    <div class="modal-header">
+      <div class="modal-title">
+        <span>🎯</span>
+        <span id="calib-modal-title">Calibrate Stick Center — Calibración de Centro Analógico</span>
+      </div>
+      <button id="calib-close-btn" class="modal-close-btn" aria-label="Close">✕</button>
+    </div>
+    <div class="calib-modal-body">
+      <div class="calib-instruction-banner" id="calib-instruction-banner">
+        <span class="calib-banner-icon" id="calib-banner-icon">🎯</span>
+        <div class="calib-banner-content">
+          <div class="calib-banner-title" id="calib-banner-title">Deja ambos sticks completamente sueltos en su posición natural de reposo.</div>
+          <div class="calib-banner-sub" id="calib-banner-sub">No toques, inclines ni presiones L3/R3 durante el muestreo.</div>
+        </div>
+      </div>
+
+      <div class="calib-device-bar">
+        <div>
+          <strong id="calib-lbl-device">Mando:</strong>
+          <span class="calib-device-name" id="calib-device-name">—</span>
+        </div>
+        <div class="calib-device-meta" id="calib-device-meta">Axes: 4</div>
+      </div>
+
+      <div class="calib-progress-wrap">
+        <div class="calib-progress-header">
+          <span id="calib-lbl-progress">Progreso de muestreo:</span>
+          <span id="calib-progress-text">0 / 90 muestras (0%)</span>
+        </div>
+        <div class="calib-progress-track">
+          <div class="calib-progress-fill" id="calib-progress-fill"></div>
+        </div>
+      </div>
+
+      <div class="calib-axes-section-title" id="calib-sec-centers-title">Centro en Reposo Medido (Mediana Estadística) y Vista Previa</div>
+      <div class="calib-axes-grid">
+        <div class="calib-axis-card">
+          <div class="calib-axis-header"><span>LX (Left X)</span><span id="calib-lbl-center-lx">Centro:</span></div>
+          <div class="calib-axis-val" id="calib-val-center-lx">—</div>
+          <div class="calib-axis-sub"><span id="calib-lbl-raw-lx">Crudo:</span> <span id="calib-val-raw-lx">+0.0000</span></div>
+          <div class="calib-axis-sub"><span id="calib-lbl-cal-lx">Calibrado:</span> <span id="calib-val-cal-lx">—</span></div>
+          <div class="calib-axis-sub"><span id="calib-lbl-jit-lx">Jitter:</span> <span id="calib-val-jit-lx">—</span></div>
+        </div>
+        <div class="calib-axis-card">
+          <div class="calib-axis-header"><span>LY (Left Y)</span><span id="calib-lbl-center-ly">Centro:</span></div>
+          <div class="calib-axis-val" id="calib-val-center-ly">—</div>
+          <div class="calib-axis-sub"><span id="calib-lbl-raw-ly">Crudo:</span> <span id="calib-val-raw-ly">+0.0000</span></div>
+          <div class="calib-axis-sub"><span id="calib-lbl-cal-ly">Calibrado:</span> <span id="calib-val-cal-ly">—</span></div>
+          <div class="calib-axis-sub"><span id="calib-lbl-jit-ly">Jitter:</span> <span id="calib-val-jit-ly">—</span></div>
+        </div>
+        <div class="calib-axis-card">
+          <div class="calib-axis-header"><span>RX (Right X)</span><span id="calib-lbl-center-rx">Centro:</span></div>
+          <div class="calib-axis-val" id="calib-val-center-rx">—</div>
+          <div class="calib-axis-sub"><span id="calib-lbl-raw-rx">Crudo:</span> <span id="calib-val-raw-rx">+0.0000</span></div>
+          <div class="calib-axis-sub"><span id="calib-lbl-cal-rx">Calibrado:</span> <span id="calib-val-cal-rx">—</span></div>
+          <div class="calib-axis-sub"><span id="calib-lbl-jit-rx">Jitter:</span> <span id="calib-val-jit-rx">—</span></div>
+        </div>
+        <div class="calib-axis-card">
+          <div class="calib-axis-header"><span>RY (Right Y)</span><span id="calib-lbl-center-ry">Centro:</span></div>
+          <div class="calib-axis-val" id="calib-val-center-ry">—</div>
+          <div class="calib-axis-sub"><span id="calib-lbl-raw-ry">Crudo:</span> <span id="calib-val-raw-ry">+0.0000</span></div>
+          <div class="calib-axis-sub"><span id="calib-lbl-cal-ry">Calibrado:</span> <span id="calib-val-cal-ry">—</span></div>
+          <div class="calib-axis-sub"><span id="calib-lbl-jit-ry">Jitter:</span> <span id="calib-val-jit-ry">—</span></div>
+        </div>
+      </div>
+
+      <div class="calib-outcomes-grid">
+        <div class="calib-outcome-card">
+          <div class="calib-outcome-head">
+            <span class="calib-outcome-title" id="calib-card-a-title">A. Medición de Centro</span>
+            <span class="calib-outcome-badge calib-badge-muted" id="calib-card-a-badge">Pendiente</span>
+          </div>
+          <div class="calib-outcome-desc" id="calib-card-a-desc">Listo para capturar muestras de reposo en los 4 ejes (LX, LY, RX, RY).</div>
+        </div>
+        <div class="calib-outcome-card">
+          <div class="calib-outcome-head">
+            <span class="calib-outcome-title" id="calib-card-b-title">B. Perfil Software (Local)</span>
+            <span class="calib-outcome-badge calib-badge-muted" id="calib-card-b-badge">Pendiente</span>
+          </div>
+          <div class="calib-outcome-desc" id="calib-card-b-desc">Ningún perfil de centro guardado todavía para la huella de este mando.</div>
+        </div>
+        <div class="calib-outcome-card">
+          <div class="calib-outcome-head">
+            <span class="calib-outcome-title" id="calib-card-c-title">C. Calibración Hardware</span>
+            <span class="calib-outcome-badge calib-badge-warn" id="calib-card-c-badge">Protegido</span>
+          </div>
+          <div class="calib-outcome-desc" id="calib-card-c-desc">Información de capacidad de calibración de hardware por protocolo.</div>
+        </div>
+      </div>
+
+      <div class="calib-footer-actions">
+        <div class="calib-footer-left">
+          <button id="calib-clear-profile-btn" class="mini-btn-danger" style="display:none;">Borrar Perfil</button>
+        </div>
+        <div class="calib-footer-right">
+          <button id="calib-cancel-btn" class="calib-btn">Cancel</button>
+          <button id="calib-retry-btn" class="calib-btn calib-btn-primary">🔄 Retry</button>
+          <button id="calib-finish-btn" class="calib-btn calib-btn-success">✓ Finish</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ── PRINTABLE A4 DIAGNOSTIC REPORT (OPTIMIZED FOR PRINT) ──── -->
 <section id="printable-report" class="print-sheet" style="display:none;">
   <div class="print-header">
@@ -526,8 +635,9 @@
   </div>
 </section>
 
-<script src="controllers-overlay.js?v=5.1"></script>
-<script src="controllers-svg.js?v=5.1"></script>
-<script src="app.js?v=5.1"></script>
+<script src="controllers-overlay.js?v=5.2"></script>
+<script src="controllers-svg.js?v=5.2"></script>
+<script src="stick-calibration.js?v=5.2"></script>
+<script src="app.js?v=5.2"></script>
 </body>
 </html>

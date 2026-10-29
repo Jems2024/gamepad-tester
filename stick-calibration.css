@@ -1,0 +1,335 @@
+/* ============================================================
+   STICK CENTER CALIBRATION MODULE — stick-calibration.css
+   Scoped styles for the Analog Stick Center Calibration modal & UI
+   ============================================================ */
+
+#stick-calibrate-center-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border-color: rgba(0, 229, 255, 0.35);
+  color: var(--cyan);
+  background: rgba(0, 229, 255, 0.08);
+  font-weight: 600;
+  transition: all 0.15s ease;
+}
+
+#stick-calibrate-center-btn:hover:not(:disabled) {
+  background: rgba(0, 229, 255, 0.18);
+  border-color: var(--cyan);
+  box-shadow: 0 0 8px rgba(0, 229, 255, 0.25);
+}
+
+#stick-calibrate-center-btn:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+  border-color: var(--border);
+  color: var(--text-muted);
+  background: var(--surface2);
+  box-shadow: none;
+}
+
+.calib-modal-card {
+  width: 680px;
+  max-width: 95vw;
+  max-height: 90vh;
+}
+
+.calib-modal-body {
+  padding: 12px 14px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.calib-instruction-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 6px;
+  background: rgba(99, 102, 241, 0.12);
+  border: 1px solid rgba(99, 102, 241, 0.38);
+  color: var(--text);
+  font-size: 0.76rem;
+  line-height: 1.4;
+}
+
+.calib-instruction-banner.status-sampling {
+  background: rgba(0, 229, 255, 0.1);
+  border-color: rgba(0, 229, 255, 0.45);
+}
+
+.calib-instruction-banner.status-success {
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.45);
+}
+
+.calib-instruction-banner.status-error {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.45);
+}
+
+.calib-banner-icon {
+  font-size: 1.1rem;
+  line-height: 1;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.calib-banner-content {
+  flex: 1;
+}
+
+.calib-banner-title {
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 2px;
+}
+
+.calib-banner-sub {
+  color: var(--text-muted);
+  font-size: 0.71rem;
+}
+
+.calib-device-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 10px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 0.71rem;
+}
+
+.calib-device-name {
+  font-weight: 700;
+  color: #fff;
+  font-family: Consolas, monospace;
+}
+
+.calib-device-meta {
+  color: var(--text-muted);
+  font-size: 0.68rem;
+}
+
+.calib-progress-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.calib-progress-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.69rem;
+  color: var(--text-muted);
+}
+
+.calib-progress-track {
+  width: 100%;
+  height: 7px;
+  background: var(--surface3);
+  border-radius: 999px;
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+}
+
+.calib-progress-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--accent), var(--cyan));
+  transition: width 0.08s linear;
+}
+
+.calib-axes-section-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.calib-axes-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.calib-axis-card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.calib-axis-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.calib-axis-val {
+  font-family: Consolas, monospace;
+  font-size: 0.96rem;
+  font-weight: 700;
+  color: var(--cyan);
+}
+
+.calib-axis-sub {
+  font-family: Consolas, monospace;
+  font-size: 0.65rem;
+  color: var(--text-muted);
+}
+
+.calib-outcomes-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.calib-outcome-card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 9px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.calib-outcome-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+}
+
+.calib-outcome-title {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.calib-outcome-badge {
+  font-size: 0.62rem;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.calib-badge-ok {
+  background: rgba(16, 185, 129, 0.18);
+  color: var(--green);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+}
+
+.calib-badge-info {
+  background: rgba(0, 229, 255, 0.14);
+  color: var(--cyan);
+  border: 1px solid rgba(0, 229, 255, 0.35);
+}
+
+.calib-badge-warn {
+  background: rgba(245, 158, 11, 0.16);
+  color: var(--yellow);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+}
+
+.calib-badge-muted {
+  background: var(--surface3);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+}
+
+.calib-outcome-desc {
+  font-size: 0.67rem;
+  color: var(--text-muted);
+  line-height: 1.35;
+}
+
+.calib-footer-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 6px;
+  border-top: 1px solid var(--border);
+}
+
+.calib-footer-left,
+.calib-footer-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.calib-btn {
+  padding: 5px 12px;
+  border-radius: 5px;
+  font-size: 0.73rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--text);
+  transition: all 0.15s ease;
+}
+
+.calib-btn:hover:not(:disabled) {
+  background: var(--surface3);
+  color: #fff;
+}
+
+.calib-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.calib-btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.calib-btn-primary:hover:not(:disabled) {
+  filter: brightness(1.12);
+  background: var(--accent);
+}
+
+.calib-btn-success {
+  background: rgba(16, 185, 129, 0.2);
+  border-color: rgba(16, 185, 129, 0.55);
+  color: var(--green);
+}
+
+.calib-btn-success:hover:not(:disabled) {
+  background: var(--green);
+  color: #000;
+}
+
+@media (max-width: 720px) {
+  .calib-axes-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .calib-outcomes-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media print {
+  #stick-calibration-modal {
+    display: none !important;
+  }
+}
