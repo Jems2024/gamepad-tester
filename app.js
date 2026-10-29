@@ -1123,12 +1123,76 @@ let state = {
   // Overall Quality Certification
   overallVerdict:       'PENDING',
 
+  // Operation Lock (prevents automatic controller switching during calibration/writes)
+  operationLock: {
+    locked: false,
+    reason: null,
+  },
+
   // Visual caches
   photoBtns:            {},
   photoStickL:          null,
   photoStickR:          null,
   photoLightbar:        null,
 };
+
+// Expose authoritative session & controller API (Fixes Defects H & I)
+const GamepadSessionAPI = {
+  getState() {
+    return state;
+  },
+  getActiveControllerIndex() {
+    return state.activeGpIndex;
+  },
+  getActiveGamepad() {
+    if (state.activeGpIndex === null || state.activeGpIndex === undefined || state.activeGpIndex < 0) {
+      return null;
+    }
+    const gps = (typeof navigator !== 'undefined' && navigator.getGamepads) ? navigator.getGamepads() : [];
+    const gp = gps[state.activeGpIndex];
+    return (gp && gp.connected) ? gp : null;
+  },
+  getModel() {
+    return state.model;
+  },
+  getUnitIdentifier() {
+    const skuEl = typeof document !== 'undefined' ? document.getElementById('batch-sku-input') : null;
+    const itemEl = dom.itemCodeInput || (typeof document !== 'undefined' ? document.getElementById('item-code-input') : null);
+    const sku = skuEl && skuEl.value ? skuEl.value.trim() : '';
+    const item = itemEl && itemEl.value ? itemEl.value.trim() : '';
+    return sku || item || null;
+  },
+  isOperationLocked() {
+    const calibStickSampling = Boolean(
+      typeof window !== 'undefined' &&
+      window.StickCenterCalibration &&
+      typeof window.StickCenterCalibration.isSamplingActive === 'function' &&
+      window.StickCenterCalibration.isSamplingActive()
+    );
+    const webHidLocked = Boolean(
+      typeof window !== 'undefined' &&
+      window.WebHIDCalibrationModule &&
+      typeof window.WebHIDCalibrationModule.isOperationLocked === 'function' &&
+      window.WebHIDCalibrationModule.isOperationLocked()
+    );
+    return Boolean(state.operationLock.locked || calibStickSampling || webHidLocked);
+  },
+  setOperationLock(locked, reason) {
+    state.operationLock.locked = Boolean(locked);
+    state.operationLock.reason = locked ? (reason || 'Operation in progress') : null;
+    if (dom.activeGamepadSelect) {
+      dom.activeGamepadSelect.disabled = Boolean(locked);
+    }
+  },
+  getNormalizedAxes(gp, profile) {
+    return getNormalizedAxes(gp, profile || state.model);
+  },
+};
+
+if (typeof window !== 'undefined') {
+  window.state = state;
+  window.GamepadSessionAPI = GamepadSessionAPI;
+}
 
 // ─────────────────────────────────────────────────────────────
 // 6. GAMEPAD API LIFECYCLE & ZERO-REFRESH HOT-SWAPPING
@@ -1232,8 +1296,16 @@ function setActiveGamepad(idx) {
     resolveModel();
     updateWorkflowProgress();
     updateOverallVerdict();
-    if (typeof window !== 'undefined' && window.StickCenterCalibration) {
-      window.StickCenterCalibration.onFrameTick(null, state.model);
+    if (typeof window !== 'undefined') {
+      if (window.StickCenterCalibration) {
+        if (typeof window.StickCenterCalibration.onControllerChanged === 'function') {
+          window.StickCenterCalibration.onControllerChanged(null);
+        }
+        window.StickCenterCalibration.onFrameTick(null, state.model);
+      }
+      if (window.WebHIDCalibrationModule && typeof window.WebHIDCalibrationModule.onControllerChanged === 'function') {
+        window.WebHIDCalibrationModule.onControllerChanged(null);
+      }
     }
     return;
   }
@@ -1261,8 +1333,16 @@ function setActiveGamepad(idx) {
   buildButtonChips(btnCount);
   updateWorkflowProgress();
   updateOverallVerdict();
-  if (typeof window !== 'undefined' && window.StickCenterCalibration) {
-    window.StickCenterCalibration.onFrameTick(gp, state.model);
+  if (typeof window !== 'undefined') {
+    if (window.StickCenterCalibration) {
+      if (typeof window.StickCenterCalibration.onControllerChanged === 'function') {
+        window.StickCenterCalibration.onControllerChanged(gp);
+      }
+      window.StickCenterCalibration.onFrameTick(gp, state.model);
+    }
+    if (window.WebHIDCalibrationModule && typeof window.WebHIDCalibrationModule.onControllerChanged === 'function') {
+      window.WebHIDCalibrationModule.onControllerChanged(gp);
+    }
   }
 }
 
@@ -1322,9 +1402,13 @@ function pollGamepads() {
     }
   }
 
-  // Automatic activity-based controller switching
+  // Automatic activity-based controller switching (locked during active calibration or hardware write)
   const now = performance.now();
-  if (connectedIndices.length > 1 && (now - state.lastActiveSwitchTime > BENCHMARKS.ACTIVITY_DEBOUNCE_MS)) {
+  if (
+    !GamepadSessionAPI.isOperationLocked() &&
+    connectedIndices.length > 1 &&
+    (now - state.lastActiveSwitchTime > BENCHMARKS.ACTIVITY_DEBOUNCE_MS)
+  ) {
     for (const idx of connectedIndices) {
       if (idx !== state.activeGpIndex) {
         const gp = gamepads[idx];
@@ -1375,8 +1459,23 @@ function processLiveGamepadInput(gp) {
   const axes = getNormalizedAxes(gp, state.model);
   const now = performance.now();
 
-  // 1. Process Sticks
+  // 1. Process Sticks (Raw controller input is 100% authoritative for all diagnostics)
   processStickData(axes, now);
+
+  // 1B. Update Opt-In Software-Corrected Preview display if enabled (never alters raw diagnostic metrics)
+  if (
+    typeof window !== 'undefined' &&
+    window.StickCenterCalibration &&
+    typeof window.StickCenterCalibration.isSoftwarePreviewEnabled === 'function' &&
+    window.StickCenterCalibration.isSoftwarePreviewEnabled()
+  ) {
+    const swAxes = window.StickCenterCalibration.getSoftwareCorrectedAxes(axes, gp);
+    const swLiveEl = typeof document !== 'undefined' ? document.getElementById('stick-sw-preview-live') : null;
+    if (swLiveEl && swAxes) {
+      const fmt = (v) => (v >= 0 ? '+' : '') + Number(v || 0).toFixed(4);
+      swLiveEl.textContent = `LX: ${fmt(swAxes.lx)} | LY: ${fmt(swAxes.ly)} | RX: ${fmt(swAxes.rx)} | RY: ${fmt(swAxes.ry)}`;
+    }
+  }
 
   // 2. Process Triggers (L2 / R2)
   processTriggersData(gp);

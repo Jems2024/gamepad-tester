@@ -181,10 +181,15 @@
         </div>
         <div class="header-actions">
           <button id="stick-calibrate-center-btn" class="mini-btn" disabled aria-disabled="true" aria-label="Calibrate Stick Center" title="Calibrate Stick Center" data-i18n="btnCalibrateCenter">🎯 Calibrate Stick Center</button>
+          <button id="stick-sw-preview-toggle-btn" class="mini-btn" disabled title="Toggle Browser Software-Corrected Preview (Raw data remains authoritative)">👁 SW Preview: OFF</button>
           <button id="stick-zoom-btn" class="mini-btn" title="Amplificar zona central" data-i18n="btnZoomCenter">🔍 Micro-Centro</button>
           <button id="stick-suite-btn" class="action-btn-primary" title="Iniciar análisis de sticks" data-i18n="btnFullSuite">⚡ Suite Sticks</button>
           <button id="stick-clear-trace-btn" class="mini-btn" title="Limpiar trayectoria" data-i18n="btnClearTrace">🔄 Limpiar</button>
         </div>
+      </div>
+
+      <div id="stick-sw-preview-note" style="display:none;background:rgba(59,130,246,0.12);border-bottom:1px solid rgba(59,130,246,0.35);padding:4px 12px;font-size:11px;color:#93c5fd;">
+        <strong>👁 Software-Corrected Preview Active (Browser Only):</strong> Raw controller input remains 100% authoritative for all diagnostic verdicts. Software preview values (<span id="stick-sw-preview-live">LX: +0.0000 | LY: +0.0000 | RX: +0.0000 | RY: +0.0000</span>) apply only inside this browser view and do NOT affect games or consoles.
       </div>
 
       <div class="card-body sticks-large-body">
@@ -694,8 +699,9 @@
     </div>
     <div class="calib-modal-body">
       <div class="webhid-mode-tabs">
-        <button id="webhid-tab-mode1" class="action-btn active">Mode 1 — Quick Center Calibration</button>
-        <button id="webhid-tab-mode2" class="action-btn">Mode 2 — Guided Endpoint Calibration (7 Steps)</button>
+        <button id="webhid-tab-mode1" class="action-btn active">Mode 1 — Quick Center (Software)</button>
+        <button id="webhid-tab-mode2" class="action-btn">Mode 2 — Guided Endpoint (7 Steps)</button>
+        <button id="webhid-tab-mode-hw" class="action-btn">Mode 3 — Sony USB Device Calibration (DS4 / DualSense)</button>
       </div>
 
       <!-- Mode 1: Quick Center Calibration -->
@@ -724,12 +730,12 @@
           </div>
           <div class="calib-outcome-card">
             <div class="calib-outcome-title">3. Controller Firmware Memory</div>
-            <div class="calib-outcome-desc" id="webhid-m1-layer-hw">Not Modified (Protected — No undocumented firmware write executed)</div>
+            <div class="calib-outcome-desc" id="webhid-m1-layer-hw">Not Modified (Use Hardware Tab for Sony USB calibration)</div>
           </div>
         </div>
         <div class="calib-footer-actions">
           <button id="webhid-m1-start-btn" class="calib-btn calib-btn-primary">▶ Start / Repeat Measurement</button>
-          <button id="webhid-m1-confirm-btn" class="calib-btn calib-btn-success">✓ Confirm Software Profile</button>
+          <button id="webhid-m1-confirm-btn" class="calib-btn calib-btn-success" disabled>✓ Confirm Software Profile</button>
         </div>
       </div>
 
@@ -752,7 +758,65 @@
           <div class="calib-footer-right">
             <button id="webhid-m2-cancel-btn" class="calib-btn">Cancel</button>
             <button id="webhid-m2-capture-btn" class="calib-btn calib-btn-primary">▶ Capture Step</button>
-            <button id="webhid-m2-confirm-btn" class="calib-btn calib-btn-success">✓ Confirm Profile</button>
+            <button id="webhid-m2-confirm-btn" class="calib-btn calib-btn-success" disabled>✓ Confirm Profile</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mode 3: Real Sony USB Hardware Calibration (DS4 / DualSense / DualSense Edge) -->
+      <div id="webhid-mode-hw-panel" class="webhid-mode-panel" style="display:none;flex-direction:column;gap:8px;">
+        <div class="calib-instruction-banner">
+          <span class="calib-banner-icon">⚡</span>
+          <div class="calib-banner-content">
+            <div class="calib-banner-title" id="webhid-hw-status-msg">Connect a Sony DualShock 4, DualSense, or DualSense Edge via USB and click "Inspect WebHID Device".</div>
+            <div class="calib-banner-sub">Temporary calibration runs in controller RAM first. Permanent NVS flash is strictly opt-in. Note: Calibration does not repair mechanically worn potentiometers.</div>
+          </div>
+        </div>
+        <div class="calib-outcomes-grid">
+          <div class="calib-outcome-card">
+            <div class="calib-outcome-title">Device Center Calibration</div>
+            <div class="calib-outcome-desc" id="webhid-hw-cap-center">Unavailable</div>
+          </div>
+          <div class="calib-outcome-card">
+            <div class="calib-outcome-title">Device Range Calibration</div>
+            <div class="calib-outcome-desc" id="webhid-hw-cap-range">Unavailable</div>
+          </div>
+          <div class="calib-outcome-card">
+            <div class="calib-outcome-title">Permanent NVS Persistence</div>
+            <div class="calib-outcome-desc" id="webhid-hw-cap-save">Unavailable</div>
+          </div>
+        </div>
+        <div class="calib-outcomes-grid">
+          <div class="calib-outcome-card">
+            <div class="calib-outcome-title">1. Temporary Device Calibration</div>
+            <div class="calib-outcome-desc" id="webhid-hw-outcome-temp">Not started</div>
+          </div>
+          <div class="calib-outcome-card">
+            <div class="calib-outcome-title">2. Permanent NVS Write Ack</div>
+            <div class="calib-outcome-desc" id="webhid-hw-outcome-perm">Not started</div>
+          </div>
+          <div class="calib-outcome-card">
+            <div class="calib-outcome-title">3. Post-Reconnect Verification</div>
+            <div class="calib-outcome-desc" id="webhid-hw-outcome-verify">Not started</div>
+          </div>
+        </div>
+        <div class="calib-device-bar" style="font-size:11px;">
+          <div><strong>12-Word Finetune Calibration Backup (DS5/Edge):</strong> <span id="webhid-hw-finetune-readout">—</span></div>
+        </div>
+        <div class="calib-device-bar" style="font-size:11px;">
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+            <input type="checkbox" id="webhid-hw-optin-checkbox">
+            <span>I understand that permanent NVS writing modifies controller non-volatile memory (DualSense Edge stock stick modules are hardware write-protected unless physically modified).</span>
+          </label>
+        </div>
+        <div class="calib-footer-actions">
+          <div class="calib-footer-left">
+            <button id="webhid-hw-center-btn" class="calib-btn calib-btn-primary" disabled>🎯 1. Calibrate Device Center (RAM)</button>
+            <button id="webhid-hw-range-start-btn" class="calib-btn calib-btn-primary" disabled>🔄 2A. Start Device Range (RAM)</button>
+            <button id="webhid-hw-range-end-btn" class="calib-btn calib-btn-success" disabled>✓ 2B. Finish Device Range (RAM)</button>
+          </div>
+          <div class="calib-footer-right">
+            <button id="webhid-hw-flash-btn" class="calib-btn calib-btn-success" disabled>💾 3. Save Permanently to Controller NVS</button>
           </div>
         </div>
       </div>

@@ -1,9 +1,11 @@
 /* ============================================================
    STICK CENTER CALIBRATION MODULE — stick-calibration.js
-   - Isolated Analog Stick Center Measurement & Calibration Layer
+   - Isolated Analog Stick Center Measurement & Software Preview Layer
    - Statistical Resting Center Calculation (Median + Mean + Jitter)
-   - Strict Per-Controller Fingerprint Profile Persistence (localStorage)
-   - Honest Hardware Calibration Capability Inspection (No Fake Writes)
+   - Versioned Per-Unit / Hardware-Serial / Descriptor Profile Persistence
+     with Non-Destructive Schema v1 -> v2 Migration
+   - Explicit Opt-In Software-Corrected Preview (Raw Data Remains 100% Authoritative)
+   - Honest Capability & Hardware Calibration Status Inspection
    ============================================================ */
 
 (function (root, factory) {
@@ -16,7 +18,7 @@
   'use strict';
 
   const STORAGE_KEY = 'gamepad_tester_center_calibrations_v1';
-  const SCHEMA_VERSION = 1;
+  const SCHEMA_VERSION = 2;
 
   const CALIBRATION_CONFIG = {
     TARGET_SAMPLES: 90,          // ~1.5s at 60Hz
@@ -30,95 +32,101 @@
       modalTitle: 'Calibrate Stick Center — Calibración de Centro Analógico',
       btnTrigger: '🎯 Calibrate Stick Center',
       bannerIdleTitle: 'Deja ambos sticks completamente sueltos en su posición natural de reposo.',
-      bannerIdleSub: 'No toques, inclines ni presiones L3/R3 durante el muestreo. Esta función mide el centro en reposo (LX, LY, RX, RY) sin alterar las lecturas crudas del diagnóstico.',
+      bannerIdleSub: 'No toques, inclines ni presiones L3/R3 durante el muestreo. Los datos crudos siguen siendo la referencia oficial del diagnóstico.',
       bannerSamplingTitle: 'Muestreando centro de reposo en tiempo real… Mantén los sticks sueltos.',
       bannerSamplingSub: 'Capturando muestras estadísticas de LX, LY, RX y RY para calcular la mediana exacta de reposo.',
-      bannerSuccessTitle: '✓ Medición de centro y perfil de calibración completados.',
-      bannerSuccessSub: 'El centro medido se ha guardado en el perfil local de este mando sin modificar las métricas crudas del test.',
+      bannerSuccessTitle: '✓ Medición completada y perfil software guardado en el navegador.',
+      bannerSuccessSub: 'El ajuste se guarda localmente para vista previa opcional en este navegador (no modifica la consola ni los juegos).',
       bannerErrorMove: '✕ Movimiento detectado durante el muestreo. Deja ambos sticks totalmente quietos y pulsa Reintentar.',
       bannerErrorDisconnect: '✕ El mando se desconectó o dejó de enviar ejes válidos durante la calibración.',
-      bannerErrorInsufficient: '✕ Muestras válidas insuficientes para calcular un centro fiable.',
+      bannerErrorInsufficient: '✕ Muestras válidas insuficientes o fallo de almacenamiento local.',
       lblDevice: 'Mando:',
       lblProgress: 'Progreso de muestreo:',
       lblSamples: 'muestras',
-      secMeasuredCenters: 'Centro en Reposo Medido (Mediana Estadística) y Vista Previa',
+      secMeasuredCenters: 'Centro en Reposo Medido (Mediana Estadística) y Vista Previa Software',
       lblCenterMeasured: 'Centro:',
-      lblRawLive: 'Crudo:',
-      lblPreviewCal: 'Calibrado:',
+      lblRawLive: 'Crudo (Oficial):',
+      lblPreviewCal: 'Vista Previa SW:',
       lblJitter: 'Jitter:',
       cardAMitle: 'A. Medición de Centro',
-      cardBMitle: 'B. Perfil Software (Local)',
-      cardCMitle: 'C. Calibración Hardware',
+      cardBMitle: 'B. Perfil Software (Navegador)',
+      cardCMitle: 'C. Calibración Interna del Mando',
       badgePending: 'Pendiente',
       badgeSampling: 'Muestreando',
-      badgeCompleted: 'Completado',
-      badgeSaved: 'Guardado',
-      badgeLoaded: 'Activo',
+      badgeCompleted: 'Medición OK',
+      badgeSaved: 'Perfil Guardado',
+      badgeLoaded: 'Disponible',
+      badgeApplied: 'Vista Previa Activa',
       badgeError: 'Error',
       badgeNotSupported: 'Solo Lectura API',
-      badgeSafeMode: 'Protegido (Sin EEPROM)',
+      badgeUsbWebHid: 'Disponible vía WebHID USB',
       descAIdle: 'Listo para capturar muestras de reposo en los 4 ejes (LX, LY, RX, RY).',
       descADone: 'Mediana calculada con {n} muestras estables (desviación máx: {j}).',
-      descBIdle: 'Ningún perfil de centro guardado todavía para la huella de este mando.',
-      descBSaved: 'Perfil guardado en localStorage para este identificador de hardware ({ts}).',
-      hwXbox360Wired: 'Xbox 360 Wired (XInput): el navegador recibe ejes normalizados vía XInput; el protocolo USB XInput no expone comandos WebHID de calibración de centro en firmware.',
-      hwXbox360Wireless: 'Xbox 360 Wireless Receiver: conectado vía receptor propietario XInput; sin soporte de escritura de centro en hardware desde el navegador.',
-      hwXboxOne: 'Xbox One Controller (GIP/XInput): el protocolo Microsoft GIP está bloqueado en WebHID por seguridad del navegador y no permite escritura directa de centro en EEPROM.',
-      hwXboxSeries: 'Xbox Series X|S Controller (GIP/BLE): gestionado por el driver del sistema (XInput/GameInput); no expone comandos verificados de calibración de hardware en navegador.',
-      hwPs4: 'Sony DualShock 4 (PS4): conectado mediante Gamepad API estándar. No se envían comandos de escritura EEPROM/NVS sin verificación de placa para evitar corromper el firmware.',
-      hwPs5: 'Sony DualSense (PS5): conectado mediante Gamepad API estándar. La calibración permanente en memoria flash interna requiere sesión de fábrica verificada; se aplica perfil software seguro.',
-      hwPs3: 'Sony DualShock 3 (PS3): expuesto mediante driver HID/Sixaxis estándar; el hardware no ofrece comando WebHID verificado de recalibración de centro.',
-      hwPs2: 'Adaptador PS2 a USB (Twin USB / DragonRise / Mayflash): el conversor USB traduce la señal analógica y no dispone de EEPROM de calibración accesible por software.',
+      descBIdle: 'Ningún perfil software activo para esta unidad.',
+      descBSaved: 'Perfil software guardado ({idType}, {ts}). Solo aplica a la vista previa del navegador.',
+      descBAmbiguous: 'Descriptor compartido por el modelo ({ts}). Pulsa "Aplicar Vista Previa" para usarlo en esta unidad.',
+      hwXbox360Wired: 'Xbox 360 Wired (XInput): el navegador recibe ejes vía XInput; el interfaz USB XInput no expone comandos WebHID de calibración en firmware.',
+      hwXbox360Wireless: 'Xbox 360 Wireless Receiver: conectado vía receptor XInput; sin soporte de calibración en hardware desde el navegador.',
+      hwXboxOne: 'Xbox One Controller (GIP/XInput): el interfaz USB GIP (FF:47:D0) no es accesible desde WebHID; en Xbox One S (fw 5.22) el comando 0x1e es rechazado (0f 01).',
+      hwXboxSeries: 'Xbox Series X|S (GIP 0x1e, fw ≥5.19.3221.0): requiere interfaz USB GIP (FF:47:D0) mediante app nativa (xboxctl / Accesorios de Xbox); no accesible por WebHID en navegador.',
+      hwPs4: 'Sony DualShock 4 (PS4): soporta calibración real en dispositivo (0x90/0x91/0x92) por cable USB en el panel "Calibrate Joysticks (WebHID)".',
+      hwPs5: 'Sony DualSense (PS5): soporta calibración real en dispositivo (0x82/0x83) y lectura de 12 palabras (0x80/0x81) por cable USB en el panel WebHID.',
+      hwPs5Edge: 'Sony DualSense Edge: soporta calibración temporal en RAM por USB WebHID; los módulos de stick de serie tienen protección física contra escritura permanente.',
+      hwPs3: 'Sony DualShock 3 (PS3): expuesto mediante driver HID/Sixaxis estándar; sin comando WebHID verificado de recalibración.',
+      hwPs2: 'Adaptador PS2 a USB: el conversor traduce señal analógica y no dispone de memoria de calibración accesible.',
       hwGeneric: 'Mando Estándar / Genérico: conectado por Gamepad API sin protocolo WebHID de fabricante verificado para escritura en firmware.',
       btnStart: '▶ Iniciar Medición',
       btnRetry: '🔄 Retry (Reintentar)',
       btnCancel: 'Cancelar',
-      btnFinish: '✓ Finish (Finalizar)',
+      btnFinish: '✓ Finish (Cerrar)',
       btnClearProfile: 'Borrar Perfil',
     },
     en: {
       modalTitle: 'Calibrate Stick Center — Analog Resting Center Calibration',
       btnTrigger: '🎯 Calibrate Stick Center',
       bannerIdleTitle: 'Leave both analog sticks completely untouched in their natural resting positions.',
-      bannerIdleSub: 'Do not touch, tilt, or press L3/R3 during sampling. This feature measures the resting center (LX, LY, RX, RY) without altering raw diagnostic readings.',
+      bannerIdleSub: 'Do not touch, tilt, or press L3/R3 during sampling. Raw controller readings remain authoritative for all diagnostics.',
       bannerSamplingTitle: 'Sampling resting center in real time… Keep both sticks untouched.',
       bannerSamplingSub: 'Collecting statistical samples for LX, LY, RX, and RY to compute the exact resting median.',
-      bannerSuccessTitle: '✓ Center measurement and software calibration profile completed.',
-      bannerSuccessSub: 'Measured center values are saved for this controller without modifying raw diagnostic calculations.',
+      bannerSuccessTitle: '✓ Center measurement completed and browser software profile saved.',
+      bannerSuccessSub: 'Saved locally for optional browser preview only (does not modify the controller hardware or affect games/consoles).',
       bannerErrorMove: '✕ Stick movement detected during sampling. Leave both sticks untouched and click Retry.',
       bannerErrorDisconnect: '✕ Controller disconnected or stopped reporting valid axes during calibration.',
-      bannerErrorInsufficient: '✕ Insufficient valid samples to compute a reliable resting center.',
+      bannerErrorInsufficient: '✕ Insufficient valid samples or local storage write failed.',
       lblDevice: 'Controller:',
       lblProgress: 'Sampling progress:',
       lblSamples: 'samples',
-      secMeasuredCenters: 'Measured Resting Center (Statistical Median) & Live Preview',
+      secMeasuredCenters: 'Measured Resting Center (Statistical Median) & Software Preview',
       lblCenterMeasured: 'Center:',
-      lblRawLive: 'Raw:',
-      lblPreviewCal: 'Calibrated:',
+      lblRawLive: 'Raw (Auth.):',
+      lblPreviewCal: 'SW Preview:',
       lblJitter: 'Jitter:',
       cardAMitle: 'A. Center Measurement',
-      cardBMitle: 'B. Software Profile (Local)',
-      cardCMitle: 'C. Hardware Calibration',
+      cardBMitle: 'B. Browser Software Profile',
+      cardCMitle: 'C. Device Hardware Calibration',
       badgePending: 'Pending',
       badgeSampling: 'Sampling',
-      badgeCompleted: 'Completed',
-      badgeSaved: 'Saved',
-      badgeLoaded: 'Active',
+      badgeCompleted: 'Measured',
+      badgeSaved: 'Profile Saved',
+      badgeLoaded: 'Available',
+      badgeApplied: 'Preview Active',
       badgeError: 'Error',
       badgeNotSupported: 'API Read-Only',
-      badgeSafeMode: 'Protected (No EEPROM)',
+      badgeUsbWebHid: 'Available via USB WebHID',
       descAIdle: 'Ready to collect resting samples across all 4 stick axes (LX, LY, RX, RY).',
       descADone: 'Statistical median computed across {n} stable samples (max jitter: {j}).',
-      descBIdle: 'No saved center profile yet for this controller hardware fingerprint.',
-      descBSaved: 'Profile saved in localStorage for this exact hardware signature ({ts}).',
-      hwXbox360Wired: 'Xbox 360 Wired (XInput): browser accesses axes via XInput; the USB XInput interface does not expose WebHID firmware center-calibration commands.',
-      hwXbox360Wireless: 'Xbox 360 Wireless Receiver: routed through OS XInput receiver driver; direct hardware center calibration is not supported in browser.',
-      hwXboxOne: 'Xbox One Controller (GIP/XInput): Microsoft GIP usages are protected by browser WebHID rules and do not expose direct EEPROM center writes.',
-      hwXboxSeries: 'Xbox Series X|S Controller (GIP/BLE): managed by OS GameInput/XInput driver; verified browser hardware calibration is not available.',
-      hwPs4: 'Sony DualShock 4 (PS4): connected via standard Gamepad API. Undocumented NVS/EEPROM writes are blocked to prevent firmware corruption on retail/clone boards.',
-      hwPs5: 'Sony DualSense (PS5): connected via standard Gamepad API. Permanent flash center writes require factory-unlocked HID sessions; using safe software profile.',
-      hwPs3: 'Sony DualShock 3 (PS3): exposed via standard HID/Sixaxis driver; no verified browser WebHID hardware center-calibration command exists.',
-      hwPs2: 'PS2-to-USB Adapter (Twin USB / DragonRise / Mayflash): USB bridge translates analog voltages and has no software-writable calibration EEPROM.',
+      descBIdle: 'No active browser software profile for this unit.',
+      descBSaved: 'Browser software profile saved ({idType}, {ts}). Applies only to local preview.',
+      descBAmbiguous: 'Model descriptor profile available ({ts}). Click "Enable Software Preview" to apply to this unit.',
+      hwXbox360Wired: 'Xbox 360 Wired (XInput): browser accesses axes via XInput; USB XInput does not expose WebHID firmware calibration commands.',
+      hwXbox360Wireless: 'Xbox 360 Wireless Receiver: routed through OS XInput receiver driver; direct hardware calibration is not supported in browser.',
+      hwXboxOne: 'Xbox One Controller (GIP/XInput): USB GIP interface (FF:47:D0) is not accessible via browser WebHID; Xbox One S (fw 5.22) rejects GIP 0x1e with [0f 01].',
+      hwXboxSeries: 'Xbox Series X|S (GIP 0x1e, fw ≥5.19.3221.0): requires vendor USB interface FF:47:D0 via native tool (xboxctl / Xbox Accessories app); not accessible via browser WebHID.',
+      hwPs4: 'Sony DualShock 4 (PS4): real device calibration (0x90/0x91/0x92) is supported over USB in the "Calibrate Joysticks (WebHID)" modal.',
+      hwPs5: 'Sony DualSense (PS5): real device calibration (0x82/0x83) and 12-word finetune readout (0x80/0x81) are supported over USB in the WebHID modal.',
+      hwPs5Edge: 'Sony DualSense Edge: temporary RAM calibration supported over USB WebHID; stock stick modules are hardware write-protected against permanent flash.',
+      hwPs3: 'Sony DualShock 3 (PS3): exposed via standard HID/Sixaxis driver; no verified browser WebHID hardware calibration command exists.',
+      hwPs2: 'PS2-to-USB Adapter: USB bridge translates analog voltages and has no software-writable calibration memory.',
       hwGeneric: 'Generic / Standard Controller: connected via Gamepad API without a verified vendor WebHID firmware calibration protocol.',
       btnStart: '▶ Start Measurement',
       btnRetry: '🔄 Retry',
@@ -130,21 +138,21 @@
       modalTitle: 'Calibrate Stick Center — Calibrazione Centro Stick Analogici',
       btnTrigger: '🎯 Calibrate Stick Center',
       bannerIdleTitle: 'Lascia entrambi gli stick analogici completamente fermi nella posizione naturale di riposo.',
-      bannerIdleSub: 'Non toccare, inclinare o premere L3/R3 durante il campionamento. Misura il centro (LX, LY, RX, RY) senza alterare le letture diagnostiche grezze.',
+      bannerIdleSub: 'Non toccare o premere L3/R3 durante il campionamento. I dati grezzi restano autorevoli per la diagnosi.',
       bannerSamplingTitle: 'Campionamento del centro a riposo in corso… Non toccare gli stick.',
       bannerSamplingSub: 'Raccolta campioni statistici per LX, LY, RX e RY per calcolare la mediana di riposo.',
-      bannerSuccessTitle: '✓ Misurazione del centro e profilo di calibrazione completati.',
-      bannerSuccessSub: 'Il centro misurato è stato salvato per questo controller senza modificare i calcoli diagnostici.',
+      bannerSuccessTitle: '✓ Misurazione completata e profilo software salvato nel browser.',
+      bannerSuccessSub: 'Il profilo viene applicato solo come anteprima locale nel browser.',
       bannerErrorMove: '✕ Movimento rilevato durante il campionamento. Lascia gli stick fermi e premi Retry.',
       bannerErrorDisconnect: '✕ Controller disconnesso durante la calibrazione.',
       bannerErrorInsufficient: '✕ Campioni validi insufficienti per calcolare il centro.',
       lblDevice: 'Controller:',
       lblProgress: 'Progresso campionamento:',
       lblSamples: 'campioni',
-      secMeasuredCenters: 'Centro a Riposo Misurato (Mediana) e Anteprima',
+      secMeasuredCenters: 'Centro a Riposo Misurato (Mediana) e Anteprima Software',
       lblCenterMeasured: 'Centro:',
       lblRawLive: 'Grezzo:',
-      lblPreviewCal: 'Calibrato:',
+      lblPreviewCal: 'Anteprima SW:',
       lblJitter: 'Jitter:',
       cardAMitle: 'A. Misurazione Centro',
       cardBMitle: 'B. Profilo Software (Locale)',
@@ -153,23 +161,26 @@
       badgeSampling: 'In corso',
       badgeCompleted: 'Completato',
       badgeSaved: 'Salvato',
-      badgeLoaded: 'Attivo',
+      badgeLoaded: 'Disponibile',
+      badgeApplied: 'Attivo',
       badgeError: 'Errore',
       badgeNotSupported: 'Solo Lettura API',
-      badgeSafeMode: 'Protetto (No EEPROM)',
+      badgeUsbWebHid: 'Supportato via USB WebHID',
       descAIdle: 'Pronto per raccogliere campioni a riposo sui 4 assi (LX, LY, RX, RY).',
       descADone: 'Mediana calcolata su {n} campioni stabili (jitter max: {j}).',
-      descBIdle: 'Nessun profilo salvato per questo identificatore hardware.',
-      descBSaved: 'Profilo salvato in localStorage per questo controller ({ts}).',
-      hwXbox360Wired: 'Xbox 360 Wired (XInput): gestito tramite driver XInput; non espone comandi WebHID di calibrazione hardware.',
-      hwXbox360Wireless: 'Xbox 360 Wireless Receiver: connesso tramite ricevitore XInput; calibrazione hardware non supportata nel browser.',
-      hwXboxOne: 'Xbox One Controller (GIP/XInput): il protocollo GIP è protetto nel browser e non consente scritture EEPROM dirette.',
-      hwXboxSeries: 'Xbox Series X|S Controller (GIP/BLE): gestito dal driver di sistema; calibrazione hardware non disponibile via browser.',
-      hwPs4: 'Sony DualShock 4 (PS4): connesso via Gamepad API. Scritture EEPROM/NVS disabilitate per prevenire corruzione firmware.',
-      hwPs5: 'Sony DualSense (PS5): connesso via Gamepad API. La scrittura flash richiede sessione di fabbrica; attivo profilo software sicuro.',
-      hwPs3: 'Sony DualShock 3 (PS3): nessun comando WebHID verificato per la calibrazione hardware del centro.',
-      hwPs2: 'Adattatore PS2-USB: il convertitore USB non dispone di EEPROM di calibrazione scrivibile.',
-      hwGeneric: 'Controller Generico: connesso via Gamepad API senza protocollo WebHID di calibrazione firmware.',
+      descBIdle: 'Nessun profilo attivo per questa unità.',
+      descBSaved: 'Profilo software salvato ({idType}, {ts}).',
+      descBAmbiguous: 'Profilo descrittore modello disponibile ({ts}).',
+      hwXbox360Wired: 'Xbox 360 Wired (XInput): nessun comando WebHID di calibrazione hardware.',
+      hwXbox360Wireless: 'Xbox 360 Wireless Receiver: calibrazione hardware non supportata nel browser.',
+      hwXboxOne: 'Xbox One Controller (GIP): interfaccia USB FF:47:D0 non accessibile da WebHID.',
+      hwXboxSeries: 'Xbox Series X|S (GIP 0x1e): richiede interfaccia USB FF:47:D0 nativa (xboxctl).',
+      hwPs4: 'Sony DualShock 4 (PS4): calibrazione hardware supportata via USB nel pannello WebHID.',
+      hwPs5: 'Sony DualSense (PS5): calibrazione hardware supportata via USB nel pannello WebHID.',
+      hwPs5Edge: 'Sony DualSense Edge: calibrazione temporanea supportata via USB WebHID.',
+      hwPs3: 'Sony DualShock 3 (PS3): nessun comando WebHID verificato.',
+      hwPs2: 'Adattatore PS2-USB: nessuna memoria di calibrazione scrivibile.',
+      hwGeneric: 'Controller Generico: connesso via Gamepad API.',
       btnStart: '▶ Avvia Misurazione',
       btnRetry: '🔄 Retry',
       btnCancel: 'Cancel',
@@ -180,21 +191,21 @@
       modalTitle: 'Calibrate Stick Center — Calibration du Centre des Sticks',
       btnTrigger: '🎯 Calibrate Stick Center',
       bannerIdleTitle: 'Laissez les deux sticks analogiques complètement relâchés dans leur position de repos.',
-      bannerIdleSub: 'Ne touchez pas et n’appuyez pas sur L3/R3 pendant l’échantillonnage. Mesure le centre (LX, LY, RX, RY) sans modifier les valeurs brutes.',
+      bannerIdleSub: 'Ne touchez pas L3/R3 pendant l’échantillonnage. Les valeurs brutes restent la référence du diagnostic.',
       bannerSamplingTitle: 'Échantillonnage du centre au repos… Ne touchez pas aux sticks.',
-      bannerSamplingSub: 'Collecte d’échantillons statistiques pour LX, LY, RX et RY afin de calculer la médiane.',
-      bannerSuccessTitle: '✓ Mesure du centre et profil de calibration terminés.',
-      bannerSuccessSub: 'Les valeurs centrales sont enregistrées localement sans altérer les calculs de diagnostic.',
-      bannerErrorMove: '✕ Mouvement détecté pendant l’échantillonnage. Gardez les sticks immobiles et cliquez sur Retry.',
+      bannerSamplingSub: 'Collecte d’échantillons statistiques pour LX, LY, RX et RY.',
+      bannerSuccessTitle: '✓ Mesure du centre et profil logiciel navigateur enregistrés.',
+      bannerSuccessSub: 'Utilisé uniquement pour l’aperçu logiciel local.',
+      bannerErrorMove: '✕ Mouvement détecté pendant l’échantillonnage.',
       bannerErrorDisconnect: '✕ Manette déconnectée pendant la calibration.',
-      bannerErrorInsufficient: '✕ Échantillons insuffisants pour calculer un centre fiable.',
+      bannerErrorInsufficient: '✕ Échantillons insuffisants.',
       lblDevice: 'Manette:',
       lblProgress: 'Progression:',
       lblSamples: 'échantillons',
-      secMeasuredCenters: 'Centre au Repos Mesuré (Médiane) et Aperçu',
+      secMeasuredCenters: 'Centre au Repos Mesuré (Médiane) et Aperçu Logiciel',
       lblCenterMeasured: 'Centre:',
       lblRawLive: 'Brut:',
-      lblPreviewCal: 'Calibré:',
+      lblPreviewCal: 'Aperçu SW:',
       lblJitter: 'Jitter:',
       cardAMitle: 'A. Mesure du Centre',
       cardBMitle: 'B. Profil Logiciel (Local)',
@@ -203,23 +214,26 @@
       badgeSampling: 'En cours',
       badgeCompleted: 'Terminé',
       badgeSaved: 'Enregistré',
-      badgeLoaded: 'Actif',
+      badgeLoaded: 'Disponible',
+      badgeApplied: 'Actif',
       badgeError: 'Erreur',
       badgeNotSupported: 'Lecture Seule API',
-      badgeSafeMode: 'Protégé (Sans EEPROM)',
+      badgeUsbWebHid: 'Disponible via USB WebHID',
       descAIdle: 'Prêt à capturer les échantillons au repos sur les 4 axes (LX, LY, RX, RY).',
       descADone: 'Médiane calculée sur {n} échantillons stables (jitter max: {j}).',
-      descBIdle: 'Aucun profil enregistré pour cette empreinte matérielle.',
-      descBSaved: 'Profil sauvegardé dans localStorage pour ce matériel ({ts}).',
-      hwXbox360Wired: 'Xbox 360 Wired (XInput): géré via XInput; aucune commande WebHID de calibration matérielle disponible.',
-      hwXbox360Wireless: 'Xbox 360 Wireless Receiver: récepteur XInput; calibration matérielle non supportée dans le navigateur.',
-      hwXboxOne: 'Xbox One Controller (GIP/XInput): protocole GIP protégé par le navigateur, sans écriture EEPROM directe.',
-      hwXboxSeries: 'Xbox Series X|S Controller (GIP/BLE): géré par le pilote système; calibration matérielle non disponible via navigateur.',
-      hwPs4: 'Sony DualShock 4 (PS4): connecté via Gamepad API. Écritures EEPROM/NVS bloquées par sécurité.',
-      hwPs5: 'Sony DualSense (PS5): connecté via Gamepad API. Profil logiciel sécurisé utilisé.',
-      hwPs3: 'Sony DualShock 3 (PS3): aucune commande WebHID vérifiée pour la calibration matérielle.',
-      hwPs2: 'Adaptateur PS2-USB: le convertisseur USB ne possède pas d’EEPROM de calibration.',
-      hwGeneric: 'Manette Générique: connectée via Gamepad API sans protocole WebHID de calibration firmware.',
+      descBIdle: 'Aucun profil enregistré pour cette unité.',
+      descBSaved: 'Profil sauvegardé ({idType}, {ts}).',
+      descBAmbiguous: 'Profil de modèle disponible ({ts}).',
+      hwXbox360Wired: 'Xbox 360 Wired (XInput): aucune commande WebHID disponible.',
+      hwXbox360Wireless: 'Xbox 360 Wireless Receiver: non supporté dans le navigateur.',
+      hwXboxOne: 'Xbox One Controller (GIP): interface FF:47:D0 non accessible par WebHID.',
+      hwXboxSeries: 'Xbox Series X|S (GIP 0x1e): requiert un outil USB natif (xboxctl).',
+      hwPs4: 'Sony DualShock 4 (PS4): calibration matérielle supportée via USB WebHID.',
+      hwPs5: 'Sony DualSense (PS5): calibration matérielle supportée via USB WebHID.',
+      hwPs5Edge: 'Sony DualSense Edge: calibration RAM supportée via USB WebHID.',
+      hwPs3: 'Sony DualShock 3 (PS3): aucune commande WebHID vérifiée.',
+      hwPs2: 'Adaptateur PS2-USB: pas d’EEPROM de calibration.',
+      hwGeneric: 'Manette Générique: connectée via Gamepad API.',
       btnStart: '▶ Démarrer',
       btnRetry: '🔄 Retry',
       btnCancel: 'Cancel',
@@ -230,46 +244,49 @@
       modalTitle: 'Calibrate Stick Center — Analogstick-Mittelpunktkalibrierung',
       btnTrigger: '🎯 Calibrate Stick Center',
       bannerIdleTitle: 'Lassen Sie beide Analogsticks völlig unberührt in ihrer natürlichen Ruheposition.',
-      bannerIdleSub: 'Berühren oder drücken Sie L3/R3 während der Messung nicht. Misst das Ruhezentrum (LX, LY, RX, RY), ohne die Rohdaten zu verändern.',
+      bannerIdleSub: 'Berühren Sie L3/R3 während der Messung nicht. Rohdaten bleiben für die Diagnose maßgeblich.',
       bannerSamplingTitle: 'Ruhezentrum wird in Echtzeit gemessen… Sticks bitte nicht berühren.',
-      bannerSamplingSub: 'Sammeln statistischer Proben für LX, LY, RX und RY zur Berechnung des Medians.',
-      bannerSuccessTitle: '✓ Mittelpunktsmessung und Kalibrierungsprofil abgeschlossen.',
-      bannerSuccessSub: 'Die gemessenen Mittelpunkte wurden gespeichert, ohne die bestehenden Diagnosewerte zu verändern.',
-      bannerErrorMove: '✕ Stick-Bewegung während der Messung erkannt. Sticks ruhig lassen und Retry klicken.',
+      bannerSamplingSub: 'Sammeln statistischer Proben für LX, LY, RX und RY.',
+      bannerSuccessTitle: '✓ Mittelpunktsmessung und Browser-Softwareprofil gespeichert.',
+      bannerSuccessSub: 'Nur für die lokale Browser-Vorschau (ändert nicht die Controller-Hardware).',
+      bannerErrorMove: '✕ Stick-Bewegung während der Messung erkannt.',
       bannerErrorDisconnect: '✕ Controller wurde während der Kalibrierung getrennt.',
-      bannerErrorInsufficient: '✕ Unzureichende gültige Messwerte für eine zuverlässige Berechnung.',
+      bannerErrorInsufficient: '✕ Unzureichende gültige Messwerte.',
       lblDevice: 'Controller:',
       lblProgress: 'Messfortschritt:',
       lblSamples: 'Proben',
-      secMeasuredCenters: 'Gemessenes Ruhezentrum (Statistischer Median) & Vorschau',
+      secMeasuredCenters: 'Gemessenes Ruhezentrum (Median) & Software-Vorschau',
       lblCenterMeasured: 'Zentrum:',
       lblRawLive: 'Rohwert:',
-      lblPreviewCal: 'Kalibriert:',
+      lblPreviewCal: 'SW-Vorschau:',
       lblJitter: 'Jitter:',
       cardAMitle: 'A. Zentrumsmessung',
-      cardBMitle: 'B. Software-Profil (Lokal)',
+      cardBMitle: 'B. Software-Profil (Browser)',
       cardCMitle: 'C. Hardware-Kalibrierung',
       badgePending: 'Ausstehend',
       badgeSampling: 'Messung',
       badgeCompleted: 'Fertig',
       badgeSaved: 'Gespeichert',
-      badgeLoaded: 'Aktiv',
+      badgeLoaded: 'Verfügbar',
+      badgeApplied: 'Aktiv',
       badgeError: 'Fehler',
       badgeNotSupported: 'Nur-Lese API',
-      badgeSafeMode: 'Geschützt (Ohne EEPROM)',
+      badgeUsbWebHid: 'Verfügbar über USB WebHID',
       descAIdle: 'Bereit zur Erfassung der Ruhewerte auf allen 4 Achsen (LX, LY, RX, RY).',
       descADone: 'Statistischer Median aus {n} stabilen Proben berechnet (Max-Jitter: {j}).',
-      descBIdle: 'Noch kein gespeichertes Profil für diese Hardware-Kennung vorhanden.',
-      descBSaved: 'Profil in localStorage für diese Hardware-Signatur gespeichert ({ts}).',
-      hwXbox360Wired: 'Xbox 360 Wired (XInput): Zugriff über XInput; keine WebHID-Firmware-Kalibrierungsbefehle verfügbar.',
-      hwXbox360Wireless: 'Xbox 360 Wireless Receiver: XInput-Empfänger; keine Hardware-Kalibrierung im Browser unterstützt.',
-      hwXboxOne: 'Xbox One Controller (GIP/XInput): Microsoft GIP ist im Browser geschützt; kein direkter EEPROM-Schreibzugriff.',
-      hwXboxSeries: 'Xbox Series X|S Controller (GIP/BLE): vom Systemtreiber verwaltet; keine Browser-Hardwarekalibrierung verfügbar.',
-      hwPs4: 'Sony DualShock 4 (PS4): über Standard-Gamepad-API verbunden. Keine ungesicherten EEPROM/NVS-Schreibzugriffe.',
-      hwPs5: 'Sony DualSense (PS5): über Standard-Gamepad-API verbunden. Sicheres Software-Kalibrierungsprofil aktiv.',
-      hwPs3: 'Sony DualShock 3 (PS3): kein verifizierter WebHID-Befehl zur Hardware-Mittelpunktkalibrierung vorhanden.',
-      hwPs2: 'PS2-zu-USB-Adapter: USB-Konverter besitzt keinen beschreibbaren Kalibrierungs-EEPROM.',
-      hwGeneric: 'Standard-/Generischer Controller: über Gamepad-API ohne verifiziertes Firmware-Kalibrierungsprotokoll verbunden.',
+      descBIdle: 'Kein aktives Software-Profil für diese Einheit.',
+      descBSaved: 'Profil gespeichert ({idType}, {ts}).',
+      descBAmbiguous: 'Modell-Profil verfügbar ({ts}).',
+      hwXbox360Wired: 'Xbox 360 Wired (XInput): keine WebHID-Firmware-Befehle verfügbar.',
+      hwXbox360Wireless: 'Xbox 360 Wireless Receiver: nicht im Browser unterstützt.',
+      hwXboxOne: 'Xbox One Controller (GIP): USB-Schnittstelle FF:47:D0 im Browser geschützt.',
+      hwXboxSeries: 'Xbox Series X|S (GIP 0x1e): erfordert nativen USB-Zugriff (xboxctl).',
+      hwPs4: 'Sony DualShock 4 (PS4): Hardware-Kalibrierung über USB WebHID unterstützt.',
+      hwPs5: 'Sony DualSense (PS5): Hardware-Kalibrierung über USB WebHID unterstützt.',
+      hwPs5Edge: 'Sony DualSense Edge: temporäre RAM-Kalibrierung über USB WebHID unterstützt.',
+      hwPs3: 'Sony DualShock 3 (PS3): kein verifizierter WebHID-Befehl vorhanden.',
+      hwPs2: 'PS2-zu-USB-Adapter: kein beschreibbarer Kalibrierungs-EEPROM.',
+      hwGeneric: 'Standard-/Generischer Controller: über Gamepad-API verbunden.',
       btnStart: '▶ Messung starten',
       btnRetry: '🔄 Retry',
       btnCancel: 'Cancel',
@@ -298,7 +315,7 @@
   }
 
   // ─────────────────────────────────────────────────────────────
-  // 1. CONTROLLER VALIDATION & HARDWARE CAPABILITY INSPECTION
+  // 1. CONTROLLER VALIDATION, IDENTITY RESOLUTION & CAPABILITIES
   // ─────────────────────────────────────────────────────────────
   function isCompatibleStickGamepad(gp) {
     if (!gp || !gp.connected) return false;
@@ -312,13 +329,55 @@
     return true;
   }
 
-  function buildDeviceKey(gp) {
+  /**
+   * Builds the model-level descriptor key.
+   * NOTE (Fixes Defect G): Different physical units of the same controller model share this descriptor.
+   * Therefore, profiles keyed only by descriptor are marked `identityType: 'descriptor-ambiguous'`
+   * unless bound to a verified WebHID hardware serial/MAC or an explicit workshop Unit/SKU ID.
+   */
+  function buildDeviceKey(gp, identityOptions) {
     if (!gp || !gp.id) return '';
+    const opts = identityOptions || {};
     const rawId = String(gp.id).trim();
     const mapping = String(gp.mapping || 'nonstandard').trim();
     const axesLen = gp.axes && typeof gp.axes.length === 'number' ? gp.axes.length : 0;
     const btnsLen = gp.buttons && typeof gp.buttons.length === 'number' ? gp.buttons.length : 0;
-    return `${rawId}|${mapping}|a:${axesLen}|b:${btnsLen}`;
+    const baseDescriptor = `${rawId}|${mapping}|a:${axesLen}|b:${btnsLen}`;
+
+    if (opts.hardwareSerial && String(opts.hardwareSerial).trim()) {
+      return `hw:${String(opts.hardwareSerial).trim()}|${baseDescriptor}`;
+    }
+    if (opts.unitId && String(opts.unitId).trim()) {
+      return `unit:${String(opts.unitId).trim()}|${baseDescriptor}`;
+    }
+    return baseDescriptor;
+  }
+
+  function resolveIdentityContext(explicitOpts) {
+    const opts = explicitOpts || {};
+    let hardwareSerial = opts.hardwareSerial || null;
+    let unitId = opts.unitId || null;
+
+    if (!hardwareSerial && typeof root !== 'undefined' && root.WebHIDCalibrationModule) {
+      const whState = root.WebHIDCalibrationModule.getState ? root.WebHIDCalibrationModule.getState() : null;
+      if (whState && whState.verifiedHardwareInfo && whState.verifiedHardwareInfo.serialNumber) {
+        hardwareSerial = whState.verifiedHardwareInfo.serialNumber;
+      }
+    }
+    if (!unitId && typeof window !== 'undefined' && window.GamepadSessionAPI && typeof window.GamepadSessionAPI.getUnitIdentifier === 'function') {
+      unitId = window.GamepadSessionAPI.getUnitIdentifier();
+    }
+
+    const identityType = hardwareSerial
+      ? 'hardware-serial'
+      : (unitId ? 'unit-id' : 'descriptor-ambiguous');
+
+    return {
+      hardwareSerial: hardwareSerial || null,
+      unitId: unitId || null,
+      identityType,
+      isUniqueUnitIdentity: identityType === 'hardware-serial' || identityType === 'unit-id',
+    };
   }
 
   function inspectControllerCapabilities(gp, modelHint) {
@@ -331,6 +390,14 @@
         centerMeasurementSupported: false,
         softwareProfileSupported: false,
         hardwareCalibrationSupported: false,
+        canReadInput: false,
+        canMeasureCenter: false,
+        canMeasureRange: false,
+        canPreviewSoftwareCorrection: false,
+        canCalibrateDeviceCenter: false,
+        canCalibrateDeviceRange: false,
+        canSaveCalibration: false,
+        canReadCalibrationBackup: false,
         hardwareStatusBadgeKey: 'badgeNotSupported',
         hardwareReasonKey: 'hwGeneric',
       };
@@ -341,15 +408,23 @@
     let family = 'generic';
     let hardwareReasonKey = 'hwGeneric';
     let hardwareStatusBadgeKey = 'badgeNotSupported';
+    let sonyUsbCapableModel = false;
 
-    if (idLower.includes('dualsense') || idLower.includes('0ce6') || idLower.includes('0df2') || model === 'ps5') {
+    if (idLower.includes('0df2') || idLower.includes('dualsense edge')) {
+      family = 'ps5-edge';
+      hardwareReasonKey = 'hwPs5Edge';
+      hardwareStatusBadgeKey = 'badgeUsbWebHid';
+      sonyUsbCapableModel = true;
+    } else if (idLower.includes('dualsense') || idLower.includes('0ce6') || model === 'ps5') {
       family = 'ps5';
       hardwareReasonKey = 'hwPs5';
-      hardwareStatusBadgeKey = 'badgeSafeMode';
+      hardwareStatusBadgeKey = 'badgeUsbWebHid';
+      sonyUsbCapableModel = true;
     } else if (idLower.includes('dualshock 4') || idLower.includes('05c4') || idLower.includes('09cc') || model === 'ps4') {
       family = 'ps4';
       hardwareReasonKey = 'hwPs4';
-      hardwareStatusBadgeKey = 'badgeSafeMode';
+      hardwareStatusBadgeKey = 'badgeUsbWebHid';
+      sonyUsbCapableModel = true;
     } else if (idLower.includes('ps3') || idLower.includes('dualshock 3') || idLower.includes('0268') || model === 'ps3') {
       family = 'ps3';
       hardwareReasonKey = 'hwPs3';
@@ -379,11 +454,19 @@
       family = 'xbox-series';
       hardwareReasonKey = 'hwXboxSeries';
       hardwareStatusBadgeKey = 'badgeNotSupported';
-    } else if (idLower.includes('xbox') || idLower.includes('xinput') || idLower.includes('045e') || idLower.includes('02d1') || idLower.includes('02dd') || model === 'xbox-one') {
+    } else if (idLower.includes('xbox') || idLower.includes('xinput') || idLower.includes('045e') || idLower.includes('02d1') || idLower.includes('02dd') || idLower.includes('02ea') || model === 'xbox-one') {
       family = 'xbox-one';
       hardwareReasonKey = 'hwXboxOne';
       hardwareStatusBadgeKey = 'badgeNotSupported';
     }
+
+    // Query live WebHID capability state if WebHIDCalibrationModule is present
+    let webHidCaps = null;
+    if (typeof root !== 'undefined' && root.WebHIDCalibrationModule && typeof root.WebHIDCalibrationModule.getCapabilities === 'function') {
+      webHidCaps = root.WebHIDCalibrationModule.getCapabilities({ gamepad: gp });
+    }
+
+    const hwActiveNow = Boolean(webHidCaps && webHidCaps.canCalibrateDeviceCenter);
 
     return {
       isCompatible: true,
@@ -391,7 +474,16 @@
       family,
       centerMeasurementSupported: true,
       softwareProfileSupported: true,
-      hardwareCalibrationSupported: false,
+      hardwareCalibrationSupported: hwActiveNow,
+      sonyUsbCapableModel,
+      canReadInput: true,
+      canMeasureCenter: true,
+      canMeasureRange: true,
+      canPreviewSoftwareCorrection: true,
+      canCalibrateDeviceCenter: hwActiveNow,
+      canCalibrateDeviceRange: Boolean(webHidCaps && webHidCaps.canCalibrateDeviceRange),
+      canSaveCalibration: Boolean(webHidCaps && webHidCaps.canSaveCalibration),
+      canReadCalibrationBackup: Boolean(webHidCaps && webHidCaps.canReadCalibrationBackup),
       hardwareStatusBadgeKey,
       hardwareReasonKey,
     };
@@ -540,26 +632,56 @@
     };
   }
 
-  function applyCalibrationOffset(rawAxes, centers) {
+  function applyCalibrationOffset(rawAxes, centers, boundsL, boundsR) {
     if (!rawAxes || typeof rawAxes !== 'object') {
       return { lx: 0, ly: 0, rx: 0, ry: 0 };
     }
     const c = centers && typeof centers === 'object' ? centers : { lx: 0, ly: 0, rx: 0, ry: 0 };
     const clamp = (v) => Math.max(-1, Math.min(1, Number.isFinite(v) ? v : 0));
+
+    const normalizeWithBounds = (rawVal, centerVal, minB, maxB) => {
+      const shifted = (rawVal || 0) - (centerVal || 0);
+      if (typeof minB === 'number' && typeof maxB === 'number' && minB < -0.25 && maxB > 0.25) {
+        if (shifted >= 0) {
+          const spanPos = Math.max(0.25, maxB - (centerVal || 0));
+          return clamp(shifted / spanPos);
+        }
+        const spanNeg = Math.max(0.25, (centerVal || 0) - minB);
+        return clamp(shifted / spanNeg);
+      }
+      return clamp(shifted);
+    };
+
     return {
-      lx: Number(clamp((rawAxes.lx || 0) - (c.lx || 0)).toFixed(6)),
-      ly: Number(clamp((rawAxes.ly || 0) - (c.ly || 0)).toFixed(6)),
-      rx: Number(clamp((rawAxes.rx || 0) - (c.rx || 0)).toFixed(6)),
-      ry: Number(clamp((rawAxes.ry || 0) - (c.ry || 0)).toFixed(6)),
+      lx: Number(normalizeWithBounds(rawAxes.lx, c.lx, boundsL && boundsL.minX, boundsL && boundsL.maxX).toFixed(6)),
+      ly: Number(normalizeWithBounds(rawAxes.ly, c.ly, boundsL && boundsL.minY, boundsL && boundsL.maxY).toFixed(6)),
+      rx: Number(normalizeWithBounds(rawAxes.rx, c.rx, boundsR && boundsR.minX, boundsR && boundsR.maxX).toFixed(6)),
+      ry: Number(normalizeWithBounds(rawAxes.ry, c.ry, boundsR && boundsR.minY, boundsR && boundsR.maxY).toFixed(6)),
     };
   }
 
   // ─────────────────────────────────────────────────────────────
-  // 3. LOCALSTORAGE PROFILE PERSISTENCE & VALIDATION
+  // 3. VERSIONED LOCALSTORAGE PERSISTENCE & MIGRATION (v1 -> v2)
   // ─────────────────────────────────────────────────────────────
+  function migrateRecordIfNeeded(rec, key) {
+    if (!rec || typeof rec !== 'object') return null;
+    if (rec.version === 1) {
+      // Non-destructive migration from Schema v1 to Schema v2
+      return Object.assign({}, rec, {
+        version: SCHEMA_VERSION,
+        deviceKey: rec.deviceKey || key,
+        identityType: rec.hardwareSerial ? 'hardware-serial' : (rec.unitId ? 'unit-id' : 'descriptor-ambiguous'),
+        hardwareSerial: rec.hardwareSerial || null,
+        unitId: rec.unitId || null,
+        migratedFromV1: true,
+      });
+    }
+    return rec;
+  }
+
   function isValidProfileRecord(rec) {
     if (!rec || typeof rec !== 'object') return false;
-    if (rec.version !== SCHEMA_VERSION) return false;
+    if (rec.version !== SCHEMA_VERSION && rec.version !== 1) return false;
     if (typeof rec.deviceKey !== 'string' || !rec.deviceKey.includes('|a:')) return false;
     if (typeof rec.deviceId !== 'string' || rec.deviceId.length === 0) return false;
     if (typeof rec.axesCount !== 'number' || rec.axesCount < 4) return false;
@@ -585,10 +707,18 @@
         const parsed = JSON.parse(raw);
         if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return {};
         const validMap = {};
+        let migratedAny = false;
         for (const [key, val] of Object.entries(parsed)) {
-          if (isValidProfileRecord(val) && val.deviceKey === key) {
-            validMap[key] = val;
+          if (isValidProfileRecord(val)) {
+            const migrated = migrateRecordIfNeeded(val, key);
+            if (migrated && migrated.deviceKey === key) {
+              if (val.version === 1) migratedAny = true;
+              validMap[key] = migrated;
+            }
           }
+        }
+        if (migratedAny) {
+          try { store.setItem(STORAGE_KEY, JSON.stringify(validMap)); } catch (_) {}
         }
         return validMap;
       } catch (e) {
@@ -607,11 +737,20 @@
       }
     },
 
-    getProfileForGamepad(gp, storageObj) {
+    getProfileForGamepad(gp, storageObj, identityOpts) {
       if (!isCompatibleStickGamepad(gp)) return null;
-      const key = buildDeviceKey(gp);
       const map = this._readAll(storageObj);
-      const profile = map[key] || null;
+      const idCtx = resolveIdentityContext(identityOpts);
+
+      // 1. Check exact hardware-serial or unit-id key first
+      if (idCtx.isUniqueUnitIdentity) {
+        const specificKey = buildDeviceKey(gp, idCtx);
+        if (map[specificKey]) return map[specificKey];
+      }
+
+      // 2. Fallback to descriptor key
+      const descKey = buildDeviceKey(gp);
+      const profile = map[descKey] || null;
       if (!profile) return null;
       if (
         profile.deviceId !== String(gp.id).trim() ||
@@ -625,10 +764,20 @@
 
     saveProfileForGamepad(gp, calcResult, storageObj) {
       if (!isCompatibleStickGamepad(gp) || !calcResult || !calcResult.ok) return null;
-      const key = buildDeviceKey(gp);
+      const idCtx = resolveIdentityContext({
+        hardwareSerial: calcResult.hardwareSerial,
+        unitId: calcResult.unitId,
+      });
+      const baseDescKey = buildDeviceKey(gp);
+      const specificKey = idCtx.isUniqueUnitIdentity ? buildDeviceKey(gp, idCtx) : baseDescKey;
+
       const record = {
         version: SCHEMA_VERSION,
-        deviceKey: key,
+        deviceKey: specificKey,
+        baseDescriptorKey: baseDescKey,
+        identityType: idCtx.identityType,
+        hardwareSerial: idCtx.hardwareSerial,
+        unitId: idCtx.unitId,
         deviceId: String(gp.id).trim(),
         mapping: String(gp.mapping || 'nonstandard').trim(),
         axesCount: gp.axes.length,
@@ -643,26 +792,43 @@
           ry: calcResult.centers.ry,
         },
         means: calcResult.means,
+        boundsL: calcResult.boundsL || null,
+        boundsR: calcResult.boundsR || null,
       };
       if (!isValidProfileRecord(record)) return null;
       const map = this._readAll(storageObj);
-      map[key] = record;
-      this._writeAll(map, storageObj);
+      map[specificKey] = record;
+      // Also store under base descriptor key for lookup compatibility while keeping `identityType` explicit
+      if (specificKey !== baseDescKey) {
+        map[baseDescKey] = Object.assign({}, record, { deviceKey: baseDescKey });
+      }
+      const wroteOk = this._writeAll(map, storageObj);
+      if (!wroteOk) return null;
       return record;
     },
 
-    removeProfileForGamepad(gp, storageObj) {
+    removeProfileForGamepad(gp, storageObj, identityOpts) {
       if (!gp) return false;
-      const key = buildDeviceKey(gp);
+      const idCtx = resolveIdentityContext(identityOpts);
+      const specificKey = idCtx.isUniqueUnitIdentity ? buildDeviceKey(gp, idCtx) : null;
+      const baseKey = buildDeviceKey(gp);
       const map = this._readAll(storageObj);
-      if (!map[key]) return false;
-      delete map[key];
+      let removed = false;
+      if (specificKey && map[specificKey]) {
+        delete map[specificKey];
+        removed = true;
+      }
+      if (map[baseKey]) {
+        delete map[baseKey];
+        removed = true;
+      }
+      if (!removed) return false;
       return this._writeAll(map, storageObj);
     }
   };
 
   // ─────────────────────────────────────────────────────────────
-  // 4. UI CONTROLLER & MODAL STATE MACHINE
+  // 4. UI CONTROLLER, OPT-IN SOFTWARE PREVIEW & MODAL STATE MACHINE
   // ─────────────────────────────────────────────────────────────
   const uiState = {
     isOpen: false,
@@ -671,23 +837,31 @@
     samples: [],
     lastResult: null,
     activeProfile: null,
+    profileExplicitlyApplied: false, // Prevents auto-applying ambiguous model profiles to another unit without user action
+    softwarePreviewEnabled: false,   // Opt-in preview toggle; raw controller data remains authoritative for diagnostics
     activeDeviceKey: '',
     modelHint: 'ps4',
   };
 
   function getActiveBrowserGamepad() {
+    if (typeof window !== 'undefined' && window.GamepadSessionAPI && typeof window.GamepadSessionAPI.getActiveGamepad === 'function') {
+      return window.GamepadSessionAPI.getActiveGamepad();
+    }
     if (typeof navigator === 'undefined' || !navigator.getGamepads) return null;
     const gps = navigator.getGamepads();
     if (typeof state === 'object' && state !== null && state.activeGpIndex !== null && gps[state.activeGpIndex]) {
       return gps[state.activeGpIndex];
     }
-    for (let i = 0; i < gps.length; i++) {
-      if (gps[i] && gps[i].connected) return gps[i];
+    if (typeof window !== 'undefined' && window.state && window.state.activeGpIndex !== null && gps[window.state.activeGpIndex]) {
+      return gps[window.state.activeGpIndex];
     }
     return null;
   }
 
   function extractNormalizedAxes(gp, model) {
+    if (typeof window !== 'undefined' && window.GamepadSessionAPI && typeof window.GamepadSessionAPI.getNormalizedAxes === 'function') {
+      return window.GamepadSessionAPI.getNormalizedAxes(gp, model);
+    }
     if (typeof getNormalizedAxes === 'function') {
       return getNormalizedAxes(gp, model);
     }
@@ -698,6 +872,75 @@
       rx: gp.axes[2] || 0,
       ry: gp.axes[3] || 0,
     };
+  }
+
+  function isSamplingActive() {
+    return uiState.isOpen && uiState.phase === 'SAMPLING';
+  }
+
+  function isSoftwarePreviewEnabled() {
+    return Boolean(uiState.softwarePreviewEnabled && uiState.activeProfile && uiState.profileExplicitlyApplied);
+  }
+
+  function setSoftwarePreviewEnabled(enabled) {
+    uiState.softwarePreviewEnabled = Boolean(enabled);
+    if (enabled && uiState.activeProfile) {
+      uiState.profileExplicitlyApplied = true;
+    }
+    renderSoftwarePreviewBanner();
+    return uiState.softwarePreviewEnabled;
+  }
+
+  function getSoftwareCorrectedAxes(rawAxes, gp) {
+    if (!rawAxes) return { lx: 0, ly: 0, rx: 0, ry: 0 };
+    const profile = uiState.activeProfile || (gp ? CalibrationProfileStore.getProfileForGamepad(gp) : null);
+    if (!profile || !profile.centers) return rawAxes;
+    return applyCalibrationOffset(rawAxes, profile.centers, profile.boundsL, profile.boundsR);
+  }
+
+  function onControllerChanged(newGp) {
+    // Reset temporary sampling state and require explicit activation if profile identity is ambiguous (Fixes Defects G & I)
+    if (uiState.phase === 'SAMPLING') {
+      uiState.phase = 'ERROR';
+      uiState.errorReason = 'DISCONNECTED';
+    } else {
+      uiState.phase = 'IDLE';
+      uiState.errorReason = null;
+    }
+    uiState.samples = [];
+    uiState.lastResult = null;
+    uiState.activeDeviceKey = newGp ? buildDeviceKey(newGp) : '';
+    uiState.activeProfile = newGp ? CalibrationProfileStore.getProfileForGamepad(newGp) : null;
+
+    // Only auto-enable profile if bound to a verified unique hardware serial or explicit unit ID
+    if (uiState.activeProfile && (uiState.activeProfile.identityType === 'hardware-serial' || uiState.activeProfile.identityType === 'unit-id')) {
+      uiState.profileExplicitlyApplied = true;
+    } else {
+      uiState.profileExplicitlyApplied = false;
+      uiState.softwarePreviewEnabled = false;
+    }
+    updateTriggerButtonState(newGp);
+    renderSoftwarePreviewBanner();
+    if (uiState.isOpen) {
+      renderModalDynamicState(newGp);
+    }
+  }
+
+  function renderSoftwarePreviewBanner() {
+    if (typeof document === 'undefined') return;
+    const toggleBtn = document.getElementById('stick-sw-preview-toggle-btn');
+    const previewNote = document.getElementById('stick-sw-preview-note');
+    if (toggleBtn) {
+      const hasProf = Boolean(uiState.activeProfile);
+      toggleBtn.disabled = !hasProf;
+      toggleBtn.classList.toggle('active', isSoftwarePreviewEnabled());
+      toggleBtn.textContent = isSoftwarePreviewEnabled()
+        ? '👁 SW Preview: ON (Raw Auth.)'
+        : '👁 SW Preview: OFF';
+    }
+    if (previewNote) {
+      previewNote.style.display = isSoftwarePreviewEnabled() ? 'block' : 'none';
+    }
   }
 
   function fmtSigned(val) {
@@ -744,18 +987,21 @@
     renderModalStaticText();
 
     const caps = inspectControllerCapabilities(gp, uiState.modelHint);
+    const idCtx = resolveIdentityContext();
     const devNameEl = document.getElementById('calib-device-name');
     const devMetaEl = document.getElementById('calib-device-meta');
     if (devNameEl) {
       devNameEl.textContent = gp && gp.id ? gp.id : '—';
     }
     if (devMetaEl) {
+      const idBadge = idCtx.hardwareSerial
+        ? `HW Serial: ${idCtx.hardwareSerial}`
+        : (idCtx.unitId ? `Unit ID: ${idCtx.unitId}` : 'Identity: Model Descriptor (Ambiguous across units)');
       devMetaEl.textContent = gp && gp.connected
-        ? `Axes: ${gp.axes ? gp.axes.length : 0} | Mapping: ${gp.mapping || 'standard'} | Family: ${caps.family.toUpperCase()}`
+        ? `Axes: ${gp.axes ? gp.axes.length : 0} | Family: ${caps.family.toUpperCase()} | ${idBadge}`
         : 'Disconnected';
     }
 
-    // Banner state
     const banner = document.getElementById('calib-instruction-banner');
     const bannerTitle = document.getElementById('calib-banner-title');
     const bannerSub = document.getElementById('calib-banner-sub');
@@ -791,7 +1037,6 @@
       }
     }
 
-    // Progress bar
     const count = uiState.samples.length;
     const target = CALIBRATION_CONFIG.TARGET_SAMPLES;
     const pct = uiState.phase === 'COMPLETE' ? 100 : Math.min(100, Math.round((count / target) * 100));
@@ -800,13 +1045,19 @@
     if (progFill) progFill.style.width = `${pct}%`;
     if (progText) progText.textContent = `${count} / ${target} ${ct('lblSamples')} (${pct}%)`;
 
-    // Centers & Live Preview
     const activeCenters = (uiState.lastResult && uiState.lastResult.centers)
       ? uiState.lastResult.centers
       : (uiState.activeProfile ? uiState.activeProfile.centers : null);
 
     const rawAxes = caps.isCompatible ? extractNormalizedAxes(gp, uiState.modelHint) : { lx: 0, ly: 0, rx: 0, ry: 0 };
-    const calAxes = activeCenters ? applyCalibrationOffset(rawAxes, activeCenters) : rawAxes;
+    const calAxes = activeCenters
+      ? applyCalibrationOffset(
+          rawAxes,
+          activeCenters,
+          uiState.activeProfile ? uiState.activeProfile.boundsL : null,
+          uiState.activeProfile ? uiState.activeProfile.boundsR : null
+        )
+      : rawAxes;
 
     ['lx', 'ly', 'rx', 'ry'].forEach((ax) => {
       const centerEl = document.getElementById(`calib-val-center-${ax}`);
@@ -849,18 +1100,23 @@
       }
     }
 
-    // Outcome B: Software Calibration Profile
+    // Outcome B: Browser Software Calibration Profile
     const badgeB = document.getElementById('calib-card-b-badge');
     const descB = document.getElementById('calib-card-b-desc');
     const clearBtn = document.getElementById('calib-clear-profile-btn');
     if (badgeB && descB) {
       if (uiState.activeProfile) {
         badgeB.className = 'calib-outcome-badge calib-badge-ok';
-        badgeB.textContent = uiState.phase === 'COMPLETE' ? ct('badgeSaved') : ct('badgeLoaded');
+        badgeB.textContent = uiState.phase === 'COMPLETE'
+          ? ct('badgeSaved')
+          : (uiState.profileExplicitlyApplied ? ct('badgeApplied') : ct('badgeLoaded'));
         const tsFormatted = uiState.activeProfile.timestamp
           ? new Date(uiState.activeProfile.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
           : 'OK';
-        descB.textContent = ct('descBSaved', { ts: tsFormatted });
+        const idTypeLbl = uiState.activeProfile.identityType || 'descriptor-ambiguous';
+        descB.textContent = uiState.profileExplicitlyApplied
+          ? ct('descBSaved', { idType: idTypeLbl, ts: tsFormatted })
+          : ct('descBAmbiguous', { ts: tsFormatted });
         if (clearBtn) clearBtn.style.display = 'inline-block';
       } else {
         badgeB.className = 'calib-outcome-badge calib-badge-muted';
@@ -874,7 +1130,7 @@
     const badgeC = document.getElementById('calib-card-c-badge');
     const descC = document.getElementById('calib-card-c-desc');
     if (badgeC && descC) {
-      badgeC.className = 'calib-outcome-badge calib-badge-warn';
+      badgeC.className = caps.sonyUsbCapableModel ? 'calib-outcome-badge calib-badge-info' : 'calib-outcome-badge calib-badge-warn';
       badgeC.textContent = ct(caps.hardwareStatusBadgeKey);
       descC.textContent = ct(caps.hardwareReasonKey);
     }
@@ -906,6 +1162,9 @@
     uiState.samples = [];
     uiState.lastResult = null;
     uiState.activeDeviceKey = buildDeviceKey(gp);
+    if (typeof window !== 'undefined' && window.GamepadSessionAPI && typeof window.GamepadSessionAPI.setOperationLock === 'function') {
+      window.GamepadSessionAPI.setOperationLock(true, 'Stick Center Sampling');
+    }
     renderModalDynamicState(gp);
   }
 
@@ -914,6 +1173,9 @@
     uiState.errorReason = null;
     uiState.samples = [];
     uiState.isOpen = false;
+    if (typeof window !== 'undefined' && window.GamepadSessionAPI && typeof window.GamepadSessionAPI.setOperationLock === 'function') {
+      window.GamepadSessionAPI.setOperationLock(false, null);
+    }
     if (typeof document !== 'undefined') {
       const modal = document.getElementById('stick-calibration-modal');
       if (modal) modal.style.display = 'none';
@@ -944,15 +1206,18 @@
   function onFrameTick(gp, modelHint) {
     if (modelHint) uiState.modelHint = modelHint;
     updateTriggerButtonState(gp);
+    renderSoftwarePreviewBanner();
 
     if (!uiState.isOpen) return;
 
-    // Check if controller disconnected or changed mid-calibration
     if (!isCompatibleStickGamepad(gp) || (uiState.activeDeviceKey && buildDeviceKey(gp) !== uiState.activeDeviceKey)) {
       if (uiState.phase === 'SAMPLING') {
         uiState.phase = 'ERROR';
         uiState.errorReason = 'DISCONNECTED';
         uiState.samples = [];
+        if (typeof window !== 'undefined' && window.GamepadSessionAPI && typeof window.GamepadSessionAPI.setOperationLock === 'function') {
+          window.GamepadSessionAPI.setOperationLock(false, null);
+        }
       }
       renderModalDynamicState(gp);
       return;
@@ -967,7 +1232,6 @@
         ry: axes.ry,
       });
 
-      // Live movement guard: abort early if user moves stick significantly during rest sampling
       if (uiState.samples.length >= 4) {
         const first = uiState.samples[0];
         const delta = Math.max(
@@ -983,6 +1247,9 @@
         ) {
           uiState.phase = 'ERROR';
           uiState.errorReason = 'EXCESSIVE_MOVEMENT';
+          if (typeof window !== 'undefined' && window.GamepadSessionAPI && typeof window.GamepadSessionAPI.setOperationLock === 'function') {
+            window.GamepadSessionAPI.setOperationLock(false, null);
+          }
           renderModalDynamicState(gp);
           return;
         }
@@ -990,10 +1257,20 @@
 
       if (uiState.samples.length >= CALIBRATION_CONFIG.TARGET_SAMPLES) {
         const res = computeCenterStatistics(uiState.samples);
+        if (typeof window !== 'undefined' && window.GamepadSessionAPI && typeof window.GamepadSessionAPI.setOperationLock === 'function') {
+          window.GamepadSessionAPI.setOperationLock(false, null);
+        }
         if (res.ok) {
-          uiState.phase = 'COMPLETE';
-          uiState.lastResult = res;
-          uiState.activeProfile = CalibrationProfileStore.saveProfileForGamepad(gp, res);
+          const saved = CalibrationProfileStore.saveProfileForGamepad(gp, res);
+          if (saved) {
+            uiState.phase = 'COMPLETE';
+            uiState.lastResult = res;
+            uiState.activeProfile = saved;
+            uiState.profileExplicitlyApplied = true;
+          } else {
+            uiState.phase = 'ERROR';
+            uiState.errorReason = 'STORAGE_WRITE_FAILED';
+          }
         } else {
           uiState.phase = 'ERROR';
           uiState.errorReason = res.reason;
@@ -1007,6 +1284,7 @@
   function initDOMListeners() {
     if (typeof document === 'undefined') return;
     const triggerBtn = document.getElementById('stick-calibrate-center-btn');
+    const swPreviewBtn = document.getElementById('stick-sw-preview-toggle-btn');
     const modal = document.getElementById('stick-calibration-modal');
     const closeBtn = document.getElementById('calib-close-btn');
     const cancelBtn = document.getElementById('calib-cancel-btn');
@@ -1014,44 +1292,67 @@
     const finishBtn = document.getElementById('calib-finish-btn');
     const clearProfileBtn = document.getElementById('calib-clear-profile-btn');
 
-    if (triggerBtn) {
+    if (triggerBtn && !triggerBtn.dataset.boundCalib) {
+      triggerBtn.dataset.boundCalib = 'true';
       triggerBtn.addEventListener('click', () => {
         openCalibrationModal();
       });
     }
-    if (closeBtn) {
+    if (swPreviewBtn && !swPreviewBtn.dataset.boundCalib) {
+      swPreviewBtn.dataset.boundCalib = 'true';
+      swPreviewBtn.addEventListener('click', () => {
+        const gp = getActiveBrowserGamepad();
+        if (!uiState.activeProfile && gp) {
+          uiState.activeProfile = CalibrationProfileStore.getProfileForGamepad(gp);
+        }
+        if (uiState.activeProfile) {
+          setSoftwarePreviewEnabled(!uiState.softwarePreviewEnabled);
+        }
+      });
+    }
+    if (closeBtn && !closeBtn.dataset.boundCalib) {
+      closeBtn.dataset.boundCalib = 'true';
       closeBtn.addEventListener('click', cancelOrCloseModal);
     }
-    if (cancelBtn) {
+    if (cancelBtn && !cancelBtn.dataset.boundCalib) {
+      cancelBtn.dataset.boundCalib = 'true';
       cancelBtn.addEventListener('click', cancelOrCloseModal);
     }
-    if (finishBtn) {
+    if (finishBtn && !finishBtn.dataset.boundCalib) {
+      finishBtn.dataset.boundCalib = 'true';
       finishBtn.addEventListener('click', cancelOrCloseModal);
     }
-    if (retryBtn) {
+    if (retryBtn && !retryBtn.dataset.boundCalib) {
+      retryBtn.dataset.boundCalib = 'true';
       retryBtn.addEventListener('click', () => {
         startSampling();
       });
     }
-    if (clearProfileBtn) {
+    if (clearProfileBtn && !clearProfileBtn.dataset.boundCalib) {
+      clearProfileBtn.dataset.boundCalib = 'true';
       clearProfileBtn.addEventListener('click', () => {
         const gp = getActiveBrowserGamepad();
         if (gp) {
           CalibrationProfileStore.removeProfileForGamepad(gp);
           uiState.activeProfile = null;
           uiState.lastResult = null;
+          uiState.profileExplicitlyApplied = false;
+          uiState.softwarePreviewEnabled = false;
           uiState.phase = 'IDLE';
+          renderSoftwarePreviewBanner();
           renderModalDynamicState(gp);
         }
       });
     }
-    if (modal) {
+    if (modal && !modal.dataset.boundCalib) {
+      modal.dataset.boundCalib = 'true';
       modal.addEventListener('click', (e) => {
         if (e.target === modal) cancelOrCloseModal();
       });
     }
 
     updateTriggerButtonState(getActiveBrowserGamepad());
+    renderSoftwarePreviewBanner();
   }
 
   if (typeof document !== 'undefined') {
@@ -1068,6 +1369,7 @@
     CALIBRATION_CONFIG,
     isCompatibleStickGamepad,
     buildDeviceKey,
+    resolveIdentityContext,
     inspectControllerCapabilities,
     computeMedian,
     computeMean,
@@ -1075,11 +1377,17 @@
     applyCalibrationOffset,
     isValidProfileRecord,
     CalibrationProfileStore,
+    isSamplingActive,
+    isSoftwarePreviewEnabled,
+    setSoftwarePreviewEnabled,
+    getSoftwareCorrectedAxes,
+    onControllerChanged,
     onFrameTick,
     updateTriggerButtonState,
     openCalibrationModal,
     cancelOrCloseModal,
     startSampling,
     renderModalStaticText,
+    getUiState: () => uiState,
   };
 });

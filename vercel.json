@@ -20,7 +20,7 @@
       ]
     },
     {
-      "source": "/(app.js|controllers-overlay.js|controllers-svg.js|style.css|index.html)",
+      "source": "/(app.js|controllers-overlay.js|controllers-svg.js|stick-calibration.js|stick-calibration.css|webhid-calibration.js|advanced-stick-diagnostics.js|trigger-full-travel.js|batch-manager.js|session-reset.js|style.css|index.html)",
       "headers": [
         {
           "key": "Cache-Control",
