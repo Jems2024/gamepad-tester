@@ -3318,6 +3318,11 @@ function fitPhotoStage() {
   const container = dom.photoViewBox;
   const wrapper = document.querySelector('.photo-stage-wrapper');
   if (!container || !wrapper) return;
+  if (window.innerWidth <= 1024 || window.innerHeight <= 560) {
+    wrapper.style.width = '100%';
+    wrapper.style.height = '100%';
+    return;
+  }
   const rect = container.getBoundingClientRect();
   const size = Math.floor(Math.min(rect.width, rect.height));
   if (size > 50) {

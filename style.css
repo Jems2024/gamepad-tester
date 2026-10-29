@@ -749,7 +749,9 @@ header h1 {
 }
 .trigger-stats-row {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
+  gap: 2px 6px;
   font-size: 0.62rem;
   color: var(--text-muted);
 }
@@ -786,6 +788,8 @@ header h1 {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 6px;
+  min-width: 0;
   padding: 6px 9px;
   background: var(--surface2);
   border: 1px solid var(--border);
@@ -858,13 +862,15 @@ header h1 {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 82px;
+  flex: 1;
+  min-width: 0;
 }
 .btn-chip.pressed .btn-name { color: #fff; }
 .chip-check {
   font-size: 0.68rem;
   font-weight: 800;
   color: var(--text-muted);
+  flex-shrink: 0;
 }
 
 /* ── 9. CERTIFICATION VERDICT CARD ─────────────────────────── */
@@ -1140,13 +1146,379 @@ header h1 {
 .mini-btn-danger { background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.4); color: #ef4444; padding: 2px 6px; font-size: 0.68rem; border-radius: 4px; cursor: pointer; }
 .mini-btn-danger:hover { background: #ef4444; color: #fff; }
 
-/* ── 13. RESPONSIVE BEHAVIOR ───────────────────────────────── */
-@media (max-width: 900px) {
-  body { height: auto; max-height: none; overflow-y: auto; }
-  .app-layout { grid-template-columns: 1fr; height: auto; }
-  .controller-stage { min-height: 360px; max-height: 420px; }
-  .sticks-grid { grid-template-columns: 1fr; }
-  .buttons-grid { grid-template-columns: repeat(3, 1fr); }
+/* ── 13. RESPONSIVE BEHAVIOR (MOBILE, IPHONE 17 PRO MAX & TABLET) ── */
+@media (max-width: 1024px), (max-height: 560px) {
+  html, body {
+    height: auto;
+    max-height: none;
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  body {
+    padding:
+      max(8px, env(safe-area-inset-top, 8px))
+      max(10px, env(safe-area-inset-right, 10px))
+      calc(68px + env(safe-area-inset-bottom, 0px))
+      max(10px, env(safe-area-inset-left, 10px));
+    gap: 8px;
+  }
+
+  header {
+    height: auto;
+    flex-wrap: wrap;
+    padding: 8px 10px;
+    gap: 8px;
+  }
+
+  .header-left {
+    flex-wrap: wrap;
+    min-width: 0;
+  }
+
+  .header-controls {
+    flex-wrap: wrap;
+  }
+
+  .workflow-bar {
+    height: auto;
+    flex-wrap: wrap;
+    padding: 6px 10px;
+    gap: 6px;
+  }
+
+  .app-layout {
+    grid-template-columns: 1fr;
+    height: auto;
+    gap: 10px;
+  }
+
+  .stage-section,
+  .sidebar-section {
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+    padding-right: 0;
+  }
+
+  .controller-stage {
+    height: auto;
+    min-height: 180px;
+    max-height: none;
+    padding: 12px 10px;
+  }
+
+  .empty-state-view {
+    height: auto;
+    padding: 12px 10px;
+    gap: 10px;
+  }
+
+  .empty-gamepad-svg-wrap {
+    width: 130px;
+  }
+
+  .empty-gamepad-svg,
+  .empty-gamepad-img {
+    max-height: 96px;
+  }
+
+  .photo-view-box {
+    width: 100%;
+    max-width: 340px;
+    aspect-ratio: 1 / 1;
+    height: auto;
+    flex: 0 0 auto;
+    margin: 0 auto;
+  }
+
+  .photo-stage-wrapper {
+    width: 100% !important;
+    height: 100% !important;
+    aspect-ratio: 1 / 1;
+  }
+
+  .buttons-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .floating-lang {
+    bottom: max(14px, env(safe-area-inset-bottom, 14px));
+    left: max(12px, env(safe-area-inset-left, 12px));
+  }
+}
+
+@media (max-width: 640px) {
+  header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 10px;
+  }
+
+  .header-left {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px 8px;
+    width: 100%;
+  }
+
+  header h1 {
+    font-size: 0.96rem;
+  }
+
+  .item-code-wrap {
+    margin-left: auto;
+    padding: 3px 8px;
+  }
+
+  .item-code-wrap input {
+    font-size: 16px;
+    width: 76px;
+    padding: 2px 6px;
+  }
+
+  .status-badge {
+    order: 3;
+    width: 100%;
+    justify-content: center;
+    padding: 4px 10px;
+    font-size: 0.72rem;
+    overflow: hidden;
+  }
+
+  #status-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .header-controls {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 6px;
+    width: 100%;
+  }
+
+  .ctrl-select-wrap {
+    grid-column: span 2;
+    width: 100%;
+  }
+
+  .ctrl-select-wrap select,
+  #model-select {
+    width: 100%;
+    max-width: none;
+    min-height: 34px;
+    font-size: 0.78rem;
+    padding: 4px 8px;
+  }
+
+  #model-select {
+    grid-column: span 2;
+  }
+
+  .header-controls .action-btn,
+  .header-controls .action-btn-primary,
+  .header-controls .action-btn-ghost {
+    justify-content: center;
+    width: 100%;
+    min-height: 34px;
+    padding: 5px 4px;
+    font-size: 0.70rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Guided Workflow Bar on Mobile */
+  .workflow-bar {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 8px 10px;
+    gap: 6px;
+  }
+
+  .workflow-steps {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4px;
+    width: 100%;
+  }
+
+  .step-sep {
+    display: none;
+  }
+
+  .step-chip {
+    flex: 1 1 auto;
+    justify-content: center;
+    padding: 4px 7px;
+    font-size: 0.68rem;
+    background: var(--surface2);
+    border-color: var(--border-subtle);
+  }
+
+  .guided-banner {
+    text-align: center;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    padding-top: 5px;
+    border-top: 1px solid var(--border-subtle);
+  }
+
+  .guided-text {
+    font-size: 0.74rem;
+    line-height: 1.35;
+    display: block;
+  }
+
+  /* Analog Sticks Card on iPhone 17 Pro Max */
+  .card-sticks-large .card-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 7px;
+    padding: 8px 10px;
+  }
+
+  .card-sticks-large .header-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+    width: 100%;
+  }
+
+  .card-sticks-large .header-actions button {
+    width: 100%;
+    justify-content: center;
+    min-height: 32px;
+    padding: 5px 6px;
+    font-size: 0.70rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .sticks-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .stick-panel {
+    padding: 6px;
+    min-width: 0;
+  }
+
+  .stick-panel-header {
+    gap: 4px;
+  }
+
+  .stick-tag {
+    font-size: 0.62rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .stick-verdict-badge {
+    font-size: 0.58rem;
+    padding: 2px 5px;
+    flex-shrink: 0;
+  }
+
+  .stick-canvas-large {
+    max-width: 148px;
+  }
+
+  .stick-metrics-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 4px;
+    padding: 4px;
+  }
+
+  /* Triggers Card */
+  .triggers-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .trigger-panel {
+    min-width: 0;
+    padding: 6px 8px;
+  }
+
+  /* Buttons Matrix Card */
+  .buttons-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .btn-chip {
+    min-height: 36px;
+    padding: 6px 10px;
+    font-size: 0.74rem;
+  }
+
+  /* Certification Verdict Card */
+  .card-verdict {
+    padding: 8px 10px;
+  }
+
+  .verdict-banner {
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: space-between;
+  }
+
+  /* Collapsible Technical Details Drawer */
+  .raw-meta-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .raw-streams-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* History Modal */
+  .modal-backdrop {
+    padding: 10px;
+  }
+
+  .modal-card {
+    max-width: 100%;
+    max-height: 90dvh;
+  }
+
+  .history-controls-row {
+    flex-wrap: wrap;
+  }
+
+  .history-controls-row input {
+    flex: 1 1 100%;
+    min-height: 34px;
+    font-size: 16px;
+  }
+
+  .history-controls-row button {
+    flex: 1 1 calc(50% - 4px);
+    justify-content: center;
+    min-height: 32px;
+  }
+
+  .history-table th,
+  .history-table td {
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 370px) {
+  .sticks-grid,
+  .triggers-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* ── 14. CLEAN A4 PRINTABLE REPORT (SINGLE-PAGE A4 FIT) ────── */
