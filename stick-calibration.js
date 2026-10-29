@@ -938,7 +938,7 @@
       const modal = document.getElementById('stick-calibration-modal');
       if (modal) modal.style.display = 'flex';
     }
-    startSampling();
+    renderModalDynamicState(gp);
   }
 
   function onFrameTick(gp, modelHint) {

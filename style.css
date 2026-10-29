@@ -1146,6 +1146,340 @@ header h1 {
 .mini-btn-danger { background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.4); color: #ef4444; padding: 2px 6px; font-size: 0.68rem; border-radius: 4px; cursor: pointer; }
 .mini-btn-danger:hover { background: #ef4444; color: #fff; }
 
+/* ── 12B. PRODUCTIVITY BAR, DISCONNECT BANNER & ADVANCED MODULES ── */
+.disconnect-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 6px 12px;
+  background: rgba(239, 68, 68, 0.16);
+  border: 1px solid var(--red);
+  border-radius: var(--radius);
+  color: #fecaca;
+  font-size: 0.72rem;
+  flex-shrink: 0;
+}
+.disconnect-banner-content {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+}
+.disconnect-banner-content strong {
+  color: #fff;
+}
+
+.productivity-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  padding: 5px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  flex-shrink: 0;
+}
+.prod-left,
+.prod-center,
+.prod-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.prod-sku-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  padding: 2px 7px;
+  border-radius: 5px;
+  font-size: 0.69rem;
+}
+.prod-sku-label {
+  font-weight: 700;
+  color: var(--text-muted);
+}
+#batch-sku-input {
+  background: var(--surface3);
+  border: 1px solid var(--border);
+  color: var(--cyan);
+  font-family: Consolas, monospace;
+  font-weight: 700;
+  font-size: 0.74rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  width: 110px;
+  outline: none;
+}
+.prod-notes-input {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 0.70rem;
+  padding: 3px 8px;
+  border-radius: 5px;
+  width: 150px;
+  outline: none;
+}
+.prod-status-lbl {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+.batch-global-badge {
+  font-size: 0.74rem;
+  font-weight: 900;
+  padding: 2px 9px;
+  border-radius: 4px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.batch-status-incomplete {
+  background: rgba(245, 158, 11, 0.16);
+  color: var(--yellow);
+  border: 1px solid var(--yellow);
+}
+.batch-status-pass {
+  background: rgba(16, 185, 129, 0.22);
+  color: var(--green);
+  border: 1px solid var(--green);
+  box-shadow: 0 0 8px var(--green-glow);
+}
+.batch-status-fail {
+  background: rgba(239, 68, 68, 0.24);
+  color: var(--red);
+  border: 1px solid var(--red);
+}
+.prod-status-reasons {
+  font-size: 0.66rem;
+  color: var(--text-muted);
+  max-width: 340px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.batch-save-feedback {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--green);
+  transition: opacity 0.25s ease;
+}
+
+/* Step 1 Full-Travel Subpanel inside Triggers Card */
+.full-travel-subpanel {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px dashed var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.full-travel-head {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+.full-travel-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.full-travel-item {
+  background: var(--surface3);
+  border: 1px solid var(--border-subtle);
+  border-radius: 5px;
+  padding: 4px 8px;
+  font-size: 0.64rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.full-travel-row,
+.full-travel-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.full-travel-detail {
+  color: var(--text-muted);
+  font-size: 0.62rem;
+}
+
+/* Step 3 & 4 Advanced Joystick Diagnostics & WebHID Card */
+.adv-diag-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.adv-circ-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.adv-circ-panel {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.adv-circ-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  font-size: 0.68rem;
+}
+.adv-circ-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.adv-circ-canvas {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: #0d0e15;
+}
+.adv-circ-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 0.64rem;
+  min-width: 0;
+}
+.adv-circ-band-note {
+  color: var(--cyan);
+  font-size: 0.61rem;
+  margin-top: 2px;
+}
+.adv-formula-note {
+  font-size: 0.62rem;
+  color: var(--text-muted);
+  background: var(--surface2);
+  border: 1px solid var(--border-subtle);
+  padding: 5px 8px;
+  border-radius: 5px;
+  line-height: 1.35;
+}
+.adv-polling-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 12px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  padding: 5px 8px;
+  border-radius: 5px;
+  font-size: 0.65rem;
+}
+.adv-polling-disclaimer {
+  width: 100%;
+  font-size: 0.60rem;
+  color: var(--text-muted);
+}
+.webhid-info-box {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.64rem;
+}
+.webhid-info-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px 8px;
+}
+.webhid-info-note {
+  color: var(--text-muted);
+  font-size: 0.62rem;
+}
+.webhid-mode-tabs {
+  display: flex;
+  gap: 6px;
+}
+.webhid-mode-tabs .action-btn.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+.webhid-steps-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px;
+  font-size: 0.68rem;
+}
+.webhid-step-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 3px 6px;
+  border-radius: 4px;
+}
+.webhid-step-row.active {
+  background: rgba(0, 229, 255, 0.12);
+  border: 1px solid rgba(0, 229, 255, 0.35);
+}
+
+/* Inline Circularity Telemetry inside main Stick Panels */
+.inline-circ-strip {
+  width: 100%;
+  margin-top: 4px;
+  padding: 5px 8px;
+  background: var(--surface3);
+  border: 1px solid rgba(0, 229, 255, 0.25);
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 0.65rem;
+}
+.inline-circ-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+.inline-circ-title {
+  font-weight: 700;
+  color: var(--cyan);
+}
+.inline-circ-metrics {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.inline-circ-val {
+  font-family: Consolas, monospace;
+  font-weight: 700;
+  color: #f3f3f7;
+}
+.inline-circ-band {
+  font-size: 0.60rem;
+  color: var(--text-muted);
+}
+
 /* ── 13. RESPONSIVE BEHAVIOR (MOBILE, IPHONE 17 PRO MAX & TABLET) ── */
 @media (max-width: 1024px), (max-height: 560px) {
   html, body {
@@ -1512,6 +1846,20 @@ header h1 {
   .history-table td {
     white-space: nowrap;
   }
+
+  .adv-circ-grid,
+  .full-travel-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .webhid-info-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .prod-status-reasons {
+    max-width: 100%;
+    white-space: normal;
+  }
 }
 
 @media (max-width: 370px) {
@@ -1547,12 +1895,15 @@ header h1 {
     print-color-adjust: exact !important;
   }
   header,
+  .disconnect-banner,
+  .productivity-bar,
   .workflow-bar,
   main.app-layout,
   .floating-lang,
   .modal-backdrop,
   #history-modal,
-  #stick-calibration-modal {
+  #stick-calibration-modal,
+  #webhid-calibration-modal {
     display: none !important;
   }
   #printable-report.print-sheet {

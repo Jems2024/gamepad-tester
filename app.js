@@ -1391,6 +1391,22 @@ function processLiveGamepadInput(gp) {
 
   // 5. Update Photo overlay interactive highlights
   highlightActiveOverlay(gp, axes);
+
+  // 6. Notify Independent Diagnostic, WebHID & Batch Modules (reusing current frame's gp & axes)
+  if (typeof window !== 'undefined') {
+    if (window.TriggerFullTravelValidator) {
+      window.TriggerFullTravelValidator.onFrameTick(gp);
+    }
+    if (window.AdvancedStickDiagnostics) {
+      window.AdvancedStickDiagnostics.onFrameTick(gp, axes, now);
+    }
+    if (window.WebHIDCalibrationModule) {
+      window.WebHIDCalibrationModule.onFrameTick(gp, axes);
+    }
+    if (window.BatchManager) {
+      window.BatchManager.onFrameTick(gp, axes);
+    }
+  }
 }
 
 function processStickData(axes, now) {
@@ -1566,6 +1582,15 @@ function finishStickDiagnostic(stick) {
     }
   }
 
+  // Automatic progression from Left Stick -> Right Stick during Stick Suite or Step 3
+  if (stick === 'l' && !state.stickMetrics.r.completed) {
+    state.forcedStep = 4;
+    startStickPhase('r', 'TESTING');
+  } else if (stick === 'r' && state.stickMetrics.l.completed) {
+    state.suite.running = false;
+    state.forcedStep = 5;
+  }
+
   updateWorkflowProgress();
   updateOverallVerdict();
 }
@@ -1638,15 +1663,16 @@ function updateStickPhaseStateMachine(stick, x, y, dist, angle, now) {
     else if (!isLeft && dom.stickRSnapVal) dom.stickRSnapVal.textContent = `${elapsedReturn}ms (${dist.toFixed(3)})`;
   }
 
-  // 3. Parallel Continuous Movement & 8 Directional Zones Analysis
-  // Non-sequential: monitors available inputs in parallel with buttons/triggers
+  // 3. Guided Stick Movement & 8 Directional Zones Analysis
+  // Waits until the user explicitly starts the Stick Suite ("⚡ Suite Sticks") or clicks Step 3/4
   const dirAngles = [0, 45, 90, 135, 180, 225, 270, 315];
+  const isStickTestingActive = (m.phase === 'TESTING' || m.phase === 'MOVE' || m.phase === 'REST');
 
-  if (dist >= 0.45) {
+  if (isStickTestingActive && dist >= 0.45) {
     m.hasMoved = true;
     m.lastActiveMoveTime = now;
     if (!m.moveStartTime) m.moveStartTime = now;
-    if (m.phase === 'IDLE') {
+    if (m.phase !== 'TESTING') {
       m.phase = 'TESTING';
       if (badgeEl && !m.completed) {
         badgeEl.className = 'stick-verdict-badge badge-testing';
@@ -2120,14 +2146,23 @@ function updateButtonsSummaryBadge() {
 // ─────────────────────────────────────────────────────────────
 function startDriftCapture() {
   resetStickDiagnostics('l');
+  state.forcedStep = 3;
   startStickPhase('l', 'TESTING');
+  updateWorkflowProgress();
 }
 
 function startFullSuite() {
   resetStickDiagnostics('l');
   resetStickDiagnostics('r');
+  state.stickHistoryL = [];
+  state.stickHistoryR = [];
+  state.suite.running = true;
   state.forcedStep = 3;
+  if (typeof window !== 'undefined' && window.AdvancedStickDiagnostics) {
+    window.AdvancedStickDiagnostics.resetAll();
+  }
   startStickPhase('l', 'TESTING');
+  updateWorkflowProgress();
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -2657,12 +2692,28 @@ function updateWorkflowProgress() {
 
   // Determine current active step
   let activeStep = 1;
-  if (state.forcedStep) activeStep = state.forcedStep;
-  else if (!buttonsDone) activeStep = 1;
-  else if (!triggersDone) activeStep = 2;
-  else if (!stickLDone) activeStep = 3;
-  else if (!stickRDone) activeStep = 4;
-  else activeStep = 5;
+  if (state.forcedStep) {
+    if (state.forcedStep === 3 && stickLDone && !stickRDone) {
+      state.forcedStep = 4;
+      if (sr.phase === 'IDLE') startStickPhase('r', 'TESTING');
+    } else if (state.forcedStep === 4 && stickRDone && stickLDone) {
+      state.forcedStep = 5;
+      state.suite.running = false;
+    }
+    activeStep = state.forcedStep;
+  } else if (!buttonsDone) {
+    activeStep = 1;
+  } else if (!triggersDone) {
+    activeStep = 2;
+  } else if (!stickLDone) {
+    activeStep = 3;
+    if (sl.phase === 'IDLE') startStickPhase('l', 'TESTING');
+  } else if (!stickRDone) {
+    activeStep = 4;
+    if (sr.phase === 'IDLE') startStickPhase('r', 'TESTING');
+  } else {
+    activeStep = 5;
+  }
 
   // Step 1: Buttons
   if (dom.stepBtn) {
@@ -2701,14 +2752,14 @@ function updateWorkflowProgress() {
     } else if (activeStep === 2) {
       dom.guidedInstructionText.textContent = t('instructionStep2');
     } else if (activeStep === 3) {
-      if (sl.phase === 'TESTING' || sl.phase === 'MOVE') {
+      if (sl.phase === 'TESTING' || sl.phase === 'MOVE' || sl.phase === 'REST') {
         const countTxt = (sl.greenCount === 8) ? '8/8 ✓' : `${sl.coverage || 0}/8`;
         dom.guidedInstructionText.textContent = `${t('stickLeftLabel')} — ${t('promptStickMove')} (${countTxt})`;
       } else {
         dom.guidedInstructionText.textContent = t('instructionStep3');
       }
     } else if (activeStep === 4) {
-      if (sr.phase === 'TESTING' || sr.phase === 'MOVE') {
+      if (sr.phase === 'TESTING' || sr.phase === 'MOVE' || sr.phase === 'REST') {
         const countTxt = (sr.greenCount === 8) ? '8/8 ✓' : `${sr.coverage || 0}/8`;
         dom.guidedInstructionText.textContent = `${t('stickRightLabel')} — ${t('promptStickMove')} (${countTxt})`;
       } else {
@@ -3187,6 +3238,10 @@ function initEventListeners() {
       resetStickDiagnostics('r');
       state.stickHistoryL = [];
       state.stickHistoryR = [];
+      state.suite.running = false;
+      if (typeof window !== 'undefined' && window.AdvancedStickDiagnostics) {
+        window.AdvancedStickDiagnostics.resetAll();
+      }
       if (dom.stickLCircVal) dom.stickLCircVal.textContent = '0/8';
       if (dom.stickRCircVal) dom.stickRCircVal.textContent = '0/8';
       if (dom.stickLSnapVal) dom.stickLSnapVal.textContent = '—';
@@ -3215,7 +3270,7 @@ function initEventListeners() {
     dom.stepStickL.addEventListener('click', () => {
       state.forcedStep = 3;
       resetStickDiagnostics('l');
-      startStickPhase('l', 'REST');
+      startStickPhase('l', 'TESTING');
       updateWorkflowProgress();
     });
   }
@@ -3223,7 +3278,7 @@ function initEventListeners() {
     dom.stepStickR.addEventListener('click', () => {
       state.forcedStep = 4;
       resetStickDiagnostics('r');
-      startStickPhase('r', 'REST');
+      startStickPhase('r', 'TESTING');
       updateWorkflowProgress();
     });
   }

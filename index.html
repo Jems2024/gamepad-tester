@@ -50,12 +50,48 @@
     </select>
 
     <!-- Essential Actions with Icons -->
+    <button id="btn-next-controller-reset" class="action-btn" title="Iniciar nueva sesión para el siguiente mando sin recargar"><span>⏭</span> <span>Next Controller / Reset Test</span></button>
+    <button id="btn-webhid-calibrate" class="action-btn" title="Calibración de Joysticks e Inspección WebHID"><span>🔌</span> <span>Calibrate Joysticks (WebHID)</span></button>
     <button id="btn-save-diag" class="action-btn" title="Guardar diagnóstico en historial"><span class="icon">💾</span> <span data-i18n="btnSaveDiag">Guardar</span></button>
     <button id="btn-print-report" class="action-btn-primary" title="Imprimir informe oficial A4"><span class="icon">🖨</span> <span data-i18n="btnPrintReport">Imprimir</span></button>
     <button id="btn-open-history" class="action-btn" title="Ver historial de revisiones"><span class="icon">🕘</span> <span data-i18n="btnHistory">Historial</span></button>
     <button id="btn-toggle-details" class="action-btn-ghost" title="Desplegar diagnóstico técnico avanzado"><span class="icon">⚙</span> <span data-i18n="btnDetails">Detalles</span></button>
   </div>
 </header>
+
+<!-- ── AUTOMATIC DISCONNECT NOTIFICATION BANNER (STEP 2) ──────── -->
+<div class="disconnect-banner" id="disconnect-notification-banner" style="display:none;" role="alert" aria-live="assertive">
+  <div class="disconnect-banner-content">
+    <strong id="disconnect-banner-title">⚠ Controller disconnected during test</strong>
+    <span id="disconnect-banner-sub">Active measurements for this device were stopped to prevent stale readings. Saved batch records remain intact.</span>
+  </div>
+  <button id="disconnect-banner-dismiss" class="mini-btn" title="Dismiss notification">✕</button>
+</div>
+
+<!-- ── LOCAL BATCH TESTING & PRODUCTIVITY BAR (STEP 5) ───────── -->
+<section class="productivity-bar" id="batch-productivity-bar" aria-label="Technician Batch Productivity Bar">
+  <div class="prod-left">
+    <label class="prod-sku-wrap" for="batch-sku-input">
+      <span class="prod-sku-label">Controller SKU / ID:</span>
+      <input id="batch-sku-input" type="text" placeholder="Scan or type SKU / ID..." value="18427" maxlength="40" autocomplete="off" spellcheck="false">
+    </label>
+    <input id="batch-notes-input" class="prod-notes-input" type="text" placeholder="Quick notes (optional)..." maxlength="120" autocomplete="off">
+  </div>
+
+  <div class="prod-center" role="status" aria-live="polite">
+    <span class="prod-status-lbl">Global Status:</span>
+    <span id="batch-global-status-badge" class="batch-global-badge batch-status-incomplete">TEST INCOMPLETE</span>
+    <span id="batch-global-status-reasons" class="prod-status-reasons">Buttons: 0/16 verified • Triggers &lt; 0.99 • Center unmeasured</span>
+  </div>
+
+  <div class="prod-actions">
+    <button id="batch-next-controller-btn" class="mini-btn" title="Reset temporary session for next controller">⏭ Next Controller / Reset Test</button>
+    <button id="btn-save-batch" class="action-btn-primary" title="Save current controller record to local batch">💾 Save to Batch</button>
+    <button id="btn-export-batch-csv" class="mini-btn" title="Export all saved batch records as Excel-compatible CSV">📥 Export Batch (CSV)</button>
+    <button id="btn-toggle-batch-panel" class="mini-btn" title="Toggle Batch History Table">📦 Batch (<span id="batch-count-badge">0 saved</span>)</button>
+    <span id="batch-save-feedback" class="batch-save-feedback" aria-live="polite"></span>
+  </div>
+</section>
 
 <!-- ── GUIDED WORKFLOW STEP PROGRESS BAR ─────────────────────── -->
 <div class="workflow-bar">
@@ -196,6 +232,20 @@
                 <span class="metric-val" id="stick-l-circ-val">0/8</span>
               </div>
             </div>
+
+            <!-- Inline Circularity Telemetry (36/72 Sectors & Avg Error %) -->
+            <div class="inline-circ-strip" id="inline-circ-strip-l">
+              <div class="inline-circ-top">
+                <span class="inline-circ-title">📐 Circularidad (Avg Error %):</span>
+                <span id="inline-circ-l-badge" class="stick-verdict-badge badge-neutral">PENDING</span>
+                <button id="inline-circ-reset-l" class="mini-btn" title="Reiniciar circularidad Stick Izquierdo">🔄</button>
+              </div>
+              <div class="inline-circ-metrics">
+                <span><strong>Avg Error:</strong> <span id="inline-circ-l-err" class="inline-circ-val">—</span></span>
+                <span><strong>Cobertura:</strong> <span id="inline-circ-l-cov" class="inline-circ-val">0/36 (0%)</span></span>
+              </div>
+              <div class="inline-circ-band" id="inline-circ-l-band">Gira 360° completos para medir circularidad</div>
+            </div>
           </div>
 
           <!-- Right Stick Panel -->
@@ -239,6 +289,20 @@
                 <span class="metric-label">8 Zonas:</span>
                 <span class="metric-val" id="stick-r-circ-val">0/8</span>
               </div>
+            </div>
+
+            <!-- Inline Circularity Telemetry (36/72 Sectors & Avg Error %) -->
+            <div class="inline-circ-strip" id="inline-circ-strip-r">
+              <div class="inline-circ-top">
+                <span class="inline-circ-title">📐 Circularidad (Avg Error %):</span>
+                <span id="inline-circ-r-badge" class="stick-verdict-badge badge-neutral">PENDING</span>
+                <button id="inline-circ-reset-r" class="mini-btn" title="Reiniciar circularidad Stick Derecho">🔄</button>
+              </div>
+              <div class="inline-circ-metrics">
+                <span><strong>Avg Error:</strong> <span id="inline-circ-r-err" class="inline-circ-val">—</span></span>
+                <span><strong>Cobertura:</strong> <span id="inline-circ-r-cov" class="inline-circ-val">0/36 (0%)</span></span>
+              </div>
+              <div class="inline-circ-band" id="inline-circ-r-band">Gira 360° completos para medir circularidad</div>
             </div>
           </div>
 
@@ -293,6 +357,37 @@
           </div>
 
         </div>
+
+        <!-- Step 1: Dedicated Analog Trigger Full-Travel Validation (>= 0.99) -->
+        <div class="full-travel-subpanel" id="trigger-full-travel-panel">
+          <div class="full-travel-head">
+            <span id="full-travel-module-title">Full-Travel Validation (Threshold ≥ 0.99)</span>
+          </div>
+          <div class="full-travel-grid">
+            <div class="full-travel-item">
+              <div class="full-travel-row">
+                <strong>L2 / LT Full Travel:</strong>
+                <span id="full-travel-l2-badge" class="trigger-badge badge-neutral">PENDING</span>
+              </div>
+              <div class="full-travel-meta">
+                <span>Max Recorded: <strong id="full-travel-l2-max">0.000</strong></span>
+                <span id="full-travel-l2-mode">No fractional steps observed yet</span>
+              </div>
+              <div class="full-travel-detail" id="full-travel-l2-detail">Pull trigger fully to verify ≥ 0.99 travel</div>
+            </div>
+            <div class="full-travel-item">
+              <div class="full-travel-row">
+                <strong>R2 / RT Full Travel:</strong>
+                <span id="full-travel-r2-badge" class="trigger-badge badge-neutral">PENDING</span>
+              </div>
+              <div class="full-travel-meta">
+                <span>Max Recorded: <strong id="full-travel-r2-max">0.000</strong></span>
+                <span id="full-travel-r2-mode">No fractional steps observed yet</span>
+              </div>
+              <div class="full-travel-detail" id="full-travel-r2-detail">Pull trigger fully to verify ≥ 0.99 travel</div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -321,6 +416,127 @@
         <span class="verdict-label" data-i18n="lblOverallVerdict">CERTIFICACIÓN TÉCNICA:</span>
         <span class="verdict-stamp stamp-pending" id="overall-verdict-stamp" data-i18n="verdictPending">PENDIENTE</span>
         <button id="btn-quick-save" class="action-btn-primary" style="margin-left:auto;"><span class="icon">💾</span> <span data-i18n="btnSaveDiag">Guardar</span></button>
+      </div>
+    </div>
+
+    <!-- 4B. Advanced Joystick Diagnostics (Circularity 36/72 Sectors, Update Frequency Hz & Jitter) + WebHID Panel -->
+    <div class="card card-adv-diag" id="adv-diagnostics-card">
+      <div class="card-header">
+        <div class="header-title-group">
+          <span class="icon">📐</span>
+          <span>Advanced Joystick Diagnostics (Circularity, Update Frequency &amp; WebHID)</span>
+        </div>
+        <div class="header-actions">
+          <button id="btn-webhid-connect" class="mini-btn" title="Connect controller via WebHID to inspect VID/PID and descriptors">🔌 Inspect WebHID Device</button>
+        </div>
+      </div>
+      <div class="card-body adv-diag-body">
+        <div class="adv-circ-grid">
+          <!-- Left Stick Circularity -->
+          <div class="adv-circ-panel">
+            <div class="adv-circ-header">
+              <strong>Left Stick Circularity</strong>
+              <span id="adv-circ-l-badge" class="stick-verdict-badge badge-neutral">PENDING</span>
+              <button id="adv-circ-reset-l" class="mini-btn" title="Reset Left Stick Circularity Trace">🔄 Reset L</button>
+            </div>
+            <div class="adv-circ-content">
+              <canvas id="adv-circ-canvas-l" class="adv-circ-canvas" width="130" height="130"></canvas>
+              <div class="adv-circ-stats">
+                <div><strong>Status:</strong> <span id="adv-circ-l-status">PENDING</span></div>
+                <div><strong>X/Y:</strong> <span id="adv-circ-l-xy">X: +0.000 | Y: +0.000</span></div>
+                <div><strong>Angular Coverage:</strong> <span id="adv-circ-l-cov">0/36 (0%)</span></div>
+                <div><strong>Avg Error (%):</strong> <span id="adv-circ-l-err">—</span></div>
+                <div><strong>Steady Jitter (1s):</strong> <span id="adv-jitter-l-val">Waiting for samples…</span></div>
+                <div class="adv-circ-band-note" id="adv-circ-l-band">Pending 360° rotation</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Stick Circularity -->
+          <div class="adv-circ-panel">
+            <div class="adv-circ-header">
+              <strong>Right Stick Circularity</strong>
+              <span id="adv-circ-r-badge" class="stick-verdict-badge badge-neutral">PENDING</span>
+              <button id="adv-circ-reset-r" class="mini-btn" title="Reset Right Stick Circularity Trace">🔄 Reset R</button>
+            </div>
+            <div class="adv-circ-content">
+              <canvas id="adv-circ-canvas-r" class="adv-circ-canvas" width="130" height="130"></canvas>
+              <div class="adv-circ-stats">
+                <div><strong>Status:</strong> <span id="adv-circ-r-status">PENDING</span></div>
+                <div><strong>X/Y:</strong> <span id="adv-circ-r-xy">X: +0.000 | Y: +0.000</span></div>
+                <div><strong>Angular Coverage:</strong> <span id="adv-circ-r-cov">0/36 (0%)</span></div>
+                <div><strong>Avg Error (%):</strong> <span id="adv-circ-r-err">—</span></div>
+                <div><strong>Steady Jitter (1s):</strong> <span id="adv-jitter-r-val">Waiting for samples…</span></div>
+                <div class="adv-circ-band-note" id="adv-circ-r-band">Pending 360° rotation</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="adv-formula-note">
+          <strong>Avg Error (%) Formula &amp; Browser Note:</strong>
+          Computed as <code>(1 / N_sampled) * Σ |Math.hypot(x, y) - 1.0| × 100</code> across 36 (or 72) angular sectors without fabricating unsampled sectors. Browser W3C Gamepad API normalizes and clamps each axis to <code>[-1.0, +1.0]</code>, which affects diagonal over-travel readings. Reference bands (Green 7–12%, Yellow &lt;3% or 13–16%, Intermediate 3–&lt;7% &amp; &gt;16–17%, Red &gt;17%) are geometric indicators and do not by themselves prove authenticity, Hall-effect, or potentiometer hardware.
+        </div>
+
+        <!-- 5.2 Application-Observed Update Frequency & Signal Stability -->
+        <div class="adv-polling-bar">
+          <div><strong>App-Observed Update Freq:</strong> <span id="adv-poll-hz">—</span></div>
+          <div><strong>Avg Interval:</strong> <span id="adv-poll-interval">—</span></div>
+          <div><strong>Timing Variability:</strong> <span id="adv-poll-var">—</span></div>
+          <div><strong>Signal Stability:</strong> <span id="adv-poll-stability">PENDING</span></div>
+          <div class="adv-polling-disclaimer">Note: Measured in JS via <code>performance.now()</code> / <code>gamepad.timestamp</code> (application-observed update rate, not guaranteed physical USB polling rate).</div>
+        </div>
+
+        <!-- 6.1 & 6.2 WebHID Device Information & Compatibility Status -->
+        <div class="webhid-info-box" id="webhid-device-info-panel">
+          <div class="webhid-info-grid">
+            <div><strong>WebHID Device:</strong> <span id="webhid-info-name">—</span></div>
+            <div><strong>VID:</strong> <span id="webhid-info-vid">—</span></div>
+            <div><strong>PID:</strong> <span id="webhid-info-pid">—</span></div>
+            <div><strong>Interface Status:</strong> <span id="webhid-info-interface">Not connected via WebHID</span></div>
+            <div><strong>Connection Type:</strong> <span id="webhid-info-conntype">Not determined</span></div>
+            <div><strong>Supported Ops:</strong> <span id="webhid-info-ops">Gamepad API Read + Local Software Profile</span></div>
+            <div><strong>Protocol Status:</strong> <span id="webhid-info-proto">Protocol not supported.</span></div>
+            <div><strong>Verification Status:</strong> <span id="webhid-info-auth">Authenticity not verified.</span></div>
+          </div>
+          <div class="webhid-info-note" id="webhid-info-note">Connect a controller via WebHID to inspect descriptors, or use "Calibrate Joysticks (WebHID)".</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4C. Local Batch History Panel (Step 5.5) -->
+    <div class="card card-batch-history" id="batch-history-card" style="display:none;">
+      <div class="card-header">
+        <div class="header-title-group">
+          <span class="icon">📦</span>
+          <span>Saved Batch Controllers (Local Storage)</span>
+        </div>
+        <div class="header-actions">
+          <button id="btn-clear-batch" class="mini-btn-danger" title="Clear all batch records (requires confirmation)">🗑 Clear Batch</button>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="history-table-wrap">
+          <table class="history-table">
+            <thead>
+              <tr>
+                <th>SKU / ID</th>
+                <th>ISO Date</th>
+                <th>Device</th>
+                <th>Result</th>
+                <th>Buttons</th>
+                <th>Triggers (≥0.99)</th>
+                <th>Circularity (L/R)</th>
+                <th>Center (&lt;0.06)</th>
+                <th>Obs. Freq</th>
+                <th>Notes</th>
+              </tr>
+            </thead>
+            <tbody id="batch-history-table-body">
+              <tr><td colspan="10" style="text-align:center;color:var(--text-muted);padding:10px;">No controllers saved in current batch yet.</td></tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
 
@@ -525,6 +741,84 @@
   </div>
 </div>
 
+<!-- ── WEBHID DUAL CALIBRATION MODAL (STEP 4.3) ──────────────── -->
+<div class="modal-backdrop" id="webhid-calibration-modal" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="webhid-calib-modal-title">
+  <div class="modal-card calib-modal-card">
+    <div class="modal-header">
+      <div class="modal-title">
+        <span>🔌</span>
+        <span id="webhid-calib-modal-title">Calibrate Joysticks (WebHID) — Center &amp; Guided Endpoint Calibration</span>
+      </div>
+      <button id="webhid-modal-close" class="modal-close-btn" aria-label="Close">✕</button>
+    </div>
+    <div class="calib-modal-body">
+      <div class="webhid-mode-tabs">
+        <button id="webhid-tab-mode1" class="action-btn active">Mode 1 — Quick Center Calibration</button>
+        <button id="webhid-tab-mode2" class="action-btn">Mode 2 — Guided Endpoint Calibration (7 Steps)</button>
+      </div>
+
+      <!-- Mode 1: Quick Center Calibration -->
+      <div id="webhid-mode1-panel" class="webhid-mode-panel" style="display:flex;flex-direction:column;gap:8px;">
+        <div class="calib-instruction-banner">
+          <span class="calib-banner-icon">🎯</span>
+          <div class="calib-banner-content">
+            <div class="calib-banner-title" id="webhid-m1-msg">Leave both sticks untouched in their resting position and click Start Center Measurement.</div>
+            <div class="calib-banner-sub">Computes median and IQR/StdDev dispersion. Saves a device-specific local software profile without altering raw diagnostic readings.</div>
+          </div>
+        </div>
+        <div class="calib-device-bar">
+          <div><strong>Before Calibration:</strong> <span id="webhid-m1-before">LX: 0 | LY: 0 | RX: 0 | RY: 0</span></div>
+        </div>
+        <div class="calib-device-bar">
+          <div><strong>After / Measured Median:</strong> <span id="webhid-m1-after">— (Run measurement first)</span></div>
+        </div>
+        <div class="calib-outcomes-grid">
+          <div class="calib-outcome-card">
+            <div class="calib-outcome-title">1. Center Measurement</div>
+            <div class="calib-outcome-desc" id="webhid-m1-layer-meas">IDLE</div>
+          </div>
+          <div class="calib-outcome-card">
+            <div class="calib-outcome-title">2. Software Correction Profile</div>
+            <div class="calib-outcome-desc" id="webhid-m1-layer-soft">Not saved yet</div>
+          </div>
+          <div class="calib-outcome-card">
+            <div class="calib-outcome-title">3. Controller Firmware Memory</div>
+            <div class="calib-outcome-desc" id="webhid-m1-layer-hw">Not Modified (Protected — No undocumented firmware write executed)</div>
+          </div>
+        </div>
+        <div class="calib-footer-actions">
+          <button id="webhid-m1-start-btn" class="calib-btn calib-btn-primary">▶ Start / Repeat Measurement</button>
+          <button id="webhid-m1-confirm-btn" class="calib-btn calib-btn-success">✓ Confirm Software Profile</button>
+        </div>
+      </div>
+
+      <!-- Mode 2: Guided Endpoint Calibration (7-Step Assistant) -->
+      <div id="webhid-mode2-panel" class="webhid-mode-panel" style="display:none;flex-direction:column;gap:8px;">
+        <div class="calib-instruction-banner">
+          <span class="calib-banner-icon">🧭</span>
+          <div class="calib-banner-content">
+            <div class="calib-banner-title" id="webhid-m2-step-title">1. Resting Center</div>
+            <div class="calib-banner-sub" id="webhid-m2-step-instr">Leave both analog sticks completely untouched in their natural resting position.</div>
+          </div>
+        </div>
+        <div id="webhid-m2-summary-list" class="webhid-steps-summary"></div>
+        <div class="calib-footer-actions">
+          <div class="calib-footer-left">
+            <button id="webhid-m2-prev-btn" class="calib-btn">◀ Prev Step</button>
+            <button id="webhid-m2-next-btn" class="calib-btn">Next Step ▶</button>
+            <button id="webhid-m2-repeat-btn" class="calib-btn">🔄 Repeat Step</button>
+          </div>
+          <div class="calib-footer-right">
+            <button id="webhid-m2-cancel-btn" class="calib-btn">Cancel</button>
+            <button id="webhid-m2-capture-btn" class="calib-btn calib-btn-primary">▶ Capture Step</button>
+            <button id="webhid-m2-confirm-btn" class="calib-btn calib-btn-success">✓ Confirm Profile</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ── PRINTABLE A4 DIAGNOSTIC REPORT (OPTIMIZED FOR PRINT) ──── -->
 <section id="printable-report" class="print-sheet" style="display:none;">
   <div class="print-header">
@@ -635,9 +929,14 @@
   </div>
 </section>
 
-<script src="controllers-overlay.js?v=5.3"></script>
-<script src="controllers-svg.js?v=5.3"></script>
-<script src="stick-calibration.js?v=5.3"></script>
-<script src="app.js?v=5.3"></script>
+<script src="controllers-overlay.js?v=5.4"></script>
+<script src="controllers-svg.js?v=5.4"></script>
+<script src="stick-calibration.js?v=5.4"></script>
+<script src="trigger-full-travel.js?v=5.4"></script>
+<script src="advanced-stick-diagnostics.js?v=5.4"></script>
+<script src="webhid-calibration.js?v=5.4"></script>
+<script src="batch-manager.js?v=5.4"></script>
+<script src="session-reset.js?v=5.4"></script>
+<script src="app.js?v=5.4"></script>
 </body>
 </html>
