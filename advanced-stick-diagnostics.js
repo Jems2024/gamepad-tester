@@ -524,127 +524,12 @@
     ctx.fill();
   }
 
-  /**
-   * Renders the 36/72-sector radial circularity wedges and Avg Error (%) HUD
-   * directly on top of the main Stick Testing Center radar canvases (#stick-l-canvas / #stick-r-canvas)
-   * after drawLargeStick() has rendered the base radar.
-   */
-  function drawMainRadarCircularityOverlay(mainCanvas, stickState) {
-    if (!mainCanvas || typeof mainCanvas.getContext !== 'function') return;
-    const ctx = mainCanvas.getContext('2d');
-    if (!ctx) return;
-
-    const w = mainCanvas.width;
-    const h = mainCanvas.height;
-    const cx = w / 2;
-    const cy = h / 2;
-    const r = (w / 2) * 0.63; // Matches drawLargeStick reference 1.0 circle radius
-
-    const sectors = stickState.activeSectorResolution === 72 ? stickState.sectors72 : stickState.sectors36;
-    const n = sectors.length;
-    const stepRad = (Math.PI * 2) / n;
-
-    // 1. Draw sampled angular sector wedges on the main radar
-    for (let i = 0; i < n; i++) {
-      const val = sectors[i];
-      if (val !== null) {
-        const a0 = i * stepRad;
-        const a1 = (i + 1) * stepRad;
-        const rad = Math.min(r * 1.18, val * r);
-        const errPct = Math.abs(val - 1.0) * 100;
-
-        ctx.beginPath();
-        ctx.moveTo(cx, cy);
-        ctx.arc(cx, cy, rad, a0, a1);
-        ctx.closePath();
-
-        if (errPct >= 7 && errPct <= 12) {
-          ctx.fillStyle = 'rgba(34, 197, 94, 0.20)';
-          ctx.strokeStyle = 'rgba(34, 197, 94, 0.55)';
-        } else if (errPct > 17) {
-          ctx.fillStyle = 'rgba(239, 68, 68, 0.22)';
-          ctx.strokeStyle = 'rgba(239, 68, 68, 0.60)';
-        } else if (errPct < 3 || (errPct >= 13 && errPct <= 16)) {
-          ctx.fillStyle = 'rgba(245, 158, 11, 0.20)';
-          ctx.strokeStyle = 'rgba(245, 158, 11, 0.55)';
-        } else {
-          ctx.fillStyle = 'rgba(0, 229, 255, 0.18)';
-          ctx.strokeStyle = 'rgba(0, 229, 255, 0.50)';
-        }
-        ctx.lineWidth = 1;
-        ctx.fill();
-        ctx.stroke();
-      }
-    }
-
-    // 2. Draw outer perimeter polygon connecting consecutive sampled sectors
-    ctx.beginPath();
-    let started = false;
-    for (let i = 0; i <= n; i++) {
-      const idx = i % n;
-      const val = sectors[idx];
-      if (val !== null) {
-        const midAngle = (idx + 0.5) * stepRad;
-        const rad = Math.min(r * 1.18, val * r);
-        const px = cx + Math.cos(midAngle) * rad;
-        const py = cy + Math.sin(midAngle) * rad;
-        if (!started) {
-          ctx.moveTo(px, py);
-          started = true;
-        } else {
-          ctx.lineTo(px, py);
-        }
-      } else {
-        started = false;
-      }
-    }
-    ctx.strokeStyle = stickState.status === 'COMPLETED' ? '#22c55e' : '#00e5ff';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    // 3. Draw compact HUD pill at the bottom of the main radar showing live Circularity Avg Error (%)
-    const hudText = stickState.avgErrorPct !== null
-      ? `Avg Error: ${stickState.avgErrorPct.toFixed(2)}% • ${stickState.sampledSectorCount}/${stickState.activeSectorResolution}`
-      : `Circularidad: ${stickState.sampledSectorCount}/${stickState.activeSectorResolution} sectores`;
-
-    ctx.save();
-    ctx.font = 'bold 11px Consolas, monospace';
-    const textWidth = ctx.measureText(hudText).width;
-    const pillW = textWidth + 18;
-    const pillH = 20;
-    const pillX = cx - pillW / 2;
-    const pillY = h - 26;
-
-    ctx.fillStyle = 'rgba(12, 12, 18, 0.88)';
-    ctx.strokeStyle = stickState.status === 'COMPLETED' ? '#22c55e' : 'rgba(0, 229, 255, 0.55)';
-    ctx.lineWidth = 1.2;
-    ctx.beginPath();
-    if (typeof ctx.roundRect === 'function') {
-      ctx.roundRect(pillX, pillY, pillW, pillH, 6);
-    } else {
-      ctx.rect(pillX, pillY, pillW, pillH);
-    }
-    ctx.fill();
-    ctx.stroke();
-
-    ctx.fillStyle = stickState.status === 'COMPLETED' ? '#4ade80' : '#00e5ff';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(hudText, cx, pillY + pillH / 2);
-    ctx.restore();
-  }
-
-  function renderUI(drawMainOverlay) {
+  function renderUI() {
     if (typeof document === 'undefined') return;
 
     const renderStick = (prefix, st, jit) => {
       const canvas = document.getElementById(`adv-circ-canvas-${prefix}`);
       if (canvas) drawCircularityCanvas(canvas, st);
-
-      if (drawMainOverlay) {
-        const mainCanvas = document.getElementById(`stick-${prefix}-canvas`);
-        if (mainCanvas) drawMainRadarCircularityOverlay(mainCanvas, st);
-      }
 
       const setTxt = (id, val) => {
         const el = document.getElementById(id);
@@ -652,7 +537,7 @@
       };
 
       const errDisplay = st.avgErrorPct !== null
-        ? `${st.avgErrorPct.toFixed(2)}%${st.status !== 'COMPLETED' ? ' (en curso)' : ''}`
+        ? `${st.avgErrorPct.toFixed(2)}%${st.status !== 'COMPLETED' ? ' (parcial)' : ''}`
         : '—';
       const covDisplay = `${st.sampledSectorCount}/${st.activeSectorResolution} (${st.coveragePct}%)`;
 
@@ -662,28 +547,17 @@
       setTxt(`adv-circ-${prefix}-status`, st.status);
       setTxt(`adv-circ-${prefix}-band`, st.classificationLabel);
 
-      // Update inline circularity telemetry in the top Stick Testing Center card
-      setTxt(`inline-circ-${prefix}-err`, errDisplay);
-      setTxt(`inline-circ-${prefix}-cov`, covDisplay);
-      setTxt(`inline-circ-${prefix}-band`, st.classificationLabel);
-
       const clsInfo = st.status === 'COMPLETED'
         ? classifyCircularityError(st.avgErrorPct)
         : { badgeClass: st.status === 'RUNNING' ? 'badge-testing' : 'badge-neutral' };
       const badgeText = st.status === 'COMPLETED'
-        ? `${st.avgErrorPct.toFixed(2)}% (${st.classification})`
+        ? `Avg Error: ${st.avgErrorPct.toFixed(2)}% (${st.classification})`
         : st.status;
 
       const badgeEl = document.getElementById(`adv-circ-${prefix}-badge`);
       if (badgeEl) {
         badgeEl.className = `stick-verdict-badge ${clsInfo.badgeClass}`;
         badgeEl.textContent = badgeText;
-      }
-
-      const inlineBadgeEl = document.getElementById(`inline-circ-${prefix}-badge`);
-      if (inlineBadgeEl) {
-        inlineBadgeEl.className = `stick-verdict-badge ${clsInfo.badgeClass}`;
-        inlineBadgeEl.textContent = badgeText;
       }
 
       if (jit) {
@@ -714,58 +588,27 @@
     if (!gp || !gp.connected || !axes) {
       return getSnapshot();
     }
-    const lx = axes.lx || 0;
-    const ly = axes.ly || 0;
-    const rx = axes.rx || 0;
-    const ry = axes.ry || 0;
-
-    // Check if app.js global stick state machine is present; if so, only record circularity
-    // when the stick test has been initiated (⚡ Suite Sticks / Step 3-4 / manual start)
-    const hasAppState = (typeof window !== 'undefined' && typeof state === 'object' && state && state.stickMetrics);
-    const leftActive = !hasAppState || state.left.manualArmed || (
-      state.stickMetrics.l && (state.stickMetrics.l.phase === 'TESTING' || state.stickMetrics.l.phase === 'MOVE' || state.stickMetrics.l.phase === 'REST')
-    );
-    const rightActive = !hasAppState || state.right.manualArmed || (
-      state.stickMetrics.r && (state.stickMetrics.r.phase === 'TESTING' || state.stickMetrics.r.phase === 'MOVE' || state.stickMetrics.r.phase === 'REST')
-    );
-
-    if (leftActive) {
-      updateStickCircularity(state.left, lx, ly);
-    } else {
-      state.left.currentX = lx;
-      state.left.currentY = ly;
-      state.left.currentR = Math.hypot(lx, ly);
-    }
-
-    if (rightActive) {
-      updateStickCircularity(state.right, rx, ry);
-    } else {
-      state.right.currentX = rx;
-      state.right.currentY = ry;
-      state.right.currentR = Math.hypot(rx, ry);
-    }
-
+    updateStickCircularity(state.left, axes.lx || 0, axes.ly || 0);
+    updateStickCircularity(state.right, axes.rx || 0, axes.ry || 0);
     updatePollingAndStability(axes, nowMs, gp.timestamp);
-    renderUI(true);
+    renderUI();
     return getSnapshot();
   }
 
-  function resetStick(which, manualArm) {
+  function resetStick(which) {
     if (which === 'l' || which === 'left') {
       state.left = createCircularityStickState();
-      if (manualArm) state.left.manualArmed = true;
     } else if (which === 'r' || which === 'right') {
       state.right = createCircularityStickState();
-      if (manualArm) state.right.manualArmed = true;
     }
-    renderUI(true);
+    renderUI();
   }
 
   function resetAll() {
     state.left = createCircularityStickState();
     state.right = createCircularityStickState();
     state.polling = createPollingAndStabilityState();
-    renderUI(true);
+    renderUI();
   }
 
   function getSnapshot() {
