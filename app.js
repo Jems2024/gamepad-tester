@@ -1582,15 +1582,6 @@ function finishStickDiagnostic(stick) {
     }
   }
 
-  // Automatic progression from Left Stick -> Right Stick during Stick Suite or Step 3
-  if (stick === 'l' && !state.stickMetrics.r.completed) {
-    state.forcedStep = 4;
-    startStickPhase('r', 'TESTING');
-  } else if (stick === 'r' && state.stickMetrics.l.completed) {
-    state.suite.running = false;
-    state.forcedStep = 5;
-  }
-
   updateWorkflowProgress();
   updateOverallVerdict();
 }
@@ -1663,16 +1654,15 @@ function updateStickPhaseStateMachine(stick, x, y, dist, angle, now) {
     else if (!isLeft && dom.stickRSnapVal) dom.stickRSnapVal.textContent = `${elapsedReturn}ms (${dist.toFixed(3)})`;
   }
 
-  // 3. Guided Stick Movement & 8 Directional Zones Analysis
-  // Waits until the user explicitly starts the Stick Suite ("⚡ Suite Sticks") or clicks Step 3/4
+  // 3. Parallel Continuous Movement & 8 Directional Zones Analysis
+  // Active from the very beginning for both sticks in parallel without step gating
   const dirAngles = [0, 45, 90, 135, 180, 225, 270, 315];
-  const isStickTestingActive = (m.phase === 'TESTING' || m.phase === 'MOVE' || m.phase === 'REST');
 
-  if (isStickTestingActive && dist >= 0.45) {
+  if (dist >= 0.45) {
     m.hasMoved = true;
     m.lastActiveMoveTime = now;
     if (!m.moveStartTime) m.moveStartTime = now;
-    if (m.phase !== 'TESTING') {
+    if (m.phase === 'IDLE') {
       m.phase = 'TESTING';
       if (badgeEl && !m.completed) {
         badgeEl.className = 'stick-verdict-badge badge-testing';
@@ -2157,11 +2147,12 @@ function startFullSuite() {
   state.stickHistoryL = [];
   state.stickHistoryR = [];
   state.suite.running = true;
-  state.forcedStep = 3;
+  state.forcedStep = null;
   if (typeof window !== 'undefined' && window.AdvancedStickDiagnostics) {
     window.AdvancedStickDiagnostics.resetAll();
   }
   startStickPhase('l', 'TESTING');
+  startStickPhase('r', 'TESTING');
   updateWorkflowProgress();
 }
 
